@@ -1,5 +1,6 @@
 from queue import PriorityQueue
 import ast
+import re
 
 """ iterate over the entire ast and make the height mapping function"""
 def addHeightAttribute(node):
@@ -53,6 +54,9 @@ def ast_visit(node, level=0):
 
 def getHeight(node):
     return node.height
+
+def descendants(node):
+    return [n for n in ast.walk(node)][1:]
 
 """dice function to calculate the dice similarity between
  two trees based on the equation 2*|A ∩ B| / |A| + |B|"""
@@ -130,3 +134,13 @@ def checkOtherT(t1, t2, T):
         isIsomorphic = checkOtherT(t1, t2, tx)
         if (isIsomorphic): return True
     return isIsomorphic
+
+
+def descendants(node):
+    """return the list of descendants of the node and if there is no descendants return None"""
+    return [n for n in ast.walk(node)][1:] if is_leaf_node(node) else None
+
+def postordertraversal(node, listNodes):
+    for child in ast.iter_child_nodes(node):
+        postordertraversal(child, listNodes)
+    listNodes.append(node)

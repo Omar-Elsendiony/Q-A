@@ -1,16 +1,16 @@
 # from utilities_parsing import *
 
-# def OptStrategy(F, G):
-#     # Initialize arrays
-#     jF = len(F)
-#     jG = len(G)
-#     Lv = [[0] * jG for _ in range(jF)]
-#     Rv = [[0] * jG for _ in range(jF)]
-#     Hv = [[0] * jG for _ in range(jF)]
-#     Lw = [0] * jG
-#     Rw = [0] * jG
-#     Hw = [0] * jG
-#     STR = [[0] * jG for _ in range(jF)]
+def OptStrategy(F, G):
+    # Initialize arrays
+    jF = len(F)
+    jG = len(G)
+    Lv = [[0] * jG for _ in range(jF)]
+    Rv = [[0] * jG for _ in range(jF)]
+    Hv = [[0] * jG for _ in range(jF)]
+    Lw = [0] * jG
+    Rw = [0] * jG
+    Hw = [0] * jG
+    STR = [[0] * jG for _ in range(jF)]
 
 #     # Postorder traversal
 #     for v in range(jF):

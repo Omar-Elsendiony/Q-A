@@ -1,4 +1,5 @@
-parentChild = {"A": ["B", "C"], "B":[], "C": ["D", "E","G"], "D": [], "E": ["F"], "F": [], "G": []}
+parentChild = {"A": ["B", "C"], "B":[], "C": ["D", "E","G"],
+                "D": [], "E": ["F"], "F": [], "G": []}
 
 root = "A" # you have to know the root of the tree
 tree = [[root]]
@@ -23,7 +24,7 @@ def drawTree(levels, parentChild):
     drawTree(levels, parentChild) if level else None
     
 drawTree(tree, parentChild)
-print(tree)
+# print(tree)
 
 
 def printTree(tree):
@@ -32,15 +33,17 @@ def printTree(tree):
             print(node, sep="", end=" ")
         print("\n")
 
-printTree(tree)
+# printTree(tree)
 
-def getLeftPath(parentChild):
-    # dedfine subtree and subforest
-    leftPath = {"A", "B"}
-    for parent in parentChild:
-        for child in parentChild[parent]:
-            leftPath.add(child)
-    return leftPath
+setPath = set()
+def getLeftPath(parentChild, root, setPath):
+    node = root
+    while node:
+        setPath.add(node)
+        nodeList = parentChild.get(node)
+        node = nodeList[0] if nodeList else None
+getLeftPath(parentChild, root, setPath) # setPath is changed in place
+# print(setPath)
 
 
 def leftPathDecomposition(parentChild):
@@ -50,3 +53,25 @@ def leftPathDecomposition(parentChild):
         for child in parentChild[parent]:
             leftPath[child] = parent
     return leftPath
+
+
+
+
+def getNumberDescendants(parentChild, root):
+    """
+    inputs: parentChild: dictionary, root: string
+    outputs: int
+    """
+    if not parentChild.get(root):
+        return 0
+    else:
+        return sum([getNumberDescendants(parentChild, child) for child in parentChild.get(root)]) + len(parentChild.get(root))
+
+print(getNumberDescendants(parentChild, root))
+
+
+
+""" number of relevant subforests equals to the number of relevant subtrees nodes summed"""
+def relevantSubtrees():
+    pass
+
