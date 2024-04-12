@@ -6,39 +6,107 @@ import time
 import types
 
 
+def segmentLine(line):
+    segmentors = {' ', '(', ')', '[', ']', '{', '}', ':', ',', '='}
+    i = 0
+    ln = len(line)
+    lst = []
+    st = set()
+    temp = ""
+    while(i < ln):
+        if (line[i] == " "): # I do not need spaces
+            if (i - 1 != 0 and line[i - 1] != " "):
+                lst.append(temp)
+                st.add(temp)
+                temp = ""
+            i += 1
+            continue
+        elif (line[i] == "\n"): # break loop has to be added in the scope as we are considering only one line and remove the outer else, however, Ignore for now
+            if (temp != ""):
+                lst.append(temp)
+                st.add(temp)
+                temp = ""
+        elif (line[i] == "\t"): # Ignore tabs
+            i += 1
+            continue
+        elif (line[i] == "#"): # Ignore comments
+            while (line[i] != "\n"):
+                i += 1
+        elif (line[i] in segmentors):
+            if (temp != ""):
+                lst.append(temp)
+                st.add(temp)
+                temp = ""
+            lst.append(line[i])
+            st.add(temp)
+        elif (line[i] == "-"): # Check if it is a unary sub
+            if (i + 1 < ln and line[i + 1].isdigit()):
+                temp += line[i]
+            else:
+                if (temp != ""):
+                    lst.append(temp) #add the previous accumulated
+                    st.add(temp)
+                lst.append(line[i]) # add the current
+                st.add(line[i])
+                temp = ""
 
-def create_module(ast_node, module_name='mutant', module_dict=None):
-    code = compile(ast_node, module_name, 'exec')
-    module = types.ModuleType(module_name)
-    module.__dict__.update(module_dict or {})
-    exec(code, module.__dict__)
-    return module
+        else:
+            temp += line[i]
+        i += 1
+    else:
+        if (temp != ""):
+            lst.append(temp)
+            st.add(temp)
+    return lst, st
+
+
+
+def mutationsCanBeApplied(setTokens: set):
+    """
+    Iterate over the set of segmented parts in the faulty location and insert the mutations that can be applied
+    Args: 
+        setTokens: set of tokens in the faulty location
+    Returns:
+        list of mutations that can be applied
+    """
+    lstMutations = [] # list of mutations that can be applied
+    if '+' in setTokens: lstMutations.append(('AR', 'ADD')) # the only mutations coupled with other binary operators that are encompassed in a list to accomodate the operation name
+    # if '-' in setTokens: lstMutations.append('AR')
+    # if '*' in setTokens: lstMutations.append('AR')
+    # if '/' in setTokens: lstMutations.append('AR')
+    # if '%' in setTokens: lstMutations.append('AR')
+    # if '**' in setTokens: lstMutations.append('AR')
+    # if '//' in setTokens: lstMutations.append('AR')
+    # if '==' in setTokens: lstMutations.append('CR')
+    # if '!=' in setTokens: lstMutations.append('CR')
+    # if '<' in setTokens: lstMutations.append('CR')
+    # if '>' in setTokens: lstMutations.append('CR')
+    # if '<=' in setTokens: lstMutations.append('CR')
+    # if '>=' in setTokens: lstMutations.append('CR')
+    # if 'and' in setTokens: lstMutations.append('CR')
+    # if 'or' in setTokens: lstMutations.append('CR')
+    # if 'not' in setTokens: lstMutations.append('CR')
+    # if 'is' in setTokens: lstMutations.append('CR')
+    # if 'in' in setTokens: lstMutations.append('CR')
+    # if 'not in' in setTokens: lstMutations.append('CR')
+    # if 'is not' in setTokens: lstMutations.append('CR')
+    # if '()' in setTokens: lstMutations.append('MR')
+    # if '[]' in setTokens: lstMutations.append('MR')
+    # if '{}' in setTokens: lstMutations.append('MR')
+    weights = [1] * len(lstMutations) # the weights are all equal for now
+
+    return lstMutations, weights
+
+
+
+
+
 
 
 def notmutate(sth):
     return sth
 
 
-
-
-class ParentNodeTransformer(ast.NodeTransformer):
-    def visit(self, node):
-        if getattr(node, 'parent', None):
-            node = copy.copy(node)
-            if hasattr(node, 'lineno'):
-                del node.lineno
-        node.parent = getattr(self, 'parent', None)
-        node.children = []
-        self.parent = node
-        result_node = super().visit(node)
-        self.parent = node.parent
-        if self.parent:
-            self.parent.children += [node] + node.children
-        return result_node
-
-
-def create_ast(code):
-    return ParentNodeTransformer().visit(ast.parse(code))
 
 
 def is_docstring(node):
@@ -54,7 +122,3 @@ def sort_operators(operators):
     return sorted(operators, key=lambda cls: cls.name())
 
 
-def f(text):
-    lines = text.split('\n')[1:-1]
-    indention = re.search('(\s*).*', lines[0]).group(1)
-    return '\n'.join(line[len(indention):] for line in lines)

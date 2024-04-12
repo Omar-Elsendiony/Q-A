@@ -1,12 +1,12 @@
 from .arithmetic import *
-
+from .copyAST import *
 
 
 
 
 standard_operators = {
     ArithmeticOperatorDeletion,
-    ArithmeticOperatorReplacement,
+    BinaryOperatorReplacement,
     # AssignmentOperatorReplacement
 }
 
