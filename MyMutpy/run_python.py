@@ -1,4 +1,13 @@
-# %%
+from glob import glob
+from subprocess import Popen, PIPE, STDOUT
+import subprocess
+from subprocess import TimeoutExpired
+import win32api
+import win32process
+import os
+import shutil
+MAX_VIRTUAL_MEMORY = 4 * 1024 * 1024 * 1024  # 4*1024 MB
+
 import threading
 import psutil
 
@@ -13,6 +22,7 @@ def check_floating(n1, n2):
     if abs(float(n1)-float(n2))<1e-6:
         return True
     return False
+
 
 def compare_files(file1, file2):
     try:
@@ -46,19 +56,6 @@ def compare_files(file1, file2):
         print("exception = ", e)
         return False
 
-
-
-from glob import glob
-from subprocess import Popen, PIPE, STDOUT
-import subprocess
-from subprocess import TimeoutExpired
-import win32api
-import win32process
-import os
-import shutil
-MAX_VIRTUAL_MEMORY = 4 * 1024 * 1024 * 1024  # 4*1024 MB
-
-
 def kill(proc_pid):
     if psutil.pid_exists(proc_pid):
         process = psutil.Process(proc_pid)
@@ -68,16 +65,8 @@ def kill(proc_pid):
         process.kill()
 
 
-def limit_virtual_memory():
-    # Get the current process handle
-    handle = win32process.GetCurrentProcess()
-
-    # Set the virtual memory limit
-    win32api.SetProcessWorkingSetSize(handle, -1, MAX_VIRTUAL_MEMORY)
-
-
 def run_python(code, test_case_folder, idx):
-    root_path = f'garbage_py/{idx}'  # I think this is the path where the code will be stored for operation
+    root_path = f'garbage_py/{idx}'
     isExist = os.path.exists(root_path)
     if not isExist:
         os.makedirs(root_path)
@@ -116,7 +105,8 @@ def run_python(code, test_case_folder, idx):
             continue
         
         out_file = in_file.replace("in", "out", 1).replace(".in", ".out", 1)
-
+        # print(f"{root_path}/cmd_out_match.txt")
+        # print(out_file)
         shutil.copy(out_file, f"{root_path}/cmd_out_match.txt")
         # p2.wait()
         if not compare_files(f'{root_path}/cmd_out.txt', f'{root_path}/cmd_out_match.txt'):
@@ -125,4 +115,3 @@ def run_python(code, test_case_folder, idx):
     
     shutil.rmtree(root_path)
     return True, len(in_files)-did_not_match,len(in_files)
-

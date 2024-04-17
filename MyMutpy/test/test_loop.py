@@ -30,7 +30,7 @@ class TestConditional(unittest.TestCase):
         mutant = ast.fix_missing_locations(mutant) # after mutation, we need to fix the missing locations
         res = (ast.unparse(mutant))
         print(res)
-        # assert(res in expected_results)
+        # assert(res in expected_results) # removed assertion as it is unpredictable for now
     
 
     def test_reverse_iteration_loop(self):
