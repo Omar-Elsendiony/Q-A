@@ -1,6 +1,6 @@
 import ast
 
-class copyMutate(ast.NodeTransformer):
+class copyMutation(ast.NodeTransformer):
 
     def visit_Module(self, node):
         return ast.copy_location(ast.Module(body=[self.visit(x) for x in node.body]), node)
@@ -52,13 +52,15 @@ class copyMutate(ast.NodeTransformer):
 
     def visit_Call(self, node):
         return ast.copy_location(ast.Call(func=self.visit(node.func), args=[self.visit(x) for x in node.args], keywords=[self.visit(x) for x in node.keywords]), node)
+    
     def visit_keyword(self, node):
         return ast.copy_location(ast.keyword(arg=node.arg, value=self.visit(node.value)), node)
+    
     def visit_Starred(self, node):
         return ast.copy_location(ast.Starred(value=self.visit(node.value), ctx=node.ctx), node)
     
     def visit_NameConstant(self, node):
-        return ast.copy_location(ast.NameConstant(value=node.value), node)
+        return ast.copy_location(ast.Constant(value=node.value), node)
     
     def visit_UnaryOp(self, node):
         return ast.copy_location(ast.UnaryOp(op=node.op, operand=self.visit(node.operand)), node)
@@ -89,50 +91,73 @@ class copyMutate(ast.NodeTransformer):
     
     def visit_Lambda(self, node):
         return ast.copy_location(ast.Lambda(args=self.visit(node.args), body=self.visit(node.body)), node)
+    
     def visit_arguments(self, node):
         return ast.copy_location(ast.arguments(posonlyargs=[self.visit(x) for x in node.posonlyargs], args=[self.visit(x) for x in node.args], vararg=self.visit(node.vararg), kwonlyargs=[self.visit(x) for x in node.kwonlyargs], kw_defaults=[self.visit(x) for x in node.kw_defaults], kwarg=self.visit(node.kwarg), defaults=[self.visit(x) for x in node.defaults]), node)
+    
     def visit_arg(self, node):
         return ast.copy_location(ast.arg(arg=node.arg, annotation=self.visit(node.annotation)), node)
+    
     def visit_Return(self, node):
         return ast.copy_location(ast.Return(value=self.visit(node.value)), node)
+    
     def visit_Delete(self, node):
         return ast.copy_location(ast.Delete(targets=[self.visit(x) for x in node.targets]), node)
+    
     def visit_Assign(self, node):
         return ast.copy_location(ast.Assign(targets=[self.visit(x) for x in node.targets], value=self.visit(node.value)), node)
+    
     def visit_AnnAssign(self, node):
         return ast.copy_location(ast.AnnAssign(target=self.visit(node.target), annotation=self.visit(node.annotation), value=self.visit(node.value), simple=node.simple), node)
+    
     def visit_AugAssign(self, node):
         return ast.copy_location(ast.AugAssign(target=self.visit(node.target), op=node.op, value=self.visit(node.value)), node)
+    
     def visit_Print(self, node):
         return ast.copy_location(ast.Print(dest=self.visit(node.dest), values=[self.visit(x) for x in node.values], nl=node.nl), node)
+    
     def visit_Raise(self, node):
         return ast.copy_location(ast.Raise(exc=self.visit(node.exc), cause=self.visit(node.cause)), node)
+    
     def visit_Assert(self, node):
         return ast.copy_location(ast.Assert(test=self.visit(node.test), msg=self.visit(node.msg)), node)
+    
     def visit_Import(self, node):
         return ast.copy_location(ast.Import(names=[self.visit(x) for x in node.names]), node)
+    
     def visit_ImportFrom(self, node):
         return ast.copy_location(ast.ImportFrom(module=node.module, names=[self.visit(x) for x in node.names], level=node.level), node)
+    
     def visit_alias(self, node):
         return ast.copy_location(ast.alias(name=node.name, asname=node.asname), node)
+    
     def visit_Exec(self, node):
         return ast.copy_location(ast.Exec(body=self.visit(node.body), globals=self.visit(node.globals), locals=self.visit(node.locals)), node)
+    
     def visit_Global(self, node):
         return ast.copy_location(ast.Global(names=[self.visit(x) for x in node.names]), node)
+    
     def visit_Nonlocal(self, node):
         return ast.copy_location(ast.Nonlocal(names=[self.visit(x) for x in node.names]), node)
+    
     def visit_Pass(self, node):
         return ast.copy_location(ast.Pass(), node)
+    
     def visit_Break(self, node):
         return ast.copy_location(ast.Break(), node)
+    
     def visit_Continue(self, node):
         return ast.copy_location(ast.Continue(), node)
+    
     def visit_Try(self, node):
         return ast.copy_location(ast.Try(body=[self.visit(x) for x in node.body], handlers=[self.visit(x) for x in node.handlers], orelse=[self.visit(x) for x in node.orelse], finalbody=[self.visit(x) for x in node.finalbody]), node)
+    
     def visit_ExceptHandler(self, node):
         return ast.copy_location(ast.ExceptHandler(type=self.visit(node.type), name=node.name, body=[self.visit(x) for x in node.body]), node)
+    
     def visit_ClassDef(self, node):
         return ast.copy_location(ast.ClassDef(name=node.name, bases=[self.visit(x) for x in node.bases], keywords=[self.visit(x) for x in node.keywords], body=[self.visit(x) for x in node.body], decorator_list=[self.visit(x) for x in node.decorator_list]), node)
+    
     def visit_keyword(self, node):
         return ast.copy_location(ast.keyword(arg=node.arg, value=self.visit(node.value)), node)
     
@@ -156,3 +181,98 @@ class copyMutate(ast.NodeTransformer):
     
     def visit_UAdd(self, node: ast.UAdd):
         return ast.copy_location(ast.UAdd(), node)
+    
+    def visit_USub(self, node: ast.USub):
+        return ast.copy_location(ast.USub(), node)
+    
+    def visit_And(self, node: ast.And):
+        return ast.copy_location(ast.And(), node)
+    
+    def visit_Or(self, node: ast.Or):
+        return ast.copy_location(ast.Or(), node)
+    
+    def visit_Add(self, node: ast.Add):
+        return ast.copy_location(ast.Add(), node)
+    
+    def visit_Div(self, node: ast.Div):
+        return ast.copy_location(ast.Div(), node)
+    
+    def visit_FloorDiv(self, node: ast.FloorDiv):
+        return ast.copy_location(ast.FloorDiv(), node)
+    
+    def visit_Mod(self, node: ast.Mod):
+        return ast.copy_location(ast.Mod(), node)
+    
+    def visit_Mult(self, node: ast.Mult):
+        return ast.copy_location(ast.Mult(), node)
+    
+    def visit_Pow(self, node: ast.Pow):
+        return ast.copy_location(ast.Pow(), node)
+    
+    def visit_Sub(self, node: ast.Sub):
+        return ast.copy_location(ast.Sub(), node)
+    
+    def visit_Eq(self, node: ast.Eq):
+        return ast.copy_location(ast.Eq(), node)
+    
+    def visit_Gt(self, node: ast.Gt):
+        return ast.copy_location(ast.Gt(), node)
+    
+    def visit_GtE(self, node: ast.GtE):
+        return ast.copy_location(ast.GtE(), node)
+    
+    def visit_Lt(self, node: ast.Lt):
+        return ast.copy_location(ast.Lt(), node)
+    
+    def visit_LtE(self, node: ast.LtE):
+        return ast.copy_location(ast.LtE(), node)
+    
+    def visit_NotEq(self, node: ast.NotEq):
+        return ast.copy_location(ast.NotEq(), node)
+    
+    def visit_Is(self, node: ast.Is):
+        return ast.copy_location(ast.Is(), node)
+    
+    def visit_IsNot(self, node: ast.IsNot):
+        return ast.copy_location(ast.IsNot(), node)
+    
+    def visit_In(self, node: ast.In):
+        return ast.copy_location(ast.In(), node)
+    
+    def visit_NotIn(self, node: ast.NotIn):
+        return ast.copy_location(ast.NotIn(), node)
+    
+    def visit_comprehension(self, node: ast.comprehension):
+        return ast.copy_location(ast.comprehension(target=self.visit(node.target), iter=self.visit(node.iter), ifs=[self.visit(x) for x in node.ifs]), node)
+    
+    def visit_MatchAs(self, node: ast.MatchAs):
+        return ast.copy_location(ast.MatchAs(), node)
+    
+    def visit_MatchMapping(self, node: ast.MatchMapping):
+        return ast.copy_location(ast.MatchMapping(), node)
+    
+    def visit_MatchSequence(self, node: ast.MatchSequence):
+        return ast.copy_location(ast.MatchSequence(), node)
+    
+    def visit_MatchStar(self, node: ast.MatchStar):
+        return ast.copy_location(ast.MatchStar(), node)
+    
+    def visit_MatchValue(self, node: ast.MatchValue):
+        return ast.copy_location(ast.MatchValue(), node)
+    
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):
+        return ast.copy_location(ast.AsyncFunctionDef(), node)
+    
+    def visit_AsyncFor(self, node: ast.AsyncFor):
+        return ast.copy_location(ast.AsyncFor(), node)
+    
+    def visit_AsyncWith(self, node: ast.AsyncWith):
+        return ast.copy_location(ast.AsyncWith(), node)
+    
+    def visit_Yield(self, node: ast.Yield):
+        return ast.copy_location(ast.Yield(), node)
+    
+    def visit_YieldFrom(self, node: ast.YieldFrom):
+        return ast.copy_location(ast.YieldFrom(), node)
+    
+    

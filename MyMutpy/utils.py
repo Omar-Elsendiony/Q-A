@@ -11,13 +11,16 @@ def segmentLine(line):
     i = 0
     ln = len(line)
     lst = []
+    col_offsets = []
     st = set()
     temp = ""
+
     while(i < ln):
         if (line[i] == " "): # I do not need spaces
             if (i - 1 != 0 and line[i - 1] != " "):
-                lst.append(temp)
-                st.add(temp)
+                if (temp != ""):
+                    lst.append(temp)
+                    st.add(temp)
                 temp = ""
             i += 1
             continue
@@ -38,26 +41,32 @@ def segmentLine(line):
                 st.add(temp)
                 temp = ""
             lst.append(line[i])
+            col_offsets.append(i + 1)
             st.add(temp)
         elif (line[i] == "-"): # Check if it is a unary sub
             if (i + 1 < ln and line[i + 1].isdigit()):
+                if (temp == ""):
+                    col_offsets.append(i + 1)
                 temp += line[i]
             else:
                 if (temp != ""):
                     lst.append(temp) #add the previous accumulated
                     st.add(temp)
                 lst.append(line[i]) # add the current
+                col_offsets.append(i + 1)
                 st.add(line[i])
                 temp = ""
 
         else:
+            if (temp == ""):
+                col_offsets.append(i + 1)
             temp += line[i]
         i += 1
-    else:
+    else:  # else for the while loop
         if (temp != ""):
             lst.append(temp)
             st.add(temp)
-    return lst, st
+    return lst, st, col_offsets
 
 
 
@@ -71,21 +80,21 @@ def mutationsCanBeApplied(setTokens: set):
     """
     lstMutations = [] # list of mutations that can be applied
     if '+' in setTokens: lstMutations.append(('AR', 'ADD')) # the only mutations coupled with other binary operators that are encompassed in a list to accomodate the operation name
-    # if '-' in setTokens: lstMutations.append('AR')
-    # if '*' in setTokens: lstMutations.append('AR')
-    # if '/' in setTokens: lstMutations.append('AR')
-    # if '%' in setTokens: lstMutations.append('AR')
-    # if '**' in setTokens: lstMutations.append('AR')
-    # if '//' in setTokens: lstMutations.append('AR')
-    # if '==' in setTokens: lstMutations.append('CR')
-    # if '!=' in setTokens: lstMutations.append('CR')
-    # if '<' in setTokens: lstMutations.append('CR')
-    # if '>' in setTokens: lstMutations.append('CR')
-    # if '<=' in setTokens: lstMutations.append('CR')
-    # if '>=' in setTokens: lstMutations.append('CR')
-    # if 'and' in setTokens: lstMutations.append('CR')
-    # if 'or' in setTokens: lstMutations.append('CR')
-    # if 'not' in setTokens: lstMutations.append('CR')
+    if '-' in setTokens: lstMutations.append(('BIN', 'SUB'))
+    if '*' in setTokens: lstMutations.append('MUL')
+    if '/' in setTokens: lstMutations.append('DIV')
+    if '%' in setTokens: lstMutations.append('MOD')
+    if '**' in setTokens: lstMutations.append('POW')
+    if '//' in setTokens: lstMutations.append('FLOORDIV')
+    if '==' in setTokens: lstMutations.append('ASSIGN')
+    if '!=' in setTokens: lstMutations.append('NE')
+    if '<' in setTokens: lstMutations.append('LT')
+    if '>' in setTokens: lstMutations.append('GT')
+    if '<=' in setTokens: lstMutations.append('LTE')
+    if '>=' in setTokens: lstMutations.append('GTE')
+    if 'and' in setTokens: lstMutations.append('AND')
+    if 'or' in setTokens: lstMutations.append('OR')
+    if 'not' in setTokens: lstMutations.append('NOT')
     # if 'is' in setTokens: lstMutations.append('CR')
     # if 'in' in setTokens: lstMutations.append('CR')
     # if 'not in' in setTokens: lstMutations.append('CR')
@@ -103,22 +112,5 @@ def mutationsCanBeApplied(setTokens: set):
 
 
 
-def notmutate(sth):
-    return sth
-
-
-
-
-def is_docstring(node):
-    def_node = node.parent.parent
-    return (isinstance(def_node, (ast.FunctionDef, ast.ClassDef, ast.Module)) and def_node.body and
-            isinstance(def_node.body[0], ast.Expr) and isinstance(def_node.body[0].value, ast.Str) and
-            def_node.body[0].value == node)
-
-
-
-
-def sort_operators(operators):
-    return sorted(operators, key=lambda cls: cls.name())
 
 
