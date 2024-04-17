@@ -22,7 +22,17 @@ class ArithmeticOperator(baseOperator):
     Base Class for all arithmetic operators
     Inherits from Node transformer
     """
+    @property
+    def lineno(self):
+        return self.target_node_lineno
 
+    @lineno.setter
+    def lineno(self, lineno):
+        self.target_node_lineno = lineno
+
+    @classmethod
+    def printMutatedSet(cls):
+        print(cls.mutatedSet)
 
     @classmethod
     def name(cls):
@@ -44,12 +54,11 @@ class ArithmeticOperatorDeletion(ArithmeticOperator):
     def name(cls):
         return 'ARD' # Arithmetic short form for deletion
 
-class BinaryOperatorReplacement(ArithmeticOperator):
+class AdditionOperatorReplacement(ArithmeticOperator):
 
-    OPERATORS = {'ADD', 'SUB'} # class Attributes
 
-    def __init__(self, target_node_lineno = None, code=None, target_node_col_offset=None, operator = 'ADD'):
-        super().__init__(target_node_lineno, code, target_node_col_offset)
+    def __init__(self, target_node_lineno = None, code_ast=None, target_node_col_offset=None, operator = 'ADD'):
+        super().__init__(target_node_lineno, code_ast, target_node_col_offset)
         self.operator = operator
 
 
@@ -57,46 +66,57 @@ class BinaryOperatorReplacement(ArithmeticOperator):
         """
         function targets the addition and subtraction operators that are considered infix operators
         """
-        # print(ArithmeticOperator.mutatedSet)
-
         if node.lineno == self.target_node_lineno :
             self.finishedMutation = True
-            # print("The End", node.lineno)
             self.mutatedSet.add(node)
-            if self.operator == 'ADD':
-                return ast.BinOp(left=self.visit(node.left), op=ast.Sub(), right=self.visit(node.right))
-            elif self.operator == 'SUB':
-                return ast.BinOp(left=self.visit(node.left), op=ast.Add(), right=self.visit(node.right))
-            else:
-                raise ("Invalid Operator")
+            return ast.BinOp(left=self.visit(node.left), op=ast.Sub(), right=self.visit(node.right))
         else:
             return node # if you do not want to continue visiting child nodes, if not self.generic_visit(node)
 
-
-
-    @property
-    def lineno(self):
-        return self.target_node_lineno
-
-    @lineno.setter
-    def lineno(self, lineno):
-        self.target_node_lineno = lineno
-
     @classmethod
-    def printMutatedSet(cls):
-        print(cls.mutatedSet)
+    def name(cls):
+        return 'ADD' # Arithmetic replacement short form
+
+class SubtractionOperatorReplacement(ArithmeticOperator):
+
+    def __init__(self, target_node_lineno = None, code_ast=None, target_node_col_offset=None, operator = 'ADD'):
+        super().__init__(target_node_lineno, code_ast, target_node_col_offset)
+        self.operator = operator
+
+
+    def visit_BinOp(self, node):
+        """
+        function targets the addition and subtraction operators that are considered infix operators
+        """
+        if node.lineno == self.target_node_lineno :
+            self.finishedMutation = True
+            self.mutatedSet.add(node)
+            return ast.BinOp(left=self.visit(node.left), op=ast.Add(), right=self.visit(node.right))
+        else:
+            return node # if you do not want to continue visiting child nodes, if not self.generic_visit(node)
 
     @classmethod
     def name(cls):
-        return 'Bin' # Arithmetic replacement short form
-
-
+        return 'SUB' # Arithmetic replacement short form
 
 class MultiplicationOperatorReplacement(ArithmeticOperator):
 
     # By default it calls the __init__ method of the parent class so, it is redundant to define it again
     # and we do not want to add any logic or whatsoever to it
     mutations = [ast.Div(), ast.Pow()] # list of mutations that can be performed on the node that represents multiplication
+
+    def visit_BinOp(self, node):
+        """
+        function targets the addition and subtraction operators that are considered infix operators
+        """
+
+        if node.lineno == self.target_node_lineno :
+            self.finishedMutation = True
+            self.mutatedSet.add(node)
+            mutation = self.choose_mutation_random_dist(MultiplicationOperatorReplacement.mutations)
+            return ast.BinOp(left=self.visit(node.left), op=mutation, right=self.visit(node.right))
+        else:
+            return node # if you do not want to continue visiting child nodes, if not self.generic_visit(node)
 
 
     def visit_Mult(self, node):
@@ -119,6 +139,19 @@ class MultiplicationOperatorReplacement(ArithmeticOperator):
 class DivisionOperatorReplacement(ArithmeticOperator):
     mutations = [ast.Mult(), ast.FloorDiv()]
 
+    def visit_BinOp(self, node):
+        """
+        function targets the addition and subtraction operators that are considered infix operators
+        """
+        if node.lineno == self.target_node_lineno :
+            self.finishedMutation = True
+            self.mutatedSet.add(node)
+            mutation = self.choose_mutation_random_dist(DivisionOperatorReplacement.mutations)
+            return ast.BinOp(left=self.visit(node.left), op=mutation, right=self.visit(node.right))
+        else:
+            return node # if you do not want to continue visiting child nodes, if not self.generic_visit(node)
+
+
     def visit_Div(self, node):
         lineno = getattr(node, 'lineno', None)
         if (lineno is None): parent = getattr(node, 'parent', None); lineno = getattr(parent, 'lineno', None)
@@ -138,13 +171,25 @@ class DivisionOperatorReplacement(ArithmeticOperator):
 class FloorDivisionOperatorReplacement(ArithmeticOperator):
     mutations = [ast.Mult(), ast.Div(), ast.Mod()]
 
-    def visit_Div(self, node):
+    def visit_BinOp(self, node):
+            """
+            function targets the addition and subtraction operators that are considered infix operators
+            """
+            if node.lineno == self.target_node_lineno :
+                self.finishedMutation = True
+                self.mutatedSet.add(node)
+                mutation = self.choose_mutation_random_dist(FloorDivisionOperatorReplacement.mutations)
+                return ast.BinOp(left=self.visit(node.left), op=mutation, right=self.visit(node.right))
+            else:
+                return node # if you do not want to continue visiting child nodes, if not self.generic_visit(node)
+
+    def visit_FloorDiv(self, node):
         lineno = getattr(node, 'lineno', None)
         if (lineno is None): parent = getattr(node, 'parent', None); lineno = getattr(parent, 'lineno', None)
         if lineno == self.target_node_lineno :
             self.finishedMutation = True
             self.mutatedSet.add(node)
-            mutation = self.choose_mutation_random_dist(DivisionOperatorReplacement.mutations)
+            mutation = self.choose_mutation_random_dist(FloorDivisionOperatorReplacement.mutations)
             return mutation
         else:
             return node
@@ -156,13 +201,26 @@ class FloorDivisionOperatorReplacement(ArithmeticOperator):
 class ModuloOperatorReplacement(ArithmeticOperator):
     mutations = [ast.Mult(), ast.FloorDiv(), ast.Mod()]
 
+    def visit_BinOp(self, node):
+            """
+            function targets the modulo operator to change it if it is in the specified line number
+            """
+
+            if node.lineno == self.target_node_lineno :
+                self.finishedMutation = True
+                self.mutatedSet.add(node)
+                mutation = self.choose_mutation_random_dist(ModuloOperatorReplacement.mutations)
+                return ast.BinOp(left=self.visit(node.left), op=mutation, right=self.visit(node.right))
+            else:
+                return node # if you do not want to continue visiting child nodes, if not self.generic_visit(node)
+
     def visit_Div(self, node):
         lineno = getattr(node, 'lineno', None)
         if (lineno is None): parent = getattr(node, 'parent', None); lineno = getattr(parent, 'lineno', None)
         if lineno == self.target_node_lineno :
             self.finishedMutation = True
             self.mutatedSet.add(node)
-            mutation = self.choose_mutation_random_dist(DivisionOperatorReplacement.mutations)
+            mutation = self.choose_mutation_random_dist(ModuloOperatorReplacement.mutations)
             return mutation
         else:
             return node

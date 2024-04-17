@@ -6,7 +6,8 @@ from .logical import *
 
 standard_operators = {
     ArithmeticOperatorDeletion,
-    BinaryOperatorReplacement,
+    AdditionOperatorReplacement,
+    SubtractionOperatorReplacement,
     MultiplicationOperatorReplacement,
     DivisionOperatorReplacement,
     ModuloOperatorReplacement,
@@ -14,6 +15,8 @@ standard_operators = {
     FloorDivisionOperatorReplacement,
     # UnaryOperatorReplacement,
     LogicalOperatorReplacement,
+    RelationalOperatorReplacement,
+    # BitwiseOperatorReplacement,
 
 }
 
