@@ -134,9 +134,14 @@ def mutationsCanBeApplied(setTokens: set):
     if 'is not' in setTokens: lstMutations.append('CR')
 
     ############### LOOPS OPERATORS ################
-    if 'for' in setTokens: lstMutations.extend(['OIL', 'RIL', 'ZIL']) # one iteration loop, reverse iteration loop, zero iteration loop
-    if 'while' in setTokens: lstMutations.extend(['OIL', 'RIL', 'ZIL'])
+    if 'for' in setTokens: lstMutations.extend(['OIL', 'RIL', 'ZIL', 'STD']) # one iteration loop, reverse iteration loop, zero iteration loop
+    if 'while' in setTokens: lstMutations.extend(['OIL', 'RIL', 'ZIL', 'STD'])
+    if 'range' in setTokens: lstMutations.append('OIL')
+    if 'enumerate' in setTokens: lstMutations.append('OIL')
+    if 'zip' in setTokens: lstMutations.append('OIL')
 
+    ################ CONDITIONAL OPERATORS ################
+    if 'if' in setTokens: lstMutations.append('COI', 'STD')
 
     # if '()' in setTokens: lstMutations.append('MR')
     # if '[]' in setTokens: lstMutations.append('MR')

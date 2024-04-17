@@ -46,6 +46,8 @@ class StatementDeletion(baseOperator):
     def visit_If(self, node):
         if not self.wanted_line(node.lineno, node.col_offset):
             return node
+        # remove the second branch of the if statement
+        # node.orelse = []
         return None
 
     def visit_While(self, node):

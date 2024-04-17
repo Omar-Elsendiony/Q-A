@@ -4,11 +4,8 @@ The main pipeline resides here
 
 """
 
-
 import ast
-
-from numpy import number
-from sqlalchemy import func
+import re
 from operators import *
 import operators
 import unparseAST
@@ -25,27 +22,76 @@ def getNameToOperatorMap(self):
 
 name_to_operator = getNameToOperatorMap(operators)
 
-
-import time
-start = time.time()
-code = """
-i = 1 == 2"""
-
-def mutate():  # helper function to mutate the code
+def editFreq(cand):
     pass
 
-def passesNegTests(program:str, inputs:List, outputs:List) -> bool:
+def testCasesPassed(candidate:str, inputs:List, outputs:List) -> bool:
+    pass
+
+def selectPool(candidates:Set, inputs:List, outputs:List) -> Set:
+    pass
+
+
+def mutate_2(cand:str, ops:Callable):  # helper function to mutate the code
+    splitted_cand = cand.split('\n')
+    faultyLineLocations = range(1, len(splitted_cand) + 1)
+
+    ## for the future ##
+    ## we check if the line still exists or not, so that we can mutate it
+    ## we will send the column offset but after making sure that the line exists
+    locs = random.choices(faultyLineLocations, k=1)
+    pool = set()
+    cand_dash = None
+    for f in locs:
+        op_f = ops(f)
+        op_f = (random.choices(op_f, k=1)[0])
+        copied_cand = copier.visit(cand)
+        cand_dash = op_f(target_node_lineno = f, code_ast = copied_cand).visitC()
+        pool.add(cand_dash)
+        cand = copied_cand
+    selectPool(pool)
+
+def mutate_2(cand:str, ops:Callable):  # helper function to mutate the code
+    splitted_cand = cand.split('\n')
+    faultyLineLocations = range(1, len(splitted_cand) + 1)
+
+    ## for the future ##
+    ## we check if the line still exists or not, so that we can mutate it
+    ## we will send the column offset but after making sure that the line exists
+    locs = random.choices(faultyLineLocations, k=1)
+    pool = set()
+    cand_dash = None
+    for f in locs:
+        op_f = ops(f)
+        op_f = (random.choices(op_f, k=1)[0])
+        copied_cand = copier.visit(cand)
+        cand_dash = op_f(target_node_lineno = f, code_ast = copied_cand).visitC()
+        pool.add(cand_dash)
+        cand = copied_cand
+    selectPool(pool, inputs, outputs)
+
+def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> bool:
     """
     Inputs:
     program : str :  program to be tested
     inputs : List :  inputs to the program
     outputs : List :  outputs of the program
     """
-    # for i in range(len(inputs)):
-    #     if eval(program
+    # let's try by capturing the name of the function in regex and the list of names is compared with the name of the function
+    function_names = re.findall(r'def\s+(\w+)', program)
+    for name in function_names:
+        if name == program_name:
+            editedProgram = re.sub(r'$', f'\nres = {program_name}', program)
+            print(editedProgram)
+            break
+    
+    # this loop is wrong as the return of exec is binary not the expected output of the program
+    for i in range(len(inputs)):
+        if eval(program, globals(), locals()) != outputs[i]:
+            return False
     return True
 
-def main(BugProgram:str, FaultLocations:List, inputs:List, outputs:List, FixPar:Callable, ops:Callable,
+def main(BugProgram:str, MethodUnderTestName:str, FaultLocations:List, inputs:List, outputs:List, FixPar:Callable, ops:Callable,
          popSize = 4, M = 4, E:int = 5, L:int = 5):
     """
     Inputs:
@@ -76,7 +122,7 @@ def main(BugProgram:str, FaultLocations:List, inputs:List, outputs:List, FixPar:
                     Solutions.append(p)
                 else:
                     Pop.remove(p) # remove p from the population to be inserted again after mutation
-                    Pop.append(mutate())
+                    Pop.append(mutate(ops))
 
 
 if __name__ == '__main__':
