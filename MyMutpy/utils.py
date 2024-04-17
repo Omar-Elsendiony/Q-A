@@ -98,18 +98,24 @@ def mutationsCanBeApplied(setTokens: set):
     if '**' in setTokens: lstMutations.append('POW')
     if '//' in setTokens: lstMutations.append('FLOORDIV')
 
-    ################ LOGICAL OPERATORS ################
-    if '<' in setTokens: lstMutations.append('LR')
-    if '>' in setTokens: lstMutations.append('LR')
-    if '<=' in setTokens: lstMutations.append('LR')
-    if '>=' in setTokens: lstMutations.append('LR')
-    if 'and' in setTokens: lstMutations.append('LR')
-    if 'or' in setTokens: lstMutations.append('LR')
-    if 'not' in setTokens: lstMutations.append('LR')
+    ################ RELATIONAL OPERATORS ################
+    if '<' in setTokens: lstMutations.append('ROR') # relational operator replacement
+    if '>' in setTokens: lstMutations.append('ROR')
+    if '<=' in setTokens: lstMutations.append('ROR')
+    if '>=' in setTokens: lstMutations.append('ROR')
+    if 'and' in setTokens: lstMutations.append('ROR')
+    if 'or' in setTokens: lstMutations.append('ROR')
+    if 'not' in setTokens: lstMutations.append('ROR')
 
     ################ ASSIGNMENT OPERATORS ################
-    if '==' in setTokens: lstMutations.append('LR')
-    if '!=' in setTokens: lstMutations.append('LR')
+    if '==' in setTokens: lstMutations.append('ROR')
+    if '!=' in setTokens: lstMutations.append('ROR')
+
+    ################ LOGICAL OPERATORS ################
+    if 'and' in setTokens: lstMutations.append('LOR')
+    if 'or' in setTokens: lstMutations.append('LOR')
+    if 'not' in setTokens: lstMutations.append('LOR')
+
 
     # if 'is' in setTokens: lstMutations.append('CR')
     # if 'in' in setTokens: lstMutations.append('CR')
