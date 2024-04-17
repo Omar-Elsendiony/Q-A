@@ -36,7 +36,6 @@ class baseOperator(ast.NodeVisitor):
 
     def visitC(self):
         """
-        
         This method is responsible for performing an intermediate visit on a node.
         
         Returns:
@@ -58,10 +57,6 @@ class baseOperator(ast.NodeVisitor):
 
     def visit(self, node):
         """Visit a node."""
-        # try:
-        #     print(node.lineno)
-        # except:
-        #     pass
         method = 'visit_' + node.__class__.__name__
         visitor = getattr(self, method, self.generic_visit)
         if (visitor != self.generic_visit and not self.finishedMutation): # this means that the mutation has already been done

@@ -79,22 +79,29 @@ def mutationsCanBeApplied(setTokens: set):
         list of mutations that can be applied
     """
     lstMutations = [] # list of mutations that can be applied
-    if '+' in setTokens: lstMutations.append(('AR', 'ADD')) # the only mutations coupled with other binary operators that are encompassed in a list to accomodate the operation name
+    
+    ################ ARITHMETIC OPERATORS ################
+    if '+' in setTokens: lstMutations.append(('BIN', 'ADD')) # the only mutations coupled with other binary operators that are encompassed in a list to accomodate the operation name
     if '-' in setTokens: lstMutations.append(('BIN', 'SUB'))
     if '*' in setTokens: lstMutations.append('MUL')
     if '/' in setTokens: lstMutations.append('DIV')
     if '%' in setTokens: lstMutations.append('MOD')
     if '**' in setTokens: lstMutations.append('POW')
     if '//' in setTokens: lstMutations.append('FLOORDIV')
+
+    ################ LOGICAL OPERATORS ################
+    if '<' in setTokens: lstMutations.append('LR')
+    if '>' in setTokens: lstMutations.append('LR')
+    if '<=' in setTokens: lstMutations.append('LR')
+    if '>=' in setTokens: lstMutations.append('LR')
+    if 'and' in setTokens: lstMutations.append('LR')
+    if 'or' in setTokens: lstMutations.append('LR')
+    if 'not' in setTokens: lstMutations.append('LR')
+
+    ################ ASSIGNMENT OPERATORS ################
     if '==' in setTokens: lstMutations.append('ASSIGN')
     if '!=' in setTokens: lstMutations.append('NE')
-    if '<' in setTokens: lstMutations.append('LT')
-    if '>' in setTokens: lstMutations.append('GT')
-    if '<=' in setTokens: lstMutations.append('LTE')
-    if '>=' in setTokens: lstMutations.append('GTE')
-    if 'and' in setTokens: lstMutations.append('AND')
-    if 'or' in setTokens: lstMutations.append('OR')
-    if 'not' in setTokens: lstMutations.append('NOT')
+
     # if 'is' in setTokens: lstMutations.append('CR')
     # if 'in' in setTokens: lstMutations.append('CR')
     # if 'not in' in setTokens: lstMutations.append('CR')

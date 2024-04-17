@@ -12,13 +12,12 @@ These includes:
 - RShift: Right shift operator
 
 """
-
 import ast
-import copy  # became irrelevant as I implemented mine
 import random # useful for choosing random mutation from a pool of applicable mutations
-import base
+# import base
+from .base import baseOperator
 
-class ArithmeticOperator(base.baseOperator):
+class ArithmeticOperator(baseOperator):
     """
     Base Class for all arithmetic operators
     Inherits from Node transformer
@@ -27,7 +26,7 @@ class ArithmeticOperator(base.baseOperator):
 
     @classmethod
     def name(cls):
-        return 'AR' # aRITHMETIC SHORT FORM
+        return 'AR' # Arithmetic short form
 
 class ArithmeticOperatorDeletion(ArithmeticOperator):
     def get_operator_type(self):

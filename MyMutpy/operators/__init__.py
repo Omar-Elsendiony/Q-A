@@ -13,6 +13,7 @@ standard_operators = {
     PowerOperatorReplacement,
     FloorDivisionOperatorReplacement,
     # UnaryOperatorReplacement,
+    LogicalOperatorReplacement,
 
 }
 
