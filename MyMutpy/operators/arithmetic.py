@@ -57,9 +57,9 @@ class ArithmeticOperatorDeletion(ArithmeticOperator):
 class AdditionOperatorReplacement(ArithmeticOperator):
 
 
-    def __init__(self, target_node_lineno = None, code_ast=None, target_node_col_offset=None, operator = 'ADD'):
-        super().__init__(target_node_lineno, code_ast, target_node_col_offset)
-        self.operator = operator
+    # def __init__(self, target_node_lineno = None, code_ast=None, target_node_col_offset=None, operator = 'ADD'):
+    #     super().__init__(target_node_lineno, code_ast, target_node_col_offset)
+    #     self.operator = operator
 
 
     def visit_BinOp(self, node):
@@ -79,9 +79,9 @@ class AdditionOperatorReplacement(ArithmeticOperator):
 
 class SubtractionOperatorReplacement(ArithmeticOperator):
 
-    def __init__(self, target_node_lineno = None, code_ast=None, target_node_col_offset=None, operator = 'ADD'):
-        super().__init__(target_node_lineno, code_ast, target_node_col_offset)
-        self.operator = operator
+    # def __init__(self, target_node_lineno = None, code_ast=None, target_node_col_offset=None, operator = 'ADD'):
+    #     super().__init__(target_node_lineno, code_ast, target_node_col_offset)
+    #     self.operator = operator
 
 
     def visit_BinOp(self, node):

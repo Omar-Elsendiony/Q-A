@@ -13,10 +13,10 @@ standard_operators = {
     ModuloOperatorReplacement,
     PowerOperatorReplacement,
     FloorDivisionOperatorReplacement,
-    # UnaryOperatorReplacement,
+    UnaryOperatorDeletion,
     LogicalOperatorReplacement,
     RelationalOperatorReplacement,
-    # BitwiseOperatorReplacement,
+    BitwiseOperatorReplacement,
 
 }
 

@@ -44,31 +44,23 @@ class RelationalOperatorReplacement(LogicalOperator):
         """
         if (node.lineno != self.target_node_lineno):
             return node
-        # node.ops[0] = ast.Lt()
-        if isinstance(node.ops[0], self.get_operator_type()):
-            # mutation = self.choose_mutation_random_dist([])
-            if isinstance(node.ops[0], ast.Lt):
-                node.ops[0] = ast.Gt()
-            elif isinstance(node.ops[0], ast.Gt):
-                node.ops[0] = ast.Lt()
-            elif isinstance(node.ops[0], ast.LtE):
-                node.ops[0] = ast.GtE()
-            elif isinstance(node.ops[0], ast.GtE):
-                node.ops[0] = ast.LtE()
-            elif isinstance(node.ops[0], ast.Eq):
-                node.ops[0] = ast.NotEq()
-            elif isinstance(node.ops[0], ast.NotEq):
-                node.ops[0] = ast.Eq()
-            elif isinstance(node.ops[0], ast.And):
-                node.ops[0] = ast.Or()
-            elif isinstance(node.ops[0], ast.Or):
-                node.ops[0] = ast.And()
-            elif isinstance(node.ops[0], ast.Not):
-                node.ops[0] = ast.Not()
-            elif isinstance(node.ops[0], ast.In):
-                node.ops[0] = ast.NotIn()
-            elif isinstance(node.ops[0], ast.NotIn):
-                node.ops[0] = ast.In()
+
+        if isinstance(node.ops[0], ast.Lt):
+            node.ops[0] = ast.Gt()
+        elif isinstance(node.ops[0], ast.Gt):
+            node.ops[0] = ast.Lt()
+        elif isinstance(node.ops[0], ast.LtE):
+            node.ops[0] = ast.GtE()
+        elif isinstance(node.ops[0], ast.GtE):
+            node.ops[0] = ast.LtE()
+        elif isinstance(node.ops[0], ast.Eq):
+            node.ops[0] = ast.NotEq()
+        elif isinstance(node.ops[0], ast.NotEq):
+            node.ops[0] = ast.Eq()
+        elif isinstance(node.ops[0], ast.In):
+            node.ops[0] = ast.NotIn()
+        elif isinstance(node.ops[0], ast.NotIn):
+            node.ops[0] = ast.In()
         return node
 
     @classmethod
@@ -78,31 +70,18 @@ class RelationalOperatorReplacement(LogicalOperator):
 
 
 class LogicalOperatorReplacement(LogicalOperator):
-    def get_operator_type(self):
-        """
-        get_operator_type: Method to get the operator type
-        """
-        return ast.And, ast.Or, ast.Not #, ast.In, ast.NotIn
-
-    def visit_Compare(self, node):
+    def visit_BoolOp(self, node):
         """
         Visit a Compare node
         """
         if (node.lineno != self.target_node_lineno):
             return node
-        # node.ops[0] = ast.Lt()
-        if isinstance(node.ops[0], self.get_operator_type()):
-            # mutation = self.choose_mutation_random_dist([])
-            if isinstance(node.ops[0], ast.And):
-                node.ops[0] = ast.Or()
-            elif isinstance(node.ops[0], ast.Or):
-                node.ops[0] = ast.And()
-            elif isinstance(node.ops[0], ast.Not):
-                node.ops[0] = ast.Not()
-            # elif isinstance(node.ops[0], ast.In):
-            #     node.ops[0] = ast.NotIn()
-            # elif isinstance(node.ops[0], ast.NotIn):
-            #     node.ops[0] = ast.In()
+        
+        if isinstance(node.op, ast.And):
+            node.op = ast.Or()
+        elif isinstance(node.op, ast.Or):
+            node.op = ast.And()
+        
         return node
 
     @classmethod
@@ -110,62 +89,69 @@ class LogicalOperatorReplacement(LogicalOperator):
         return 'LOR'  # Logical Operator Replacement
 
 
+class BitwiseOperatorReplacement(LogicalOperator):
 
-class LogicalOperatorDeletion(LogicalOperator):
-    pass
+    def visit_BinOp(self, node):
+        """
+        Visit a Compare node
+        """
+        if (node.lineno != self.target_node_lineno):
+            return node
+        
+        if isinstance(node.op, ast.BitAnd):
+            node.op = ast.BitOr()
+        elif isinstance(node.op, ast.BitOr):
+            node.op = ast.BitAnd()
+        elif isinstance(node.op, ast.BitXor):
+            node.op = ast.BitAnd()
+        elif isinstance(node.op, ast.LShift):
+            node.op = ast.RShift()
+        elif isinstance(node.op, ast.RShift):
+            node.op = ast.LShift()
+        return node
 
-class LogicalOperatorInsertion(LogicalOperator):
-    pass
-
-class LogicalOperatorSwap(LogicalOperator):
-    pass
-
-
-
-
-# class LTE(LogicalOperatorReplacement):
-#     """
-#     LTE: Class meant to mutate less than or equal to
-#     """
-#     def visit_Compare(self, node):
-#         """
-#         Visit a Compare node
-#         """
-#         if node.ops[0] == ast.LtE():
-#             node.ops[0] = ast.Lt()
-#         return node
-    
-#     def name(cls):
-#         return 'LTE'
+    @classmethod
+    def name(cls):
+        return 'BOR'  # Bitwise Operator Replacement
 
 
-# class GTE(LogicalOperatorReplacement):
-#     """
-#     LTE: Class meant to mutate less than or equal to
-#     """
-#     def visit_Compare(self, node):
-#         """
-#         Visit a Compare node
-#         """
-#         mutation = self.choose_mutation_random_dist([])
-#         if node.ops[0] == ast.LtE():
-#             node.ops[0] = ast.Lt()
-#         return node
-    
-#     def name(cls):
-#         return 'GTE'
+class UnaryOperatorDeletion(LogicalOperator):
+    def visit_UnaryOp(self, node):
+        """
+        Visit a Compare node
+        """
+        if (node.lineno != self.target_node_lineno):
+            return node
+        
+        # if isinstance(node.op, ast.Not):
+        #     # return None
+        #     # delattr(node, 'op')
+        #     node.op = ast.Nonlocal()
+        # elif isinstance(node.op, ast.USub):
+        #     delattr(node, 'op')
+        return node.operand   # very important and tricky, you return only the operand without the operator
+
+    @classmethod
+    def name(cls):
+        return 'UOR'  # Unary Operator Replacement
 
 
-# class LTE(LogicalOperator):
-#     """
-#     LTE: Class meant to mutate less than or equal to
-#     """
-#     def visit_Compare(self, node):
-#         """
-#         Visit a Compare node
-#         """
-#         if node.ops[0] == ast.LtE():
-#             node.ops[0] = ast.Lt()
-#         return node
-#     def name(cls):
-#         return 'LTE'
+class MembershipOperatorReplacement(LogicalOperator):
+    def visit_Compare(self, node):
+        """
+        Visit a Compare node
+        """
+        if (node.lineno != self.target_node_lineno):
+            return node
+        
+        if isinstance(node.ops[0], ast.In):
+            node.ops[0] = ast.NotIn()
+        elif isinstance(node.ops[0], ast.NotIn):
+            node.ops[0] = ast.In()
+        return node
+
+    @classmethod
+    def name(cls):
+        return 'MR'  # Comparison Operator Replacement
+
+

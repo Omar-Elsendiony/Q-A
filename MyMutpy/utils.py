@@ -89,6 +89,7 @@ def mutationsCanBeApplied(setTokens: set):
     """
     lstMutations = [] # list of mutations that can be applied
     
+    # Note: the follwing will be converted to  a loop over the list to get the column offset
     ################ ARITHMETIC OPERATORS ################
     if '+' in setTokens: lstMutations.append('ADD') # the only mutations coupled with other binary operators that are encompassed in a list to accomodate the operation name
     if '-' in setTokens: lstMutations.append('SUB')
@@ -103,9 +104,6 @@ def mutationsCanBeApplied(setTokens: set):
     if '>' in setTokens: lstMutations.append('ROR')
     if '<=' in setTokens: lstMutations.append('ROR')
     if '>=' in setTokens: lstMutations.append('ROR')
-    if 'and' in setTokens: lstMutations.append('ROR')
-    if 'or' in setTokens: lstMutations.append('ROR')
-    if 'not' in setTokens: lstMutations.append('ROR')
 
     ################ ASSIGNMENT OPERATORS ################
     if '==' in setTokens: lstMutations.append('ROR')
@@ -114,13 +112,27 @@ def mutationsCanBeApplied(setTokens: set):
     ################ LOGICAL OPERATORS ################
     if 'and' in setTokens: lstMutations.append('LOR')
     if 'or' in setTokens: lstMutations.append('LOR')
-    if 'not' in setTokens: lstMutations.append('LOR')
+    # if 'not' in setTokens: lstMutations.append('LOR')
 
+    ################ BITWISE OPERATORS ################
+    if '&' in setTokens: lstMutations.append('BOR')
+    if '|' in setTokens: lstMutations.append('BOR')
+    if '~' in setTokens: lstMutations.append('BOR')
+    if '^' in setTokens: lstMutations.append('BOR')
+    if '<<' in setTokens: lstMutations.append('BOR')
+    if '>>' in setTokens: lstMutations.append('BOR')
 
-    # if 'is' in setTokens: lstMutations.append('CR')
-    # if 'in' in setTokens: lstMutations.append('CR')
-    # if 'not in' in setTokens: lstMutations.append('CR')
-    # if 'is not' in setTokens: lstMutations.append('CR')
+    ################ UNARY OPERATORS ################
+    # if '-' in setTokens: lstMutations.append('UOR')
+    # if '+' in setTokens: lstMutations.append('UOR')
+    if 'not' in setTokens: lstMutations.append('UOR')
+    if '~' in setTokens: lstMutations.append('UOR')
+
+    ################ MEMBERSHIP OPERATORS ################
+    if 'in' in setTokens: lstMutations.append('CR')
+    if 'not in' in setTokens: lstMutations.append('CR')
+    if 'is not' in setTokens: lstMutations.append('CR')
+
     # if '()' in setTokens: lstMutations.append('MR')
     # if '[]' in setTokens: lstMutations.append('MR')
     # if '{}' in setTokens: lstMutations.append('MR')
