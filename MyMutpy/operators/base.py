@@ -70,9 +70,14 @@ class baseOperator(ast.NodeVisitor):
         This method is responsible for choosing the mutation to be performed on the node.
         It is called by the visit method.
         """
-        # random.randint(5, 15) % 2
         choice = random.choice(listChoices)
-        # choice = listChoices[random.randint(0, 50) % 2]
         return choice
 
 
+    def wanted_line(self, line_no, col_offset):
+        """
+        This method is responsible for checking if the current line is the line we want to mutate.
+        """
+        if line_no == self.target_node_lineno:
+            return True
+        return False

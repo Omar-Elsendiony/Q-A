@@ -1,7 +1,8 @@
 from .arithmetic import *
 from .copyAST import *
 from .logical import *
-
+from .conditional import *
+from .loop import *
 
 
 standard_operators = {
@@ -17,7 +18,10 @@ standard_operators = {
     LogicalOperatorReplacement,
     RelationalOperatorReplacement,
     BitwiseOperatorReplacement,
-
+    ConditionalOperatorInsertion,
+    OneIterationLoop,
+    ZeroIterationLoop,
+    ReverseIterationLoop
 }
 
 experimental_operators = set()
