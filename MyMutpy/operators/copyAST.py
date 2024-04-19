@@ -1,4 +1,5 @@
 import ast
+import re
 
 class copyMutation(ast.NodeTransformer):
 
@@ -30,7 +31,7 @@ class copyMutation(ast.NodeTransformer):
         return ast.copy_location(ast.Dict(keys=[self.visit(x) for x in node.keys], values=[self.visit(x) for x in node.values]), node)
 
     def visit_Attribute(self, node):
-        return ast.copy_location(ast.Attribute(value=self.visit(node.value), attr=node.attr+"1", ctx=node.ctx), node)
+        return ast.copy_location(ast.Attribute(value=self.visit(node.value), attr=node.attr, ctx=node.ctx), node)
 
     def visit_Subscript(self, node):
         return ast.copy_location(ast.Subscript(value=self.visit(node.value), slice=self.visit(node.slice), ctx=node.ctx), node)
@@ -87,16 +88,22 @@ class copyMutation(ast.NodeTransformer):
         return ast.copy_location(ast.withitem(context_expr=self.visit(node.context_expr), optional_vars=self.visit(node.optional_vars)), node)
     
     def visit_FunctionDef(self, node):
-        return ast.copy_location(ast.FunctionDef(name=node.name, args=self.visit(node.args), body=[self.visit(x) for x in node.body], decorator_list=[self.visit(x) for x in node.decorator_list], returns=self.visit(node.returns)), node)
+        returns = None if node.returns is None else self.visit(node.returns)
+        return ast.copy_location(ast.FunctionDef(name=node.name, args=self.visit(node.args), body=[self.visit(x) for x in node.body], decorator_list=[self.visit(x) for x in node.decorator_list], returns=returns), node)
     
     def visit_Lambda(self, node):
         return ast.copy_location(ast.Lambda(args=self.visit(node.args), body=self.visit(node.body)), node)
     
     def visit_arguments(self, node):
-        return ast.copy_location(ast.arguments(posonlyargs=[self.visit(x) for x in node.posonlyargs], args=[self.visit(x) for x in node.args], vararg=self.visit(node.vararg), kwonlyargs=[self.visit(x) for x in node.kwonlyargs], kw_defaults=[self.visit(x) for x in node.kw_defaults], kwarg=self.visit(node.kwarg), defaults=[self.visit(x) for x in node.defaults]), node)
+        vararg = None if node.vararg is None else self.visit(node.vararg)
+        kwarg = None if node.kwarg is None else self.visit(node.kwarg)
+        return ast.copy_location(ast.arguments(posonlyargs=[self.visit(x) for x in node.posonlyargs], args=[self.visit(x) for x in node.args], vararg=vararg, kwonlyargs=[self.visit(x) for x in node.kwonlyargs], kw_defaults=[self.visit(x) for x in node.kw_defaults], kwarg=kwarg, defaults=[self.visit(x) for x in node.defaults]), node)
     
     def visit_arg(self, node):
-        return ast.copy_location(ast.arg(arg=node.arg, annotation=self.visit(node.annotation)), node)
+        if node is None:
+            return None
+        annotation = None if node.annotation is None else self.visit(node.annotation)
+        return ast.copy_location(ast.arg(arg=node.arg, annotation=annotation), node)
     
     def visit_Return(self, node):
         return ast.copy_location(ast.Return(value=self.visit(node.value)), node)

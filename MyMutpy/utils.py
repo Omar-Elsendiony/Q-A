@@ -129,19 +129,27 @@ def mutationsCanBeApplied(setTokens: set):
     if '~' in setTokens: lstMutations.append('UOR')
 
     ################ MEMBERSHIP OPERATORS ################
-    if 'in' in setTokens: lstMutations.append('CR')
-    if 'not in' in setTokens: lstMutations.append('CR')
-    if 'is not' in setTokens: lstMutations.append('CR')
+    if 'in' in setTokens: lstMutations.append('CR'); print("in"); print(setTokens)
+    if 'not in' in setTokens: lstMutations.append('CR');  print("not in")
+    if 'is not' in setTokens: lstMutations.append('CR'); print("is not")
 
     ############### LOOPS OPERATORS ################
     if 'for' in setTokens: lstMutations.extend(['OIL', 'RIL', 'ZIL', 'STD']) # one iteration loop, reverse iteration loop, zero iteration loop
-    if 'while' in setTokens: lstMutations.extend(['OIL', 'RIL', 'ZIL', 'STD'])
+    if 'while' in setTokens: lstMutations.extend(['OIL', 'RIL', 'ZIL', 'STD']) # added statement deletion
     if 'range' in setTokens: lstMutations.append('OIL')
     if 'enumerate' in setTokens: lstMutations.append('OIL')
     if 'zip' in setTokens: lstMutations.append('OIL')
 
     ################ CONDITIONAL OPERATORS ################
-    if 'if' in setTokens: lstMutations.append('COI', 'STD')
+    if 'if' in setTokens: lstMutations.extend(['COI', 'STD'])
+
+    ################ SLICE OPERATORS ################
+    if ':' in setTokens: lstMutations.append('SIR')
+
+    ################ BREAK AND CONTINUE ################
+    if 'break' in setTokens: lstMutations.append('BCR')
+    if 'continue' in setTokens: lstMutations.append('BCR')
+
 
     # if '()' in setTokens: lstMutations.append('MR')
     # if '[]' in setTokens: lstMutations.append('MR')
