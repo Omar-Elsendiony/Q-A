@@ -81,3 +81,5 @@ class baseOperator(ast.NodeVisitor):
         if line_no == self.target_node_lineno:
             return True
         return False
+
+        expected = datetime . datetime ( 1970 , 1 , 1 , 1 , 0 , 23 , 0 , datefmt . localtz )
