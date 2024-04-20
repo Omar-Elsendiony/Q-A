@@ -232,7 +232,7 @@ if __name__ == '__main__':
         for line in lines:
             utils.processLine(line, i , outputs)
             i += 1
- 
+
     faultLocations = range(len(buggyProgram.split('\n'))) # it is there for now
     # print(inputs)
     # print(outputs)
