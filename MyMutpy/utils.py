@@ -4,6 +4,9 @@ import re
 import sys
 import time
 import types
+
+from numpy import extract
+from sklearn.tree import export_graphviz
 from operators import standard_operators, experimental_operators
 
 def build_name_to_operator_map():
@@ -158,6 +161,41 @@ def mutationsCanBeApplied(setTokens: set):
 
     return lstMutations, weights
 
+
+def checkTypeInput(val):
+    if val.startswith("\"") and val.endswith("\""): # I know that it is string explicitly
+        val = re.sub(r"\"", "\\\"", val)
+        val = re.sub(r"_", " ", val)
+    elif val.lstrip("-").lstrip('+').lstrip('0').isdigit():
+        val = int(val)
+    elif "." in val:
+        units, decimal = val.split(".")
+        if not (units.lstrip("-").lstrip('+').lstrip('0').isdigit() and decimal.isdigit()):
+            print(units)
+            print(decimal)
+            return
+        val = float(val)
+    # if not within all of the previous conditions, val will return as it is
+    return val
+
+def processLine(line, i, testcaseList):
+    """
+    process the line of either the input txt file or output text file
+    Args:
+        line: line to be processed
+        i: line number (zero indexed)
+        testcaseList: list to store the testcases outputs or inputs
+    """
+    if line == '':
+        print(f"Input is blank, please insert input at line {i + 1}")
+        exit(-1)
+    extractedLine = line.strip().split(',')
+    if len(extractedLine) == 1:  # I think this condition is unnecessary , but later
+        testcaseList.append(checkTypeInput(extractedLine[0]))
+    else:
+        for i in range(len(extractedLine)):
+            extractedLine[i] = checkTypeInput(extractedLine[i])
+        testcaseList.append(extractedLine)
 
 
 

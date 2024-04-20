@@ -8,9 +8,9 @@ import ast
 import re
 from operators import *
 import operators
-import unparseAST
+# import unparseAST
 import utils
-import time
+# import time
 import random
 from typing import List, Set, Callable
 from runCode import runCode
@@ -23,6 +23,7 @@ def getNameToOperatorMap(self):
 
 
 def editFreq(cand):
+    ## TODO ##
     pass
 
 def fitness_testCasesPassed(program:str, program_name:str, inputs:List, outputs:List) -> int:
@@ -36,13 +37,6 @@ def fitness_testCasesPassed(program:str, program_name:str, inputs:List, outputs:
     editedProgram = None
     passedTests = 0
     res = None
-    function_names = re.findall(r'def\s+(\w+)', program)
-    for name in function_names:
-        if name == program_name:
-            # program = re.sub(r'$', f'\ntestcase = {inputs}', program)
-            program = re.sub(r'$', f'\nres = {program_name}', program)
-            # print(program)
-            break
 
     for i in range(len(inputs)):
         try:
@@ -69,30 +63,30 @@ def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> 
     # let's try by capturing the name of the function in regex and the list of names is compared with the name of the function
     editedProgram = None
     res = None
-    foundName = False
-    function_names = re.findall(r'def\s+(\w+)', program)
-    for name in function_names:
-        if name == program_name:
-            foundName = True
-            # program = re.sub(r'$', f'\nres = {program_name}', program)
-            break
 
-    if not foundName:
-        print("Function name not found")
-        return False
     for i in range(len(inputs)):
         try:
             testcase = inputs[i]
-            # program = re.sub(r'$', f'\n\ntestcase = {testcase}\nres = {program_name}()\n\nprint(res)', program)
-            program += f'\n\ntestcase = {testcase}\nres = {program_name}()\n\nprint(res)'
-            # editedProgram = re.sub(f'\nres = {program_name}', f'\nres = {program_name}()\n\nprint(res)', program)
-            editedProgram = program
-            res = runCode(editedProgram, globals())
-            res = res.strip()
-            if len(outputs[i]) == 1:
-                outputs[i] = outputs[i][0]
-            if (eval(res) != outputs[i]):
-                return False
+            if (eval(testcase) is None):
+                # program = re.sub(r'$', f'\n\ntestcase = {testcase}\nres = {program_name}()\n\nprint(res)', program)
+                program += f'\n\ntestcase = {testcase}\nres = {program_name}()\n\nprint(res)'
+                # editedProgram = re.sub(f'\nres = {program_name}', f'\nres = {program_name}()\n\nprint(res)', program)
+                editedProgram = program
+                res = runCode(editedProgram, globals())
+                res = res.strip()
+                if len(outputs[i]) == 1:
+                    outputs[i] = outputs[i][0]
+                if (eval(res) != outputs[i]):
+                    return False
+            else:
+                program += f'\n\ntestcase = {testcase}\nres = {program_name}(*testcase)\n\nprint(res)'
+                editedProgram = program
+                res = runCode(editedProgram, globals())
+                res = res.strip()
+                if len(outputs[i]) == 1:
+                    outputs[i] = outputs[i][0]
+                if (eval(res) != outputs[i]):
+                    return False
         except Exception as e:
             print(e)
             return False
@@ -207,50 +201,59 @@ def main(BugProgram:str, MethodUnderTestName:str, FaultLocations:List, inputs:Li
     return Solutions
 
 if __name__ == '__main__':
-    ops = utils.mutationsCanBeApplied
+    ops = utils.mutationsCanBeApplied # operations that can be applied ALIAS
     inputs = []
     outputs = []
     methodUnderTestName = None
+
     with open('O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy/BuggyProgram.txt', 'r') as file:
         buggyProgram = file.read()
     with open('O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy/MethodUnderTestName.txt', 'r') as file:
         methodUnderTestName = file.read().strip()
+        foundName = False
+        function_names = re.findall(r'def\s+(\w+)', buggyProgram)
+        for name in function_names:
+            if name == methodUnderTestName:
+                foundName = True
+                break
+        if not foundName:
+            print("Function name not found")
+            exit(-1)
     with open('O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy/inputs.txt', 'r') as file:
         lines = file.readlines()
+        i = 0
         for line in lines:
-            extractedLine = line.strip().split(',')
-            if len(extractedLine) == 1:
-                if ((extractedLine[0].lstrip('-').lstrip('+').lstrip('0')).isdigit() and not extractedLine[0].startswith('0')):
-                    inputs.append([int(extractedLine[0])])
-                else:
-                    inputs.append(extractedLine[0])
-            else:
-                for i in range(len(extractedLine)):
-                    if ((extractedLine[i].lstrip('-').lstrip('+').lstrip('0')).isdigit() and not extractedLine[i].startswith('0')):
-                        extractedLine[i] = int(extractedLine[i])
-                inputs.append(extractedLine)
-            # inputs.append(line.strip().split(','))
+            utils.processLine(line, i, inputs)
+            i += 1
 
     with open('O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy/outputs.txt', 'r') as file:
         lines = file.readlines()
+        i = 0
         for line in lines:
-            extractedLine = line.strip().split(',')
-            if len(extractedLine) == 1:
-                if ((extractedLine[0].lstrip('-').lstrip('+').lstrip('0')).isdigit() and not extractedLine[0].startswith('0')):
-                    outputs.append([int(extractedLine[0])])
-                else:
-                    outputs.append(extractedLine[0])
-            else:
-                for i in range(len(extractedLine)):
-                    if ((extractedLine[i].lstrip('-').lstrip('+').lstrip('0')).isdigit() and not extractedLine[i].startswith('0')):
-                        extractedLine[i] = int(extractedLine[i])
-                outputs.append(extractedLine)
+            utils.processLine(line, i , outputs)
+            i += 1
  
     faultLocations = range(len(buggyProgram.split('\n'))) # it is there for now
+    # print(inputs)
+    # print(outputs)
     solutions = main(buggyProgram, methodUnderTestName, faultLocations, inputs, outputs, None, ops)
     print(solutions)
     # print(methodUnderTestName)
     # print(buggyProgram)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # codeLines = code.split('\n')
 # codeLineslst = [] # temporary list to store the code lines
