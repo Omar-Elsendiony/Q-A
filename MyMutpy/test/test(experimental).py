@@ -13,6 +13,7 @@ class TestLogical(unittest.TestCase):
         name_to_operator = utils.build_name_to_operator_map()
         return name_to_operator
 
+    # testing the time it takes to edit using regex
     def test_regex(self):
         """
         Testing regex
@@ -30,6 +31,7 @@ class TestLogical(unittest.TestCase):
         print(span)
         # print(line)
 
+    # testing the time it takes to edit using AST
     def test_ast(self):
         """
         Testing regex

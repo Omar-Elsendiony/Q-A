@@ -8,9 +8,7 @@ import ast
 import re
 from operators import *
 import operators
-# import unparseAST
 import utils
-# import time
 import random
 from typing import List, Set, Callable
 from runCode import runCode
@@ -67,24 +65,27 @@ def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> 
     for i in range(len(inputs)):
         try:
             testcase = inputs[i]
-            if (eval(testcase) is None):
+            if (type(testcase) is not list and eval(testcase) is None):
                 # program = re.sub(r'$', f'\n\ntestcase = {testcase}\nres = {program_name}()\n\nprint(res)', program)
-                program += f'\n\ntestcase = {testcase}\nres = {program_name}()\n\nprint(res)'
+                # if (i == 0): # add in the first iteration only
+                #     program += f'\n\ntestcase = {testcase}\nres = {program_name}()\n\nprint(res)'
                 # editedProgram = re.sub(f'\nres = {program_name}', f'\nres = {program_name}()\n\nprint(res)', program)
-                editedProgram = program
+                editedProgram = program + f'\n\ntestcase = {testcase}\nres = {program_name}()\n\nprint(res)'
                 res = runCode(editedProgram, globals())
                 res = res.strip()
-                if len(outputs[i]) == 1:
-                    outputs[i] = outputs[i][0]
+                # if len(outputs[i]) == 1:
+                #     outputs[i] = outputs[i][0]
                 if (eval(res) != outputs[i]):
                     return False
             else:
-                program += f'\n\ntestcase = {testcase}\nres = {program_name}(*testcase)\n\nprint(res)'
-                editedProgram = program
+                # if (i == 0): # add in the first iteration only
+                #     program += f'\n\ntestcase = {testcase}\nres = {program_name}(*testcase)\n\nprint(res)'
+                editedProgram = program + f'\n\ntestcase = {testcase}\nres = {program_name}(*testcase)\n\nprint(res)'
+            
                 res = runCode(editedProgram, globals())
                 res = res.strip()
-                if len(outputs[i]) == 1:
-                    outputs[i] = outputs[i][0]
+                # if outputs[i] is not list:
+                #     outputs[i] = outputs[i][0]
                 if (eval(res) != outputs[i]):
                     return False
         except Exception as e:
@@ -112,8 +113,8 @@ def mutate(cand:str, ops:Callable, name_to_operator):  # helper function to muta
     ## for the future ##
     ## we check if the line still exists or not, so that we can mutate it
     ## we will send the column offset but after making sure that the line exists
-    locs = random.choices(faultyLineLocations, k=1)
-    locs = [4]
+    locs = random.choices(faultyLineLocations, k=1) # we select from fault line locations arbitrarily for now
+    # locs = [4]
 
     pool = set()
     cand_dash = None
@@ -198,17 +199,18 @@ def main(BugProgram:str, MethodUnderTestName:str, FaultLocations:List, inputs:Li
                     # Pop.remove(p) # remove p from the population to be inserted again after mutation
                     # Pop.append(mutate(ops))
         number_of_iterations += 1
+    print(Pop)
     return Solutions
 
 if __name__ == '__main__':
-    ops = utils.mutationsCanBeApplied # operations that can be applied ALIAS
+    ops = utils.mutationsCanBeApplied # ALIAS to operations that can be applied 
     inputs = []
     outputs = []
     methodUnderTestName = None
 
-    with open('O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy/BuggyProgram.txt', 'r') as file:
+    with open('O:/DriveFiles/GP_Projects/Bug-Repair/Q-A/MyMutpy/testcases/BuggyPrograms/2.txt', 'r') as file:
         buggyProgram = file.read()
-    with open('O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy/MethodUnderTestName.txt', 'r') as file:
+    with open('O:/DriveFiles/GP_Projects/Bug-Repair/Q-A/MyMutpy/testcases/MetaData/2.txt', 'r') as file:
         methodUnderTestName = file.read().strip()
         foundName = False
         function_names = re.findall(r'def\s+(\w+)', buggyProgram)
@@ -219,14 +221,14 @@ if __name__ == '__main__':
         if not foundName:
             print("Function name not found")
             exit(-1)
-    with open('O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy/inputs.txt', 'r') as file:
+    with open('O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy/testcases/Inputs/2.txt', 'r') as file:
         lines = file.readlines()
         i = 0
         for line in lines:
             utils.processLine(line, i, inputs)
             i += 1
 
-    with open('O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy/outputs.txt', 'r') as file:
+    with open('O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy/testcases/Outputs/2.txt', 'r') as file:
         lines = file.readlines()
         i = 0
         for line in lines:

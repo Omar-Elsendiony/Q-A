@@ -14,12 +14,12 @@ class ConditionalOperatorInsertion(baseOperator):
         node.test = not_node
         return node
 
-    def mutate_While(self, node):
+    def visit_While(self, node):
         if (node.lineno != self.target_node_lineno):
             return node
         return self.negate_test(node)
 
-    def mutate_If(self, node):
+    def visit_If(self, node):
         if (node.lineno != self.target_node_lineno):
             return node
         return self.negate_test(node)

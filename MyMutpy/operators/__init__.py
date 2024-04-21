@@ -30,7 +30,12 @@ standard_operators = {
     ## MISC ##
     SliceIndexRemove,
     BreakContinueReplacement,
-    StatementDeletion
+    StatementDeletion,
+    ## MEMBERSHIP ##
+    MembershipReplacement
+    ## ASSIGNMENT ##
+    ## UNARY ##
+
 }
 
 experimental_operators = set()

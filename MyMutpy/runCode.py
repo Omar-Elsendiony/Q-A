@@ -1,3 +1,4 @@
+from ast import Dict
 import sys
 
 from time import sleep
@@ -24,12 +25,14 @@ class CustomThread(threading.Thread):
             interrupt_main()
 
 
-def runCode(code, myglobals):
+def runCode(code: str, myglobals):
     oldStdOUT = sys.stdout
     redirectedOutput = sys.stdout = StringIO()
     oldStdERR = sys.stderr
     redirectedOutput2 = sys.stderr = StringIO()
     result = ""
+    if (myglobals.get('res')):
+        del myglobals['res']
     thread = CustomThread()
     try:
         thread.start()
@@ -44,7 +47,9 @@ def runCode(code, myglobals):
     except KeyboardInterrupt as k:
         result = "timed out"
     thread.stop()
-    myglobals.popitem()
+    # myglobals.popitem()
+    if (myglobals.get('testcase')):
+        del myglobals['testcase']
     sys.stdout = oldStdOUT
     sys.stderr = oldStdERR
 

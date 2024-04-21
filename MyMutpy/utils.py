@@ -1,12 +1,6 @@
 import ast
 import copy
 import re
-import sys
-import time
-import types
-
-from numpy import extract
-from sklearn.tree import export_graphviz
 from operators import standard_operators, experimental_operators
 
 def build_name_to_operator_map():
@@ -132,9 +126,9 @@ def mutationsCanBeApplied(setTokens: set):
     if '~' in setTokens: lstMutations.append('UOR')
 
     ################ MEMBERSHIP OPERATORS ################
-    if 'in' in setTokens: lstMutations.append('CR'); print("in"); print(setTokens)
-    if 'not in' in setTokens: lstMutations.append('CR');  print("not in")
-    if 'is not' in setTokens: lstMutations.append('CR'); print("is not")
+    if 'in' in setTokens: lstMutations.append('MER');
+    if 'not in' in setTokens: lstMutations.append('MER');  print("not in")
+    if 'is not' in setTokens: lstMutations.append('MER'); print("is not")
 
     ############### LOOPS OPERATORS ################
     if 'for' in setTokens: lstMutations.extend(['OIL', 'RIL', 'ZIL', 'STD']) # one iteration loop, reverse iteration loop, zero iteration loop
@@ -163,6 +157,7 @@ def mutationsCanBeApplied(setTokens: set):
 
 
 def checkTypeInput(val):
+    val = val.strip()
     if val.startswith("\"") and val.endswith("\""): # I know that it is string explicitly
         val = re.sub(r"\"", "\\\"", val)
         val = re.sub(r"_", " ", val)
@@ -196,11 +191,6 @@ def processLine(line, i, testcaseList):
         for i in range(len(extractedLine)):
             extractedLine[i] = checkTypeInput(extractedLine[i])
         testcaseList.append(extractedLine)
-
-
-
-
-
 
 
 

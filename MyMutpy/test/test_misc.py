@@ -49,7 +49,7 @@ class TestMisc(unittest.TestCase):
 
 
 
-    def test_one_iteration_loop(self):
+    def test_swap_continue_break(self):
         """
         Testing one iteration loop
         """

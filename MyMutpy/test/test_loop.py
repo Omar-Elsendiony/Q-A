@@ -1,7 +1,7 @@
 from ast import List
 from __init__ import *
 
-class TestConditional(unittest.TestCase):
+class TestLoop(unittest.TestCase):
     def setUp(self) -> None:
         warnings.filterwarnings("ignore")
         self.copier = copyAST.copyMutation()
@@ -29,9 +29,34 @@ class TestConditional(unittest.TestCase):
         mutant = op(target_node_lineno = i, code_ast = line_ast).visitC()
         mutant = ast.fix_missing_locations(mutant) # after mutation, we need to fix the missing locations
         res = (ast.unparse(mutant))
-        print(res)
+        # print(res)
         # assert(res in expected_results) # removed assertion as it is unpredictable for now
-    
+
+
+    def utility_2(self, line: str, expected_results: List):
+        """
+        Testing greater than operator
+        Checking the result conforms with the expected results
+        """
+        splitted_cand = line.split('\n')
+        faultyLineLocations = list(range(len(splitted_cand)))
+
+        name_to_operator = self.getNameToOperatorMap()
+        line_ast = ast.parse(line)
+        for f in faultyLineLocations:
+            tokenList, tokenSet, offsets = utils.segmentLine(splitted_cand[f])
+            op_f_list, op_f_weights = utils.mutationsCanBeApplied(tokenSet)
+            if (op_f_list == []):
+                continue
+            choice = (random.choices(op_f_list, weights=op_f_weights, k=1)[0])
+            # start mutation
+            op = name_to_operator[choice]
+            copied_line_ast = self.copier.copy(line_ast)
+            mutant = op(target_node_lineno = f + 1, code_ast = line_ast).visitC()
+            mutant = ast.fix_missing_locations(mutant) # after mutation, we need to fix the missing locations
+            line_ast = copied_line_ast
+            res = (ast.unparse(mutant))
+            print(res)
 
     def test_reverse_iteration_loop(self):
         """
@@ -53,6 +78,19 @@ for i in range(10):
     print(i)
         """
         self.utility(line, ["LT = 1 <= 2", "LT = 1 > 2"])
+
+    def test_delete_loop(self):
+        """
+        Testing delete loop
+        """
+        line = """
+x = 2
+for i in range(10):
+    print(i)
+        """
+        self.utility_2(line, ["""
+x = 2
+        """])
 
 
 if __name__ == '__main__':
