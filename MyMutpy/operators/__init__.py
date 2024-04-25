@@ -27,6 +27,9 @@ standard_operators = {
     OneIterationLoop,
     ZeroIterationLoop,
     ReverseIterationLoop,
+    LoopDeletion,
+    ## CONDITIONAL ##
+    ConditionalOperatorInsertion,
     ## MISC ##
     SliceIndexRemove,
     BreakContinueReplacement,

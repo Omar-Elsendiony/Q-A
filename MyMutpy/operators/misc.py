@@ -43,6 +43,9 @@ class SliceIndexRemove(baseOperator):
         return 'SIR'  # Slice Index Remove
     
 class StatementDeletion(baseOperator):
+    """
+    Delete 
+    """
     def visit_If(self, node):
         if not self.wanted_line(node.lineno, node.col_offset):
             return node
@@ -50,15 +53,6 @@ class StatementDeletion(baseOperator):
         # node.orelse = []
         return None
 
-    def visit_While(self, node):
-        if not self.wanted_line(node.lineno, node.col_offset):
-            return node
-        return None
-
-    def visit_For(self, node):
-        if not self.wanted_line(node.lineno, node.col_offset):
-            return node
-        return None
 
     @classmethod
     def name(cls):
@@ -97,3 +91,43 @@ class MembershipReplacement(baseOperator):
     @classmethod
     def name(cls):
         return 'MER'  # Statement Deletion
+
+class ConstantReplacement(baseOperator):
+
+    def is_docstring(node):
+        def_node = node.parent.parent
+        return (isinstance(def_node, (ast.FunctionDef, ast.ClassDef, ast.Module)) and def_node.body and
+                isinstance(def_node.body[0], ast.Expr) and isinstance(def_node.body[0].value, ast.Str) and
+                def_node.body[0].value == node)
+
+    def mutate_Num_zero(self, node):
+        if not node.n:
+            raise node
+
+        return ast.Num(n=0)
+    
+    def mutate_Num_one(self, node):
+        if not node.n:
+            raise node
+
+        return ast.Num(n=1)
+    
+    def mutate_Num_minus_one(self, node):
+        if not node.n:
+            raise node
+
+        return ast.Num(n=-1)
+
+
+    def mutate_Num_empty(self, node):
+        if not node.n:
+            raise node
+
+        return ast.Num(n=0)
+    
+
+    def mutate_Str_empty(self, node):
+        if not node.s or self.is_docstring(node):
+            raise node
+
+        return ast.Str(s='')

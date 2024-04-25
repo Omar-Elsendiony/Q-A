@@ -82,4 +82,4 @@ class baseOperator(ast.NodeVisitor):
             return True
         return False
 
-        expected = datetime . datetime ( 1970 , 1 , 1 , 1 , 0 , 23 , 0 , datefmt . localtz )
+        # expected = datetime . datetime ( 1970 , 1 , 1 , 1 , 0 , 23 , 0 , datefmt . localtz )

@@ -136,22 +136,22 @@ class UnaryOperatorDeletion(LogicalOperator):
         return 'UOR'  # Unary Operator Replacement
 
 
-class MembershipOperatorReplacement(LogicalOperator):
-    def visit_Compare(self, node):
-        """
-        Visit a Compare node
-        """
-        if (node.lineno != self.target_node_lineno):
-            return node
+# class MembershipOperatorReplacement(LogicalOperator):
+#     def visit_Compare(self, node):
+#         """
+#         Visit a Compare node
+#         """
+#         if (node.lineno != self.target_node_lineno):
+#             return node
         
-        if isinstance(node.ops[0], ast.In):
-            node.ops[0] = ast.NotIn()
-        elif isinstance(node.ops[0], ast.NotIn):
-            node.ops[0] = ast.In()
-        return node
+#         if isinstance(node.ops[0], ast.In):
+#             node.ops[0] = ast.NotIn()
+#         elif isinstance(node.ops[0], ast.NotIn):
+#             node.ops[0] = ast.In()
+#         return node
 
-    @classmethod
-    def name(cls):
-        return 'MR'  # Comparison Operator Replacement
+#     @classmethod
+#     def name(cls):
+#         return 'MR'  # Comparison Operator Replacement
 
 

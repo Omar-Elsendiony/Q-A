@@ -62,3 +62,19 @@ class ZeroIterationLoop(baseOperator):
     @classmethod
     def name(cls):
         return 'ZIL'  # Zero Iteration Loop
+
+class LoopDeletion(baseOperator):
+
+    def visit_While(self, node):
+        if not self.wanted_line(node.lineno, node.col_offset):
+            return node
+        return None
+
+    def visit_For(self, node):
+        if not self.wanted_line(node.lineno, node.col_offset):
+            return node
+        return None
+
+    @classmethod
+    def name(cls):
+        return 'LOD'  # Statement Deletion

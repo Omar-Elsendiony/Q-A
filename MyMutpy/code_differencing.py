@@ -12,13 +12,20 @@ def _subtrees(script):
         if isinstance(action, ops.Insert):
             _, text = node
             insert_content = text if text is not None else action.insert_id
+            subtrees[(action.insert_id)] = (insert_content)
+            # target_id = target.node_id
+            # if target_id not in subtrees: subtrees[target_id] = []
+            # else: subtrees[target_id] = []
+            # subtrees[target_id].insert(position, insert_content)
         elif isinstance(action, ops.Move):
             insert_content = node
+            # subtrees[str(action.move_id)] = (insert_content)
 
-        if hasattr(target, "node_id"):
-            target_id = target.node_id
-            if target_id not in subtrees: subtrees[target_id] = []
-            subtrees[target_id].insert(position, insert_content)
+        # if hasattr(target, "node_id"):
+        #     target_id = target.node_id
+        #     if target_id not in subtrees: subtrees[target_id] = []
+        #     else: subtrees[target_id] = []
+        #     subtrees[target_id].insert(position, insert_content)
     
     return subtrees
 
@@ -29,7 +36,12 @@ def _serialize_tree(subtrees, node_id):
     while len(stack) > 0:
         element = stack.pop(0)
         if isinstance(element, int):
-            stack = subtrees.get(element, []) + stack
+            # element = str(element)
+            elem = subtrees.get(element, [])
+            if (elem != []):
+                result.append(elem)
+            else:
+                stack = subtrees.get(element, []) + stack
         else:
             result.append(element)
 
@@ -41,7 +53,7 @@ def flatten_script(script):
 
     for action in script:
         if isinstance(action, ops.Insert):
-            if hasattr(action.target_node, "node_id"): continue # Ignore because we flatten
+            if not hasattr(action.target_node, "node_id"): continue # Ignore because we flatten
             new_node = _serialize_tree(subtrees, action.insert_id)
             result_script.append(ops.Insert(action.target_node, new_node, position = action.position, insert_id=action.insert_id))
         elif isinstance(action, ops.Move) and hasattr(action.target_node, "node_id"):
@@ -64,6 +76,7 @@ def synthesize_rewrite_script(script):
             if action.position == len(target_node.children):
                 (start_line, start_pos), (end_line, end_pos) = target_node.position[1], target_node.position[1]
             else:
+                if (target_node.children == []): continue
                 predecessor = target_node.children[action.position]
                 (start_line, start_pos), (end_line, end_pos) = predecessor.position[1], predecessor.position[1]
 
@@ -92,12 +105,33 @@ lang = "python")
 
 
 s = output.edit_script()
-s = synthesize_rewrite_script(s)
-print((s))
+# s = synthesize_rewrite_script(s)
+# print((s))
 
 # Open the file in write mode
-with open('O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy\output.txt', 'w') as file:
-    for action in s:
-        (start_line, start_pos, end_line, end_pos), new_content = action
-        file.write(f"{start_line} {start_pos} {end_line} {end_pos} {new_content}\n")
+# with open('O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy\output.txt', 'w') as file:
+#     for action in s:
+#         (start_line, start_pos, end_line, end_pos), new_content = action
+#         file.write(f"{start_line} {start_pos} {end_line} {end_pos} {new_content}\n")
 
+import json
+
+def read_json_file(file_path):
+    with open(file_path, 'r') as f:
+        line_content = [json.loads(line) for line in f.readlines()]
+    return line_content
+data = read_json_file('O:\DriveFiles\GP_Projects\ctssb_data_1M\ctssb_data_1M/file-0.jsonl/file-0.jsonl')
+import ast
+
+print(data[31]["before"])
+print(data[31]["after"])
+# print(data[1]["comodified"])
+print(data[31]["edit_script"])
+# print(data[631]["likely_bug"])
+
+# s = ast.dump(ast.parse(data[31]["before"]), indent=4)
+print("-------------------------------------")
+diff = cd.difference(data[31]["before"], data[31]["after"], lang="python")
+actions = synthesize_rewrite_script(diff.edit_script())
+for action in actions:
+    print(action)
