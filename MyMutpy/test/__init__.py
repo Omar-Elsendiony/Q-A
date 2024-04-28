@@ -15,11 +15,18 @@ directory = path.Path(__file__).abspath()
 sys.path.append(directory.parent.parent)
 from operators import *
 import utils
-# import unparseAST
-from ast import List
-
+from typing import List
+import ast
 
 class TestBase(unittest.TestCase):
+        def setUp(self) -> None:
+            warnings.filterwarnings("ignore")
+            self.copier = copyAST.copyMutation()
+    
+        def getNameToOperatorMap(self):
+            name_to_operator = utils.build_name_to_operator_map()
+            return name_to_operator
+
         def utility_2(self, line: str, expected_results: List):
             """
             Testing greater than operator
@@ -54,10 +61,11 @@ class TestBase(unittest.TestCase):
                     # print(res)
                     # print("------------------")
             for m in mutationsDone:
-                print("*******************************************")
-                # print(m)
+                # print("*******************************************")
+                print(m)
                 # print(expected_results[0])
-                print("*******************************************")
+                # print("*******************************************")
                 if mutationsDone in expected_results:
                     print("Mutation is correct")
                     break
+            # print("Mutation is incorrect")

@@ -39,15 +39,47 @@ parentify(parent_node)
 
 class trialVisitor(ast.NodeVisitor):
     countNodes = 0
-
+    handleLst = []
+    setBodyNodes = set()
     def visit(self, node):
-        if (hasattr(node.parent, 'body')):  # check if it falls directly under a node that has body attr that can encompass it
-            print(node.__class__.__name__)
-            trialVisitor.countNodes += 1
+        if (hasattr(node.parent, 'body') and node.__class__.__name__ != "Compare"):  # check if it falls directly under a node that has body attr that can encompass it
+            self.setBodyNodes.add(node.parent)
+            self.handleLst.append(node)
         return super().visit(node)
 
 
-trialVisitor().visit(parent_node)
-print(trialVisitor.countNodes)
+class InsertChildNode(ast.NodeTransformer):
+    def visit(self, node):
+        print(node.__class__.__name__)
+        return super().visit(node)
+
+tree = """if (val is none):
+    print('None')"""
+treeAST = ast.parse(tree)
+print(ast.dump(treeAST, indent=4))
+# InsertChildNode().visit(treeAST)
+
+import random
+# random.randint will take the integers in the range inclusive of the two numbers
+
+# for i, parent in enumerate(mutator.get_parents):
+#     parent.body.insert(mutator.get_indices[i], new_node.body[0])
+
+# trialVisitor().visit(parent_node)
+# print(trialVisitor.handleLst)
+# print(trialVisitor.setBodyNodes)
+
+# # choose from elements body nodes
+# # choose a random body node
+# k = random.choice(list(trialVisitor.setBodyNodes))
+# # print(k)
+
+# # choose a random index
+# indexBody = random.randint(0, len(k.body) - 1)
+# k.body.insert(indexBody, ast.parse("print('Hello World')").body[0])
+
+# print('------------------------------------')
+# print(ast.unparse(parent_node))
+# print('------------------------------------')
 
 

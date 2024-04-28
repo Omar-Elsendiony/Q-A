@@ -46,17 +46,21 @@ class StatementDeletion(baseOperator):
     """
     Delete 
     """
-    def visit_If(self, node):
-        if not self.wanted_line(node.lineno, node.col_offset):
-            return node
-        # remove the second branch of the if statement
-        # node.orelse = []
-        return None
+    def visit_Assign(self, node):
+        return ast.Pass()
 
+    def visit_Return(self, node):
+        return ast.Pass()
+
+    def visit_Expr(self, node):
+        # if utils.is_docstring(node.value):
+        #     raise MutationResign()
+        return ast.Pass()
 
     @classmethod
     def name(cls):
-        return 'STD'  # Statement Deletion
+        return 'STD' # Statement Deletion
+
 
 
 class MembershipReplacement(baseOperator):
@@ -67,32 +71,44 @@ class MembershipReplacement(baseOperator):
     in
     not in
     """
-    def visit_In(self, node: ast.In) -> Any:
+
+    def visit_Compare(self, node: ast.Compare) -> Any:
         if not self.wanted_line(node.lineno, node.col_offset):
             return node
-        return ast.NotIn()
+        if isinstance(node.ops[0], ast.Is):
+            operation = ast.IsNot()
+        elif isinstance(node.ops[0], ast.IsNot):
+            operation = ast.Is()
+        return ast.Compare(left=self.visit(node.left), ops=[operation], comparators=[self.visit(x) for x in node.comparators])
+        # return super().visit_Compare(node)
 
-    def visit_Is(self, node: ast.Is) -> Any:
-        if not self.wanted_line(node.lineno, node.col_offset):
-            return node
-        return ast.IsNot()
+    # def visit_Is(self, node: ast.Is) -> Any:
+    #     if not self.wanted_line(node.lineno, node.col_offset):
+    #         return node
+    #     return ast.IsNot()
 
-    def visit_IsNot(self, node: ast.IsNot):
-        if not self.wanted_line(node.lineno, node.col_offset):
-            return node
-        return ast.Is()
+    # def visit_IsNot(self, node: ast.IsNot):
+    #     if not self.wanted_line(node.lineno, node.col_offset):
+    #         return node
+    #     return ast.Is()
 
-    def visit_NotIn(self, node: ast.NotIn):
-        if not self.wanted_line(node.lineno, node.col_offset):
-            return node
-        return ast.In()
+    # not IN removed for Nowwwwwwwwwwwww
+    
+    # def visit_NotIn(self, node: ast.NotIn):
+    #     if not self.wanted_line(node.lineno, node.col_offset):
+    #         return node
+    #     return ast.In()
 
+    # def visit_In(self, node: ast.In) -> Any:
+    #     if not self.wanted_line(node.lineno, node.col_offset):
+    #         return node
+    #     return ast.NotIn()
 
     @classmethod
     def name(cls):
         return 'MER'  # Statement Deletion
 
-class ConstantReplacement(baseOperator):
+class ConstantNumericReplacement(baseOperator):
 
     def is_docstring(node):
         def_node = node.parent.parent
@@ -104,30 +120,61 @@ class ConstantReplacement(baseOperator):
         if not node.n:
             raise node
 
-        return ast.Num(n=0)
+        return ast.Constant(n=0)
     
     def mutate_Num_one(self, node):
         if not node.n:
             raise node
 
-        return ast.Num(n=1)
+        return ast.Constant(n=1)
     
     def mutate_Num_minus_one(self, node):
         if not node.n:
             raise node
 
-        return ast.Num(n=-1)
+        return ast.Constant(n=-1)
 
-
-    def mutate_Num_empty(self, node):
-        if not node.n:
-            raise node
-
-        return ast.Num(n=0)
     
+    def mutate_Num_incr_1(self, node):
+        return ast.Constant(n=node.n + 1)
+    
+    def mutate_Num_decr_1(self, node):
+        return ast.Constant(n=node.n - 1)
+    # def mutate_Str_single_space(self, node):
+    #     if not node.s or self.is_docstring(node):
+    #         raise node
 
-    def mutate_Str_empty(self, node):
-        if not node.s or self.is_docstring(node):
-            raise node
+    #     return ast.Str(s=' ')
+    
+    # def mutate_Str_single_quote(self, node):
+    #     if not node.s or self.is_docstring(node):
+    #         raise node
 
-        return ast.Str(s='')
+    #     return ast.Str(s="'")
+
+    def visit_Constant(self, node):
+        if not self.wanted_line(node.lineno, node.col_offset):
+            return node
+        func = self.choose_mutation_random_dist([self.mutate_Num_incr_1, self.mutate_Num_decr_1])
+        return func(node)
+
+    @classmethod
+    def name(cls):
+        return 'CNR'  # Constant Replacement
+
+class ConstantStringReplacement(baseOperator):
+
+    # def mutate_Str_empty(self, node):
+    #     if not node.s or self.is_docstring(node):
+    #         raise node
+
+    #     return ast.Constant(s='')
+
+    def visit_Str(self, node):
+        if not self.wanted_line(node.lineno, node.col_offset):
+            return node
+        return ast.Constant(s='')
+
+    @classmethod
+    def name(cls):
+        return 'CSR'  # Constant Replacement

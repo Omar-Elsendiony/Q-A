@@ -1,6 +1,9 @@
 import ast
 import copy
 import re
+from tabnanny import check
+
+from sympy import true
 from operators import standard_operators, experimental_operators
 
 def build_name_to_operator_map():
@@ -10,7 +13,65 @@ def build_name_to_operator_map():
         # result[operator.long_name()] = operator
     return result
 
+def checkIsSlice(tokens: list, i: int):
+    """
+    Check if the current token is a slice operator or not
+    Args:
+        tokens: list of tokens in the faulty location
+        i: index of the current token
+    Returns:
+        True if the current token is a slice operator, False otherwise
+    """
+    if tokens[i] == ":":
+        if i - 1 >= 0 and (tokens[i - 1] == "[" or type(tokens[i - 1]) == int):
+            return True
+        if i + 1 < len(tokens) and (tokens[i - 1] == "[" or type(tokens[i + 1]) == int):
+            return True
+    return False
 
+def checkPreviousNotDigit(tokens: list, i: int):
+    """
+    Check if the previous token is not a digit
+    Args:
+        tokens: list of tokens in the faulty location
+        i: index of the current token
+    Returns:
+        True if the previous token is not a digit, False otherwise
+    """
+    # it is not plausible that we will reach the beginning of line without any token (int or none)
+    while (i - 1 >= 0 and (tokens[i - 1]) != ' '):
+        i -= 1
+    if not (type(tokens[i]) == int):
+        return True
+    return False
+
+
+
+def checkIsSlice(listTokens, currentIndex):
+    def checkRight(tokens, i):
+        while i + 1 < len(tokens) and tokens[i + 1] != ']':
+            val = tokens[i + 1] # value may be a space, digit or negative, else, this can not be a slice
+            if not (val.lstrip("-").lstrip('+').lstrip('0').isdigit() or val == '-' or val == ' '):
+                return False
+        else: # if break, will not go to else
+            if (tokens[i + 1] == ']'):
+                return True
+        return False
+    
+    def checkLeft(tokens, i):
+        while i - 1 >= 0 and tokens[i - 1] != '[':
+            val = tokens[i - 1] # value may be a space, digit or negative, else, this can not be a slice
+            if not (val.lstrip("-").lstrip('+').lstrip('0').isdigit() or val == '-' or val == ' '):
+                return False
+        else: # if break, will not go to else
+            if (tokens[i - 1] == '['):
+                return True
+        return False
+    
+    if (checkRight(listTokens, currentIndex) and checkLeft(listTokens, currentIndex)):
+        return True
+    else:
+        return False
 
 def segmentLine(line):
     segmentors = {' ', '(', ')', '[', ']', '{', '}', ':', ','}
@@ -39,7 +100,7 @@ def segmentLine(line):
             i += 1
             continue
         elif (line[i] == "#"): # Ignore comments
-            while ( i < ln and line[i] != "\n"):
+            while (i < ln and line[i] != "\n"):
                 i += 1
         elif (line[i] in segmentors):
             if (temp != ""):
@@ -49,8 +110,8 @@ def segmentLine(line):
             lst.append(line[i])
             col_offsets.append(i + 1)
             st.add(temp)
-        elif (line[i] == "-"): # Check if it is a unary sub
-            if (i + 1 < ln and line[i + 1].isdigit()):
+        elif (line[i] == "-"): # Check if it is a unary subtraction (-x)
+            if (i + 1 < ln and line[i + 1].isdigit() and checkPreviousNotDigit(line, i)):
                 if (temp == ""):
                     col_offsets.append(i + 1)
                 temp += line[i]
@@ -58,23 +119,54 @@ def segmentLine(line):
                 if (temp != ""):
                     lst.append(temp) #add the previous accumulated
                     st.add(temp)
+                    temp = ""
                 lst.append(line[i]) # add the current
                 col_offsets.append(i + 1)
                 st.add(line[i])
                 temp = ""
-
+        elif (line[i] == "\"" or line[i] == "'"): # Check if it is a string
+            if (temp != ""):
+                lst.append(temp)
+                st.add(temp)
+                temp = ""
+            lst.append(line[i]) # add the current
+            col_offsets.append(i + 1)
+            st.add(line[i])
+            temp = ""
+            if (line[i] == "\""):
+                i += 1
+                while(i < ln and line[i] != '"'):
+                    i += 1
+            else:
+                i += 1
+                while(i < ln and line[i] != "'"):
+                    i += 1
+            i += 1
+        elif (line[i] == ":"):
+            if (checkIsSlice(line, i)): # ensure it is a slice and not function definition
+                if (temp != ""):
+                    lst.append(temp)
+                    st.add(temp)
+                    temp = ""
+                lst.append(":")
+                col_offsets.append(i + 1)
+                st.add(":")
+                temp = ""
         else:
             if (temp == ""):
                 col_offsets.append(i + 1)
+            if (line[i].isdigit()):
+                st.add("NUM")
             temp += line[i]
         i += 1
     else:  # else for the while loop
         if (temp != ""):
             lst.append(temp)
             st.add(temp)
+    # checkIsSlice = False
     return lst, st, col_offsets
 
-
+# make a dictionary that contains offsets of the tokens
 
 def mutationsCanBeApplied(setTokens: set):
     """
@@ -126,27 +218,35 @@ def mutationsCanBeApplied(setTokens: set):
     if '~' in setTokens: lstMutations.append('UOR')
 
     ################ MEMBERSHIP OPERATORS ################
-    if 'in' in setTokens: lstMutations.append('MER');
-    if 'not in' in setTokens: lstMutations.append('MER');  print("not in")
-    if 'is not' in setTokens: lstMutations.append('MER'); print("is not")
+    if 'in' in setTokens: lstMutations.append('MER')
+    if 'not in' in setTokens: lstMutations.append('MER')
+    if 'is not' in setTokens: lstMutations.append('MER')
+    if 'is' in setTokens: lstMutations.append('MER')
 
     ############### LOOPS OPERATORS ################
-    if 'for' in setTokens: lstMutations.extend(['OIL', 'RIL', 'ZIL', 'STD']) # one iteration loop, reverse iteration loop, zero iteration loop
-    if 'while' in setTokens: lstMutations.extend(['OIL', 'RIL', 'ZIL', 'STD']) # added statement deletion
+    if 'for' in setTokens: lstMutations.extend(['OIL', 'RIL', 'ZIL', 'LOD']) # one iteration loop, reverse iteration loop, zero iteration loop
+    if 'while' in setTokens: lstMutations.extend(['OIL', 'RIL', 'ZIL', 'LOD']) # added statement deletion
     if 'range' in setTokens: lstMutations.append('OIL')
     if 'enumerate' in setTokens: lstMutations.append('OIL')
     if 'zip' in setTokens: lstMutations.append('OIL')
 
     ################ CONDITIONAL OPERATORS ################
-    if 'if' in setTokens: lstMutations.extend(['COI', 'STD'])
+    if 'if' in setTokens: lstMutations.extend(['COI', 'COD'])
 
     ################ SLICE OPERATORS ################
-    if ':' in setTokens: lstMutations.append('SIR')
+    if ':' in setTokens: lstMutations.append('SIR') # make sure it is encompassed between square brackets
 
     ################ BREAK AND CONTINUE ################
     if 'break' in setTokens: lstMutations.append('BCR')
     if 'continue' in setTokens: lstMutations.append('BCR')
 
+    ################ STATEMENT DELETION ################
+    if 'NUM' in setTokens: lstMutations.append('CNR') # constant replacement
+    if 'STR' in setTokens: lstMutations.append('CNR') # constant replacement
+    if 'return' in setTokens: lstMutations.append('STD')
+    
+    ############### STRING MUTATIONS ################
+    if '"' in setTokens or '\'' in setTokens: lstMutations.append('CSR')
 
     # if '()' in setTokens: lstMutations.append('MR')
     # if '[]' in setTokens: lstMutations.append('MR')

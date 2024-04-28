@@ -199,7 +199,7 @@ def main(BugProgram:str, MethodUnderTestName:str, FaultLocations:List, inputs:Li
                     # Pop.remove(p) # remove p from the population to be inserted again after mutation
                     # Pop.append(mutate(ops))
         number_of_iterations += 1
-    print(Pop)
+    # print(Pop)
     return Solutions
 
 if __name__ == '__main__':
@@ -208,9 +208,9 @@ if __name__ == '__main__':
     outputs = []
     methodUnderTestName = None
 
-    with open('O:/DriveFiles/GP_Projects/Bug-Repair/Q-A/MyMutpy/testcases/BuggyPrograms/2.txt', 'r') as file:
+    with open('O:/DriveFiles/GP_Projects/Bug-Repair/Q-A/MyMutpy/testcases/BuggyPrograms/1.txt', 'r') as file:
         buggyProgram = file.read()
-    with open('O:/DriveFiles/GP_Projects/Bug-Repair/Q-A/MyMutpy/testcases/MetaData/2.txt', 'r') as file:
+    with open('O:/DriveFiles/GP_Projects/Bug-Repair/Q-A/MyMutpy/testcases/MetaData/1.txt', 'r') as file:
         methodUnderTestName = file.read().strip()
         foundName = False
         function_names = re.findall(r'def\s+(\w+)', buggyProgram)
@@ -221,14 +221,14 @@ if __name__ == '__main__':
         if not foundName:
             print("Function name not found")
             exit(-1)
-    with open('O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy/testcases/Inputs/2.txt', 'r') as file:
+    with open('O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy/testcases/Inputs/1.txt', 'r') as file:
         lines = file.readlines()
         i = 0
         for line in lines:
             utils.processLine(line, i, inputs)
             i += 1
 
-    with open('O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy/testcases/Outputs/2.txt', 'r') as file:
+    with open('O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy/testcases/Outputs/1.txt', 'r') as file:
         lines = file.readlines()
         i = 0
         for line in lines:

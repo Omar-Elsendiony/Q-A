@@ -57,6 +57,7 @@ class baseOperator(ast.NodeVisitor):
 
     def visit(self, node):
         """Visit a node."""
+        # if isinstance(node, list): node = node[0] # as it will be a list with first element only
         method = 'visit_' + node.__class__.__name__
         visitor = getattr(self, method, self.generic_visit)
         if (visitor != self.generic_visit and not self.finishedMutation): # this means that the mutation has already been done

@@ -48,11 +48,12 @@ class ConditionalDeletion(baseOperator):
 
         # roll dice and choose to either delete the entire if statement or only the else branch
         # you may remove the condition or the entire if statement
-        rand = self.random.randint(0, 1)
+        import random
+        rand = random.randint(0, 1)
         if rand == 0:
             return None
         else: # focus, this may be changed drastically
-            return (ast.IfExp(test=self.visit(node.test), body=self.visit(node.body), orelse=None), node)
+            # return (ast.IfExp(test=self.visit(node.test), body=self.visit(node.body), orelse=None), node)
             return node.body
         
         return None
