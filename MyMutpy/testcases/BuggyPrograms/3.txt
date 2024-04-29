@@ -1,0 +1,6 @@
+def buggy_function():
+    # This function has a bug!
+    x = 5
+    y = 1
+    result = x / y  # Division by zero error
+    return result

@@ -1,10 +1,8 @@
 import ast
 import copy
 import re
-from tabnanny import check
-
-from sympy import true
 from operators import standard_operators, experimental_operators
+import random
 
 def build_name_to_operator_map():
     result = {}
@@ -13,21 +11,25 @@ def build_name_to_operator_map():
         # result[operator.long_name()] = operator
     return result
 
-def checkIsSlice(tokens: list, i: int):
-    """
-    Check if the current token is a slice operator or not
-    Args:
-        tokens: list of tokens in the faulty location
-        i: index of the current token
-    Returns:
-        True if the current token is a slice operator, False otherwise
-    """
-    if tokens[i] == ":":
-        if i - 1 >= 0 and (tokens[i - 1] == "[" or type(tokens[i - 1]) == int):
-            return True
-        if i + 1 < len(tokens) and (tokens[i - 1] == "[" or type(tokens[i + 1]) == int):
-            return True
-    return False
+def getNameToOperatorMap(self):
+    name_to_operator = build_name_to_operator_map()
+    return name_to_operator
+
+# def checkIsSlice(tokens: list, i: int):
+#     """
+#     Check if the current token is a slice operator or not
+#     Args:
+#         tokens: list of tokens in the faulty location
+#         i: index of the current token
+#     Returns:
+#         True if the current token is a slice operator, False otherwise
+#     """
+#     if tokens[i] == ":":
+#         if i - 1 >= 0 and (tokens[i - 1] == "[" or type(tokens[i - 1]) == int):
+#             return True
+#         if i + 1 < len(tokens) and (tokens[i - 1] == "[" or type(tokens[i + 1]) == int):
+#             return True
+#     return False
 
 def checkPreviousNotDigit(tokens: list, i: int):
     """
@@ -53,8 +55,9 @@ def checkIsSlice(listTokens, currentIndex):
             val = tokens[i + 1] # value may be a space, digit or negative, else, this can not be a slice
             if not (val.lstrip("-").lstrip('+').lstrip('0').isdigit() or val == '-' or val == ' '):
                 return False
+            i += 1
         else: # if break, will not go to else
-            if (tokens[i + 1] == ']'):
+            if (i + 1 < len(tokens) and tokens[i + 1] == ']'):
                 return True
         return False
     
@@ -63,6 +66,7 @@ def checkIsSlice(listTokens, currentIndex):
             val = tokens[i - 1] # value may be a space, digit or negative, else, this can not be a slice
             if not (val.lstrip("-").lstrip('+').lstrip('0').isdigit() or val == '-' or val == ' '):
                 return False
+            i -= 1
         else: # if break, will not go to else
             if (tokens[i - 1] == '['):
                 return True
@@ -74,7 +78,7 @@ def checkIsSlice(listTokens, currentIndex):
         return False
 
 def segmentLine(line):
-    segmentors = {' ', '(', ')', '[', ']', '{', '}', ':', ','}
+    segmentors = {' ', '(', ')', '[', ']', '{', '}', ','}
     i = 0  # iterator to parse the line character by character
     ln = len(line)  # length of the line
     lst = []  #list of tokens
@@ -241,9 +245,13 @@ def mutationsCanBeApplied(setTokens: set):
     if 'continue' in setTokens: lstMutations.append('BCR')
 
     ################ STATEMENT DELETION ################
-    if 'NUM' in setTokens: lstMutations.append('CNR') # constant replacement
-    if 'STR' in setTokens: lstMutations.append('CNR') # constant replacement
-    if 'return' in setTokens: lstMutations.append('STD')
+    # these are very special, I will add with very low probability
+    maxRand = 100
+    prob = random.randint(1, maxRand) / maxRand
+    if (prob > 0.95):  # Do not forget weights
+        if 'NUM' in setTokens: lstMutations.append('CNR') # constant replacement
+        if 'STR' in setTokens: lstMutations.append('CNR') # constant replacement
+        if 'return' in setTokens: lstMutations.append('STD')
     
     ############### STRING MUTATIONS ################
     if '"' in setTokens or '\'' in setTokens: lstMutations.append('CSR')

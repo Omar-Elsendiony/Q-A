@@ -28,14 +28,12 @@ class SliceIndexRemove(baseOperator):
         return ast.Slice(lower=node.lower, upper=None, step=node.step)
 
     def mutate_Slice_remove_step(self, node):
-
-
         return ast.Slice(lower=node.lower, upper=node.upper, step=None)
     
     def visit_Slice(self, node):
         if not self.wanted_line(node.lineno, node.col_offset):
             return node
-        func = self.choose_mutation_random_dist(self.mutate_Slice_remove_lower, self.mutate_Slice_remove_upper, self.mutate_Slice_remove_step)
+        func = self.choose_mutation_random_dist([self.mutate_Slice_remove_lower, self.mutate_Slice_remove_upper, self.mutate_Slice_remove_step])
         return func(node)
 
     @classmethod

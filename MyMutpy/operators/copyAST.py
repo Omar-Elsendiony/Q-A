@@ -40,7 +40,10 @@ class copyMutation(ast.NodeTransformer):
         return ast.copy_location(ast.Index(value=self.visit(node.value)), node)
 
     def visit_Slice(self, node):
-        return ast.copy_location(ast.Slice(lower=self.visit(node.lower), upper=self.visit(node.upper), step=self.visit(node.step)), node)
+        lower = None if node.lower is None else self.visit(node.lower)
+        upper = None if node.upper is None else self.visit(node.upper)
+        step = None if node.step is None else self.visit(node.step)
+        return ast.copy_location(ast.Slice(lower=lower, upper=upper, step=step), node)
 
     def visit_ExtSlice(self, node):
         return ast.copy_location(ast.ExtSlice(dims=[self.visit(x) for x in node.dims]), node)

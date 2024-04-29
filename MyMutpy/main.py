@@ -14,10 +14,7 @@ from typing import List, Set, Callable
 from runCode import runCode
 
 
-copier = copyMutation()
-def getNameToOperatorMap(self):
-    name_to_operator = utils.build_name_to_operator_map()
-    return name_to_operator
+
 
 
 def editFreq(cand):
@@ -107,13 +104,14 @@ def selectPool(candidates:List, inputs:List, outputs:List) -> Set:
 #     pass
 
 def mutate(cand:str, ops:Callable, name_to_operator):  # helper function to mutate the code
+    copier = copyMutation()
     splitted_cand = cand.split('\n')
     faultyLineLocations = list(range(len(splitted_cand)))
 
     ## for the future ##
     ## we check if the line still exists or not, so that we can mutate it
     ## we will send the column offset but after making sure that the line exists
-    locs = random.choices(faultyLineLocations, k=1) # we select from fault line locations arbitrarily for now
+    locs = random.choices(faultyLineLocations, k=2) # we select from fault line locations arbitrarily for now
     # locs = [4]
 
     pool = set()
@@ -131,6 +129,7 @@ def mutate(cand:str, ops:Callable, name_to_operator):  # helper function to muta
         copied_cand.type_ignores = []
         operator = name_to_operator[op_f]
         cand_dash = operator(target_node_lineno = f + 1, code_ast = cand_ast).visitC() # f + 1 because the line number starts from 1
+        ast.fix_missing_locations(cand_dash)
         pool.add(cand_dash)
         # print(ast.dump(cand_dash, indent=4))
         cand_dash.type_ignores = []
@@ -165,7 +164,7 @@ def mutate(cand:str, ops:Callable, name_to_operator):  # helper function to muta
 
 
 def main(BugProgram:str, MethodUnderTestName:str, FaultLocations:List, inputs:List, outputs:List, FixPar:Callable, ops:Callable,
-         popSize = 6, M = 4, E:int = 5, L:int = 5):
+         popSize:int = 6, M:int = 4, E:int = 5, L:int = 5):
     """
     Inputs:
     BugProgram : str :  buggy program
@@ -184,7 +183,7 @@ def main(BugProgram:str, MethodUnderTestName:str, FaultLocations:List, inputs:Li
     for i in range(E):  # E number must be less than or equal to the population size
         Pop.append(BugProgram)  # seeding the population with candidates that were not exposed to mutation
     
-    name_to_operator = getNameToOperatorMap(operators)
+    name_to_operator = utils.getNameToOperatorMap(operators)
     # while len(Pop) < popSize:
     #     Pop.append(mutate([], ops))  # mutate the population
     
@@ -239,61 +238,7 @@ if __name__ == '__main__':
     # print(inputs)
     # print(outputs)
     solutions = main(buggyProgram, methodUnderTestName, faultLocations, inputs, outputs, None, ops)
-    print(solutions)
+    for solution in solutions:
+        print(solution)
     # print(methodUnderTestName)
     # print(buggyProgram)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# codeLines = code.split('\n')
-# codeLineslst = [] # temporary list to store the code lines
-# codeLinesset = set() # temporary set to store the code lines
-# print(codeLines) # print the code lines which are a list lines after being split by '\n'
-# for line in codeLines:
-#     codeLineslstX , codeLinessetX, offsets = utils.segmentLine(line) # any variable appended by X is temporary
-#     # assume know we are going to mutate the code line by line
-#     print(len(codeLineslstX), len(codeLinessetX), len(offsets))
-#     print(codeLineslstX)
-#     print(offsets)
-#     lstMutations, weights = utils.mutationsCanBeApplied(codeLinessetX)
-#     if not lstMutations: # check list is empty or not
-#         continue
-#     choice = random.choices(lstMutations, weights = weights, k=1)[0] # random.choice returns a list, its size determined by k
-#     i = 1
-#     line_ast = ast.parse(line)
-#     if (type(choice) is tuple):
-#         opCode = choice[0]
-#         operator = choice[1]
-#         op = name_to_operator[opCode]
-#         lineParsedOriginal = copier.visit(line_ast)
-#         mutant = op(target_node_lineno = i, code_ast = line_ast, operator = operator).visitC()
-#         mutant = ast.fix_missing_locations(mutant) # after mutation, we need to fix the missing locations
-#         print("**********************************")
-#         print(unparseAST.to_source(mutant))
-#         print("**********************************")
-#     else:
-#         op = name_to_operator[choice]
-#         lineParsedOriginal = copier.visit(line_ast)
-#         line_ast = ast.parse(line)
-#         mutant = op(target_node_lineno = i, code_ast = line_ast).visitC()
-#         mutant = ast.fix_missing_locations(mutant) # after mutation, we need to fix the missing locations
-#         print("**********************************")
-#         print(unparseAST.to_source(mutant))
-#         print("**********************************")
-    # i+=1
-
-
-
-

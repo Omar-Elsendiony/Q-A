@@ -1,6 +1,6 @@
 from __init__ import *
 
-class TestLoop(TestBase):
+class TestMembership(TestBase):
 
     def test_is(self):
         """
