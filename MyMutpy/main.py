@@ -5,14 +5,17 @@ The main pipeline resides here
 """
 
 import ast
+from importlib import metadata
 import re
+
+from sympy import O
 from operators import *
 import operators
 import utils
 import random
 from typing import List, Set, Callable
 from runCode import runCode
-
+import faultLocalizationUtils
 
 
 
@@ -205,11 +208,19 @@ if __name__ == '__main__':
     ops = utils.mutationsCanBeApplied # ALIAS to operations that can be applied 
     inputs = []
     outputs = []
+    inputProgramPath = 'O:/DriveFiles/GP_Projects/Bug-Repair/Q-A/MyMutpy/testcases/BuggyPrograms'
+    destinationLocalizationPath = 'O:/DriveFiles/GP_Projects/Bug-Repair/Q-A/MyMutpy/testcases/GeneratedTests'
+    inputCasesPath = 'O:/DriveFiles/GP_Projects/Bug-Repair/Q-A/MyMutpy/testcases/Inputs'
+    outputCasesPath = 'O:/DriveFiles/GP_Projects/Bug-Repair/Q-A/MyMutpy/testcases/Outputs'
+    metaDataPath = 'O:/DriveFiles/GP_Projects/Bug-Repair/Q-A/MyMutpy/testcases/MetaData'
+    file_id = 1
+    file_name = f'{file_id}.txt'
+    
     methodUnderTestName = None
 
-    with open('O:/DriveFiles/GP_Projects/Bug-Repair/Q-A/MyMutpy/testcases/BuggyPrograms/1.txt', 'r') as file:
+    with open(f'{inputProgramPath}/{file_name}', 'r') as file:
         buggyProgram = file.read()
-    with open('O:/DriveFiles/GP_Projects/Bug-Repair/Q-A/MyMutpy/testcases/MetaData/1.txt', 'r') as file:
+    with open(f'{metaDataPath}/{file_name}', 'r') as file:
         methodUnderTestName = file.read().strip()
         foundName = False
         function_names = re.findall(r'def\s+(\w+)', buggyProgram)
@@ -220,25 +231,33 @@ if __name__ == '__main__':
         if not foundName:
             print("Function name not found")
             exit(-1)
-    with open('O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy/testcases/Inputs/1.txt', 'r') as file:
+    with open(f'{inputCasesPath}/{file_name}', 'r') as file:
         lines = file.readlines()
         i = 0
         for line in lines:
             utils.processLine(line, i, inputs)
             i += 1
 
-    with open('O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy/testcases/Outputs/1.txt', 'r') as file:
+    with open(f'{outputCasesPath}/{file_name}', 'r') as file:
         lines = file.readlines()
         i = 0
         for line in lines:
             utils.processLine(line, i , outputs)
             i += 1
 
-    faultLocations = range(len(buggyProgram.split('\n'))) # it is there for now
+    # faultLocations = range(len(buggyProgram.split('\n'))) # it is there for now
+    # copyFolder(inputProgramPath, destinationLocalizationPath, file_id)
+    # create_py_test(inputs, outputs, methodUnderTestName, destinationLocalizationPath)
+
+    faultLocalizationUtils.main(inputs, outputs, methodUnderTestName, inputProgramPath, destinationLocalizationPath, file_id)
+    destination_folder = destinationLocalizationPath
+    test_path = f'{destination_folder}/test.py'
+    src_path = f'{destination_folder}/source_code.py'
+    # s = faultLocalizationUtils.runFaultLocalization(test_path, src_path)
     # print(inputs)
     # print(outputs)
-    solutions = main(buggyProgram, methodUnderTestName, faultLocations, inputs, outputs, None, ops)
-    for solution in solutions:
-        print(solution)
+    # solutions = main(buggyProgram, methodUnderTestName, faultLocations, inputs, outputs, None, ops)
+    # for solution in solutions:
+    #     print(solution)
     # print(methodUnderTestName)
     # print(buggyProgram)
