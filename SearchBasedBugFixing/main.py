@@ -7,8 +7,6 @@ The main pipeline resides here
 import ast
 from importlib import metadata
 import re
-
-from sympy import O
 from operators import *
 import operators
 import utils
