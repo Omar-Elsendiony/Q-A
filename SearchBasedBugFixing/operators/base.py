@@ -4,6 +4,18 @@ import random
 
 class baseOperator(ast.NodeVisitor):
     mutatedSet = set()  # set of ast nodes that were mutated
+    identifiers = []  # list of identifiers in the code
+    maxRand = 100  # maximum random number
+
+
+    @classmethod
+    def set_identifiers(cls, identifiers):
+        cls.identifiers = identifiers
+
+    @classmethod
+    def get_identifiers(cls):
+        return cls.identifiers
+
 
     def __init__(self, target_node_lineno = None, code_ast = None, target_node_col_offset=None):
         self.target_node_lineno = target_node_lineno
@@ -83,4 +95,23 @@ class baseOperator(ast.NodeVisitor):
             return True
         return False
 
-        # expected = datetime . datetime ( 1970 , 1 , 1 , 1 , 0 , 23 , 0 , datefmt . localtz )
+    def visit_Name(self, node):
+        # generate a random number and according you will replace the node identifier with another in the identifiers list
+        gen = random.randint(0, self.maxRand) / self.maxRand
+        if (gen < 0.7):
+            return node
+        
+
+        if self.wanted_line(node.lineno, node.col_offset):
+            if node.id in self.identifiers:
+                # print("OKKKKKKKKKKKKKKKKK")
+                self.mutatedSet.add(node)
+                # print(node.id)
+
+                selectedIdentifier = random.choice(self.identifiers)
+                while(selectedIdentifier == node.id and len(self.identifiers) > 1):
+                    selectedIdentifier = random.choice(self.identifiers)
+                node.id = selectedIdentifier
+                # print(node.id)
+                # self.finishedMutation = True # no this is not the intended mutation
+        return node

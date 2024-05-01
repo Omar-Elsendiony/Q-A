@@ -18,7 +18,7 @@ def getFaultyLines(folder_path):
     lines = []
     scores = []
 
-    with open(f'{fauxpy_folder}/Scores_Tarantula.csv', 'r') as file:
+    with open(f'../{fauxpy_folder}/Scores_Tarantula.csv', 'r') as file:
         reader = csv.reader(file)
         next(reader)  # Skip the header row
         for row in reader:
@@ -28,8 +28,9 @@ def getFaultyLines(folder_path):
                 lines.append(lineno)
                 scores.append(row[1])
 
-    print(lines)
-    print(scores)
+    # print(lines)
+    # print(scores)
+    return lines, scores
 
 
 def deleteFolder(folder_path):
@@ -128,12 +129,12 @@ def runFaultLocalization(test_path, src_path):
     # test_path = "O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy\FaultLocalization/test/test_1.py"
     # src_path = "O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy\FaultLocalization/test/src.py"
     # python -m pytest .\MyMutpy\FaultLocalization\test\test_1.py   --src .\MyMutpy\FaultLocalization\test\src.py  --family sbfl  --granularity statement --top-n 14
-    return subprocess.run(["python", "-m", "pytest", f"{test_path}", "--src", f"{src_path}", "--family", "sbfl", "--granularity", "statement", "--top-n" , "25"], stderr=subprocess.PIPE)
+    return subprocess.run(["python3", "-m", "pytest", f"{test_path}", "--src", f"{src_path}", "--family", "sbfl", "--granularity", "statement", "--top-n" , "25"], stderr=subprocess.PIPE)
 
 
 def main(inputs, outputs, function_name, source_folder, destination_folder, file_id):
     # delete the folder of the fault localization if found
-    folder_path = 'O:/DriveFiles/GP_Projects/Bug-Repair/Q-A/'
+    folder_path = '..'
     deleteFolder(folder_path)
 
     # Copy the file from the source folder to the destination folder

@@ -17,7 +17,7 @@ while (y < 10):
         print("Bye World")
     y += 1
 x = 2   
-                       """)
+""")
 
 # check if the node type is ast node, if yes take it
 # if isinstance(child_node, ast.AST):
@@ -27,7 +27,7 @@ x = 2
 # parent_node.body.append(child_node)
 
 # Print the modified AST tree
-print(ast.dump(parent_node, indent=4))
+# print(ast.dump(parent_node, indent=4))
 
 def parentify(tree):
     tree.parent = None
@@ -37,10 +37,10 @@ def parentify(tree):
 parentify(parent_node)
 
 
-class trialVisitor(ast.NodeVisitor):
+class insertionVisitor(ast.NodeVisitor):
     countNodes = 0
-    handleLst = []
-    setBodyNodes = set()
+    handleLst = [] # handles for candidates that can be inserted in the body of the parent node
+    setBodyNodes = set()  # set of nodes that can be the vessel for another statements
     def visit(self, node):
         if (hasattr(node.parent, 'body') and node.__class__.__name__ != "Compare"):  # check if it falls directly under a node that has body attr that can encompass it
             self.setBodyNodes.add(node.parent)
@@ -48,15 +48,15 @@ class trialVisitor(ast.NodeVisitor):
         return super().visit(node)
 
 
-class InsertChildNode(ast.NodeTransformer):
-    def visit(self, node):
-        print(node.__class__.__name__)
-        return super().visit(node)
+# class InsertChildNode(ast.NodeTransformer):
+#     def visit(self, node):
+#         print(node.__class__.__name__)
+#         return super().visit(node)
 
-tree = """if (val is none):
-    print('None')"""
-treeAST = ast.parse(tree)
-print(ast.dump(treeAST, indent=4))
+# tree = """if (val is none):
+#     print('None')"""
+# treeAST = ast.parse(tree)
+# print(ast.dump(treeAST, indent=4))
 # InsertChildNode().visit(treeAST)
 
 import random
@@ -65,21 +65,41 @@ import random
 # for i, parent in enumerate(mutator.get_parents):
 #     parent.body.insert(mutator.get_indices[i], new_node.body[0])
 
-# trialVisitor().visit(parent_node)
-# print(trialVisitor.handleLst)
-# print(trialVisitor.setBodyNodes)
+insertionVisitor().visit(parent_node)
+candInsertNodes = insertionVisitor.handleLst
+# print(insertionVisitor.setBodyNodes)
 
-# # choose from elements body nodes
-# # choose a random body node
-# k = random.choice(list(trialVisitor.setBodyNodes))
-# # print(k)
+# choose from elements body nodes
+# choose a random body node
+vesselNodes = list(insertionVisitor.setBodyNodes)
+# vesselNodesDash = []
+# for v in vesselNodes:
+#     if (v.__class__.__name__ != "While" and v.__class__.__name__ != "If"):
+#         vesselNodesDash.append(v)
+# vesselNodes = vesselNodesDash
+vesselNode = random.choice(vesselNodes)
 
-# # choose a random index
-# indexBody = random.randint(0, len(k.body) - 1)
-# k.body.insert(indexBody, ast.parse("print('Hello World')").body[0])
+candInsertNode = None
+for i in range(13):
+    for i in range(13): # only 3 trials :)
+        candInsertNode = random.choice(candInsertNodes)
+        if (candInsertNode.__class__.__name__ != "While" and candInsertNode.__class__.__name__ != "If"):
+            break
+    # print(k)
 
-# print('------------------------------------')
-# print(ast.unparse(parent_node))
-# print('------------------------------------')
+    # choose a random line in the vessel to insert your new code into
+    indexBody = random.randint(0, len(vesselNode.body) - 1)
+    print(vesselNode.__class__.__name__)
+    print(candInsertNode.__class__.__name__)
+    try:
+        vesselNode.body.insert(indexBody, candInsertNode)
+    except Exception as e:
+        print(e)
+        break
+
+
+print('------------------------------------')
+print(ast.unparse(parent_node))
+print('------------------------------------')
 
 

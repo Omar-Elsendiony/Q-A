@@ -50,6 +50,18 @@ class ArithmeticOperatorDeletion(ArithmeticOperator):
             return node.operand
         return self.generic_visit(node)
     
+
+    def visit_BinOp(self, node):
+        """
+        function targets the addition and subtraction operators that are considered infix operators
+        """
+        if node.lineno == self.target_node_lineno :
+            self.finishedMutation = True
+            self.mutatedSet.add(node)
+            return self.visit(node.left)
+        else:
+            return node # if you do not want to continue visiting child nodes, if not self.generic_visit(node)
+
     @classmethod
     def name(cls):
         return 'ARD' # Arithmetic short form for deletion

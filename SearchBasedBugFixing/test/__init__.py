@@ -5,18 +5,21 @@ import path
 #########################################
 ########################################
 import warnings
-
-import unittest.test
 warnings.filterwarnings("ignore")
 ########################################
-
+import SearchBasedBugFixing.astmonkey_O
+import SearchBasedBugFixing.unparser
 # directory reach
 directory = path.Path(__file__).abspath()
 sys.path.append(directory.parent.parent)
+###############################################
 from operators import *
 import utils
 from typing import List
 import ast
+from identifierVisitor import IdentifierVisitor
+from operators.base import *
+
 
 class TestBase(unittest.TestCase):
         def setUp(self) -> None:
@@ -27,7 +30,7 @@ class TestBase(unittest.TestCase):
             name_to_operator = utils.build_name_to_operator_map()
             return name_to_operator
 
-        def utility_2(self, line: str, expected_results: List):
+        def utility_2(self, line: str, expected_results: List):  # it is actually not line but a list of lines(candidates)
             """
             Testing greater than operator
             Checking the result conforms with the expected results
@@ -39,6 +42,13 @@ class TestBase(unittest.TestCase):
             name_to_operator = self.getNameToOperatorMap()
             line_ast = ast.parse(line)
             line_ast.type_ignores = []
+            utils.parentify(line_ast)
+            idVistitor = IdentifierVisitor()
+            idVistitor.visit(line_ast)
+            baseOperator.set_identifiers(list(idVistitor.get_identifiers))
+            print("------------------------------------")
+            print(baseOperator.get_identifiers())
+            print("------------------------------------")
 
             numberMutationsNeeded = 17
             for m in range(numberMutationsNeeded):
@@ -55,7 +65,8 @@ class TestBase(unittest.TestCase):
                     mutant = op(target_node_lineno = f + 1, code_ast = line_ast).visitC()
                     mutant = ast.fix_missing_locations(mutant) # after mutation, we need to fix the missing locations
                     line_ast = copied_line_ast
-                    res = (ast.unparse(mutant))
+                    # res = (SearchBasedBugFixing.unparser.unparser().visit(mutant))
+                    res = ast.unparse(mutant)
                     mutationsDone.append(res)
                     # print("------------------")
                     # print(res)

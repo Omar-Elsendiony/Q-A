@@ -1,6 +1,4 @@
-def buggy_function():
-    # This function has a bug!
-    x = 5
-    y = 1
-    result = x / y  # Division by zero error
-    return result
+def factorial(n):
+    if n == 0:
+        return 1
+    return n * factorial(n)

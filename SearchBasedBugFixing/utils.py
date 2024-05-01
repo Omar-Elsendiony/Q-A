@@ -184,13 +184,13 @@ def mutationsCanBeApplied(setTokens: set):
     
     # Note: the follwing will be converted to  a loop over the list to get the column offset
     ################ ARITHMETIC OPERATORS ################
-    if '+' in setTokens: lstMutations.append('ADD') # the only mutations coupled with other binary operators that are encompassed in a list to accomodate the operation name
-    if '-' in setTokens: lstMutations.append('SUB')
-    if '*' in setTokens: lstMutations.append('MUL')
-    if '/' in setTokens: lstMutations.append('DIV')
-    if '%' in setTokens: lstMutations.append('MOD')
-    if '**' in setTokens: lstMutations.append('POW')
-    if '//' in setTokens: lstMutations.append('FLOORDIV')
+    if '+' in setTokens: lstMutations.append('ADD');# lstMutations.append('ARD') # the only mutations coupled with other binary operators that are encompassed in a list to accomodate the operation name
+    if '-' in setTokens: lstMutations.append('SUB');# lstMutations.append('ARD')
+    if '*' in setTokens: lstMutations.append('MUL');# lstMutations.append('ARD')
+    if '/' in setTokens: lstMutations.append('DIV');# lstMutations.append('ARD')
+    if '%' in setTokens: lstMutations.append('MOD');# lstMutations.append('ARD')
+    if '**' in setTokens: lstMutations.append('POW');# lstMutations.append('ARD')
+    if '//' in setTokens: lstMutations.append('FLOORDIV');# lstMutations.append('ARD')
 
     ################ RELATIONAL OPERATORS ################
     if '<' in setTokens: lstMutations.append('ROR') # relational operator replacement
@@ -300,5 +300,11 @@ def processLine(line, i, testcaseList):
             extractedLine[i] = checkTypeInput(extractedLine[i])
         testcaseList.append(extractedLine)
 
+
+def parentify(tree):
+    tree.parent = None
+    for node in ast.walk(tree):
+        for child in ast.iter_child_nodes(node):
+            child.parent = node
 
 

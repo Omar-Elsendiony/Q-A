@@ -1,16 +1,7 @@
 from ast import List
 from __init__ import *
 
-class TestArithmetic(unittest.TestCase):
-    def setUp(self) -> None:
-        warnings.filterwarnings("ignore")
-
-        # self.op = ArithmeticOperatorDeletion()
-        self.copier = copyAST.copyMutation()
-    
-    def getNameToOperatorMap(self):
-        name_to_operator = utils.build_name_to_operator_map()
-        return name_to_operator
+class TestArithmetic(TestBase):
 
     def utility(self, line: str, expected_results: List):
         codeLineslstX , codeLinessetX, offsets = utils.segmentLine(line) # any variable appended by X is temporary
@@ -22,7 +13,7 @@ class TestArithmetic(unittest.TestCase):
         op = name_to_operator[choice]
         mutant = op(target_node_lineno = i, code_ast = line_ast).visitC()
         # mutant = ast.fix_missing_locations(mutant) # after mutation, we need to fix the missing locations
-        res = (unparseAST.to_source(mutant))
+        res = (ast.unparse(mutant))
         print(res)
         assert(res in expected_results)
 
@@ -32,7 +23,7 @@ class TestArithmetic(unittest.TestCase):
         """
         line = "sum = 1 + 2"
         expected_results = ["sum = 1 - 2", "sum = 1 * 2", "sum = 1 / 2"]
-        self.utility(line, expected_results)
+        self.utility_2(line, expected_results)
 
     def test_subtraction(self):
         """
@@ -41,7 +32,7 @@ class TestArithmetic(unittest.TestCase):
         """
         line = "diff = 1 - 2"
         expected_results = ["diff = 1 + 2", "diff = 1 * 2", "diff = 1 / 2"]
-        self.utility(line, expected_results)
+        self.utility_2(line, expected_results)
 
 
     def test_multiplication(self):
@@ -51,7 +42,7 @@ class TestArithmetic(unittest.TestCase):
         """
         line = "mult = 1 * 2"
         expected_results = ["mult = 1 / 2", "mult = 1 ** 2"]
-        self.utility(line, expected_results)
+        self.utility_2(line, expected_results)
 
 
     def test_division(self):
@@ -61,7 +52,7 @@ class TestArithmetic(unittest.TestCase):
         """
         line = "div = 1 / 2"
         expected_results = ["div = 1 * 2", "div = 1 ** 2"]
-        self.utility(line, expected_results)
+        self.utility_2(line, expected_results)
 
 if __name__ == '__main__':
     unittest.main()

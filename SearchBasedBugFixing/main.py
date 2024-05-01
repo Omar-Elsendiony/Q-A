@@ -11,7 +11,7 @@ from operators import *
 import operators
 import utils
 import random
-from typing import List, Set, Callable
+from typing import List, Set, Dict, Callable
 from runCode import runCode
 import faultLocalizationUtils
 
@@ -31,22 +31,34 @@ def fitness_testCasesPassed(program:str, program_name:str, inputs:List, outputs:
     """
     # let's try by capturing the name of the function in regex and the list of names is compared with the name of the function
     editedProgram = None
-    passedTests = 0
     res = None
+    passedTests = 0
 
     for i in range(len(inputs)):
         try:
             testcase = inputs[i]
-            program = re.sub(f'\nres = {program_name}', f'\n\ntestcase = {testcase}\nres = {program_name}', program)
-            editedProgram = re.sub(f'\nres = {program_name}', f'\nres = {program_name}()', program)
-            if (globals().get('res') is not None):
-                del globals()['res']
-            exec(editedProgram, globals())
-            if res == outputs[i]:
-                passedTests += 1
+            if (type(testcase) is not list):
+                if (testcase.lower() == 'void'):
+                    editedProgram = program + f'\n\nres = {program_name}()\n\nprint(res)'
+                else:
+                    editedProgram = program + f'\n\ntestcase = {testcase}\nres = {program_name}({testcase})\n\nprint(res)'
+                res = runCode(editedProgram, globals())
+                res = res.strip()
+                if (eval(res) != outputs[i]):
+                    return False
+            else:
+                editedProgram = program + f'\n\ntestcase = {testcase}\nres = {program_name}(*testcase)\n\nprint(res)'
+            
+                res = runCode(editedProgram, globals())
+                res = res.strip()
+                # if outputs[i] is not list:
+                #     outputs[i] = outputs[i][0]
+                if (eval(res) == outputs[i]):
+                    passedTests += 1
         except Exception as e:
             print(e)
-            # return False
+            return 0
+
     return passedTests
 
 def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> bool:
@@ -63,12 +75,11 @@ def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> 
     for i in range(len(inputs)):
         try:
             testcase = inputs[i]
-            if (type(testcase) is not list and eval(testcase) is None):
-                # program = re.sub(r'$', f'\n\ntestcase = {testcase}\nres = {program_name}()\n\nprint(res)', program)
-                # if (i == 0): # add in the first iteration only
-                #     program += f'\n\ntestcase = {testcase}\nres = {program_name}()\n\nprint(res)'
-                # editedProgram = re.sub(f'\nres = {program_name}', f'\nres = {program_name}()\n\nprint(res)', program)
-                editedProgram = program + f'\n\ntestcase = {testcase}\nres = {program_name}()\n\nprint(res)'
+            if (type(testcase) is not list):
+                if (testcase.lower() == 'void'):
+                    editedProgram = program + f'\n\nres = {program_name}()\n\nprint(res)'
+                else:
+                    editedProgram = program + f'\n\ntestcase = {testcase}\nres = {program_name}({testcase})\n\nprint(res)'
                 res = runCode(editedProgram, globals())
                 res = res.strip()
                 # if len(outputs[i]) == 1:
@@ -104,15 +115,16 @@ def selectPool(candidates:List, inputs:List, outputs:List) -> Set:
 # def selectPool(candidates:Set) -> Set:
 #     pass
 
-def mutate(cand:str, ops:Callable, name_to_operator):  # helper function to mutate the code
+def mutate(cand:str, ops:Callable, name_to_operator:Dict, 
+           faultyLineLocations: List, weightsFaultyLineLocations:List ):  # helper function to mutate the code
     copier = copyMutation()
     splitted_cand = cand.split('\n')
-    faultyLineLocations = list(range(len(splitted_cand)))
+    # faultyLineLocations = list(range(len(splitted_cand)))
 
     ## for the future ##
     ## we check if the line still exists or not, so that we can mutate it
     ## we will send the column offset but after making sure that the line exists
-    locs = random.choices(faultyLineLocations, k=2) # we select from fault line locations arbitrarily for now
+    locs = random.choices(faultyLineLocations, weights = weightsFaultyLocations, k=3) # we select from fault line locations arbitrarily for now
     # locs = [4]
 
     pool = set()
@@ -121,7 +133,10 @@ def mutate(cand:str, ops:Callable, name_to_operator):  # helper function to muta
     cand_ast.type_ignores = []
     # op_f = None
     for f in locs:
-        tokenList, tokenSet, offsets = utils.segmentLine(splitted_cand[f])
+        try:
+            tokenList, tokenSet, offsets = utils.segmentLine(splitted_cand[f])
+        except:
+            continue
         op_f_list, op_f_weights = ops(tokenSet)
         if (op_f_list == []):
             continue
@@ -134,11 +149,12 @@ def mutate(cand:str, ops:Callable, name_to_operator):  # helper function to muta
         pool.add(cand_dash)
         # print(ast.dump(cand_dash, indent=4))
         cand_dash.type_ignores = []
-        # print("**********************************")
+        print("**********************************")
+        # print(op_f)
         # print(ast.unparse(cand_dash))
         cand = copied_cand
         # print(ast.unparse(cand))
-        # print("**********************************")
+        print("**********************************")
     if (len(pool) == 0):
         return cand
     return selectPool(list(pool), inputs, outputs)
@@ -164,8 +180,18 @@ def mutate(cand:str, ops:Callable, name_to_operator):  # helper function to muta
 
 
 
-def main(BugProgram:str, MethodUnderTestName:str, FaultLocations:List, inputs:List, outputs:List, FixPar:Callable, ops:Callable,
-         popSize:int = 6, M:int = 4, E:int = 5, L:int = 5):
+def main(BugProgram:str, 
+        MethodUnderTestName:str, 
+        FaultLocations:List,
+        weightsFaultyLocations:List,
+        inputs:List, 
+        outputs:List, 
+        FixPar:Callable, 
+        ops:Callable,
+        popSize:int = 6, 
+        M:int = 4, 
+        E:int = 5, 
+        L:int = 5):
     """
     Inputs:
     BugProgram : str :  buggy program
@@ -187,7 +213,8 @@ def main(BugProgram:str, MethodUnderTestName:str, FaultLocations:List, inputs:Li
     name_to_operator = utils.getNameToOperatorMap(operators)
     # while len(Pop) < popSize:
     #     Pop.append(mutate([], ops))  # mutate the population
-    
+
+
     number_of_iterations = 0
     while len(Solutions) < M and number_of_iterations < 10:
         for p in Pop:
@@ -195,22 +222,29 @@ def main(BugProgram:str, MethodUnderTestName:str, FaultLocations:List, inputs:Li
                 if passesNegTests(p, MethodUnderTestName, inputs, outputs):
                     Solutions.add(p)
                 else:
-                    Pop[Pop.index(p)] = mutate(p, ops, name_to_operator)
+                    Pop[Pop.index(p)] = mutate(p, ops, name_to_operator, FaultLocations, weightsFaultyLocations)
                     # Pop.remove(p) # remove p from the population to be inserted again after mutation
                     # Pop.append(mutate(ops))
         number_of_iterations += 1
     # print(Pop)
     return Solutions
 
+
+
+
+
+
+
+
 if __name__ == '__main__':
     ops = utils.mutationsCanBeApplied # ALIAS to operations that can be applied 
     inputs = []
     outputs = []
-    inputProgramPath = 'O:/DriveFiles/GP_Projects/Bug-Repair/Q-A/MyMutpy/testcases/BuggyPrograms'
-    destinationLocalizationPath = 'O:/DriveFiles/GP_Projects/Bug-Repair/Q-A/MyMutpy/testcases/GeneratedTests'
-    inputCasesPath = 'O:/DriveFiles/GP_Projects/Bug-Repair/Q-A/MyMutpy/testcases/Inputs'
-    outputCasesPath = 'O:/DriveFiles/GP_Projects/Bug-Repair/Q-A/MyMutpy/testcases/Outputs'
-    metaDataPath = 'O:/DriveFiles/GP_Projects/Bug-Repair/Q-A/MyMutpy/testcases/MetaData'
+    inputProgramPath = 'SearchBasedBugFixing/testcases/BuggyPrograms'
+    destinationLocalizationPath = 'SearchBasedBugFixing/testcases/GeneratedTests'
+    inputCasesPath = 'SearchBasedBugFixing/testcases/Inputs'
+    outputCasesPath = 'SearchBasedBugFixing/testcases/Outputs'
+    metaDataPath = 'SearchBasedBugFixing/testcases/MetaData'
     file_id = 1
     file_name = f'{file_id}.txt'
     
@@ -248,14 +282,23 @@ if __name__ == '__main__':
     # create_py_test(inputs, outputs, methodUnderTestName, destinationLocalizationPath)
 
     faultLocalizationUtils.main(inputs, outputs, methodUnderTestName, inputProgramPath, destinationLocalizationPath, file_id)
-    destination_folder = destinationLocalizationPath
-    test_path = f'{destination_folder}/test.py'
-    src_path = f'{destination_folder}/source_code.py'
+    faultLocations, weightsFaultyLocations = faultLocalizationUtils.getFaultyLines('..') # the parent directory
+    # destination_folder = destinationLocalizationPath
+    # test_path = f'{destination_folder}/test.py'
+    # src_path = f'{destination_folder}/source_code.py'
     # s = faultLocalizationUtils.runFaultLocalization(test_path, src_path)
+
     # print(inputs)
     # print(outputs)
-    # solutions = main(buggyProgram, methodUnderTestName, faultLocations, inputs, outputs, None, ops)
-    # for solution in solutions:
-    #     print(solution)
+    faultLocations = list(map(int, faultLocations))
+    weightsFaultyLocations = list(map(float, weightsFaultyLocations))
+    
+    print(faultLocations)
+    print(weightsFaultyLocations)
+
+
+    solutions = main(buggyProgram, methodUnderTestName, faultLocations, weightsFaultyLocations, inputs, outputs, None, ops)
+    for solution in solutions:
+        print(solution)
     # print(methodUnderTestName)
     # print(buggyProgram)
