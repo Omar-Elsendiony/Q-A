@@ -8,7 +8,7 @@ import warnings
 warnings.filterwarnings("ignore")
 ########################################
 import SearchBasedBugFixing.astmonkey_O
-import SearchBasedBugFixing.unparser
+import SearchBasedBugFixing.deprecated.unparser
 # directory reach
 directory = path.Path(__file__).abspath()
 sys.path.append(directory.parent.parent)
@@ -17,7 +17,7 @@ from operators import *
 import utils
 from typing import List
 import ast
-from identifierVisitor import IdentifierVisitor
+from SearchBasedBugFixing.identifier.identifierVisitor import IdentifierVisitor
 from operators.base import *
 
 
