@@ -7,8 +7,6 @@ import path
 import warnings
 warnings.filterwarnings("ignore")
 ########################################
-import SearchBasedBugFixing.astmonkey_O
-import SearchBasedBugFixing.deprecated.unparser
 # directory reach
 directory = path.Path(__file__).abspath()
 sys.path.append(directory.parent.parent)
@@ -46,9 +44,9 @@ class TestBase(unittest.TestCase):
             idVistitor = IdentifierVisitor()
             idVistitor.visit(line_ast)
             baseOperator.set_identifiers(list(idVistitor.get_identifiers))
-            print("------------------------------------")
-            print(baseOperator.get_identifiers())
-            print("------------------------------------")
+            # print("------------------------------------")
+            # print(baseOperator.get_identifiers())
+            # print("------------------------------------")
 
             numberMutationsNeeded = 17
             for m in range(numberMutationsNeeded):

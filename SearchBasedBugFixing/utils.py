@@ -11,7 +11,7 @@ def build_name_to_operator_map():
         # result[operator.long_name()] = operator
     return result
 
-def getNameToOperatorMap(self):
+def getNameToOperatorMap():
     name_to_operator = build_name_to_operator_map()
     return name_to_operator
 
@@ -77,8 +77,26 @@ def checkIsSlice(listTokens, currentIndex):
     else:
         return False
 
+def addColumnOffset(offsetsDict: dict, token: str, lineno: int):
+    if (offsetsDict.get(token)):
+        offsetsDict[token].append(lineno)
+    else:
+        offsetsDict[token] = [lineno]
+
+def checkSavedSequence(temp: str, lst: list, st: set, unit_ColOffset: dict, col_offsets: list):
+    if (temp != ""):
+        lst.append(temp)
+        st.add(temp)
+        addColumnOffset(unit_ColOffset, temp, col_offsets[-1])
+        temp = ""
+    return temp
+
+
 def segmentLine(line):
-    segmentors = {' ', '(', ')', '[', ']', '{', '}', ','}
+    unit_ColOffset = dict() # dictionary that holds unit and the places that it is in 
+    segmentors = {' ', '(', ')', '[', ']', '{', '}', ',', '.', ';'}
+    operators_1 = {'+', '-', '*', '/', '%', '>', '<', '^'} # one character string
+    operators_2 = {'**', '//', '<<', '>>'}  # two characters string
     i = 0  # iterator to parse the line character by character
     ln = len(line)  # length of the line
     lst = []  #list of tokens
@@ -89,17 +107,13 @@ def segmentLine(line):
     while(i < ln):
         if (line[i] == " "): # I do not need spaces
             if (i - 1 >= 0 and line[i - 1] != " "): # means that the previous character was not a space
-                if (temp != ""):
-                    lst.append(temp)
-                    st.add(temp)
-                    temp = ""
+                temp = checkSavedSequence(temp, lst, st, unit_ColOffset=unit_ColOffset, col_offsets=col_offsets)
+
             i += 1
             continue
         elif (line[i] == "\n"): # break loop has to be added in the scope as we are considering only one line and remove the outer else, however, Ignore for now
-            if (temp != ""):
-                lst.append(temp)
-                st.add(temp)
-                temp = ""
+            temp = checkSavedSequence(temp, lst, st, unit_ColOffset=unit_ColOffset, col_offsets=col_offsets)
+
         elif (line[i] == "\t"): # Ignore tabs
             i += 1
             continue
@@ -107,17 +121,61 @@ def segmentLine(line):
             while (i < ln and line[i] != "\n"):
                 i += 1
         elif (line[i] in segmentors):
-            if (temp != ""):
-                lst.append(temp)
-                st.add(temp)
-                temp = ""
+            temp = checkSavedSequence(temp, lst, st, unit_ColOffset=unit_ColOffset, col_offsets=col_offsets)
             lst.append(line[i])
-            col_offsets.append(i + 1)
             st.add(temp)
+            col_offsets.append(i + 1)
+            addColumnOffset(unit_ColOffset, line[i], i + 1)
+        elif (line[i] in operators_1 and ((line[i + 1] in operators_1 and line[i + 2] == '=') or line[i + 1] == '=')):
+            # this is augmented Assignment
+            col_offsets.append(i + 1)
+            addColumnOffset(unit_ColOffset, line[i], i + 1)
+
+            temp = checkSavedSequence(temp, lst, st, unit_ColOffset=unit_ColOffset, col_offsets=col_offsets)
+            if ((line[i + 1] in operators_1 and line[i + 2] == '=')):
+                lst.append("AugAssign")
+                st.add("AugAssign")
+                i += 2
+            else:
+                lst.append("AugAssign")
+                st.add("AugAssign")
+                i += 1
+        elif (line[i] == "="):
+            col_offsets.append(i + 1)
+            
+            temp = checkSavedSequence(temp, lst, st, unit_ColOffset=unit_ColOffset, col_offsets=col_offsets)
+            if (line[i + 1] == "="):
+                lst.append("==")
+                st.add("==")
+                addColumnOffset(unit_ColOffset, "==", i + 1)
+                i += 1
+            else:
+                lst.append("=")
+                st.add("=")
+                addColumnOffset(unit_ColOffset, "=", i + 1)
+        
+        elif (line[i] in operators_1 and (temp != "" or line[i+1] != " ")): # this means that the operators and the operands are adherent
+            lst.append(temp)
+            st.add(temp)
+            temp = ""
+            col_offsets.append(i + 1)
+
+            if (line[i] + line[i + 1] in operators_2):
+                lst.append(line[i] + line[i + 1])
+                st.add(line[i] + line[i + 1])
+                addColumnOffset(unit_ColOffset, line[i] + line[i + 1], i + 1)
+                i += 1
+            else:
+                lst.append(line[i])
+                st.add(line[i])
+                addColumnOffset(unit_ColOffset, line[i], i + 1)
+
         elif (line[i] == "-"): # Check if it is a unary subtraction (-x)
             if (i + 1 < ln and line[i + 1].isdigit() and checkPreviousNotDigit(line, i)):
                 if (temp == ""):
                     col_offsets.append(i + 1)
+                    addColumnOffset(unit_ColOffset, line[i], i + 1)
+
                 temp += line[i]
             else:
                 if (temp != ""):
@@ -126,15 +184,16 @@ def segmentLine(line):
                     temp = ""
                 lst.append(line[i]) # add the current
                 col_offsets.append(i + 1)
+                addColumnOffset(unit_ColOffset, line[i], i + 1)
+
                 st.add(line[i])
                 temp = ""
         elif (line[i] == "\"" or line[i] == "'"): # Check if it is a string
-            if (temp != ""):
-                lst.append(temp)
-                st.add(temp)
-                temp = ""
-            lst.append(line[i]) # add the current
+            temp = checkSavedSequence(temp, lst, st, unit_ColOffset=unit_ColOffset, col_offsets=col_offsets)
+            lst.append("STR") # add the current
             col_offsets.append(i + 1)
+            addColumnOffset(unit_ColOffset, "STR", i + 1)
+
             st.add(line[i])
             temp = ""
             if (line[i] == "\""):
@@ -148,19 +207,27 @@ def segmentLine(line):
             i += 1
         elif (line[i] == ":"):
             if (checkIsSlice(line, i)): # ensure it is a slice and not function definition
-                if (temp != ""):
-                    lst.append(temp)
-                    st.add(temp)
-                    temp = ""
+                temp = checkSavedSequence(temp, lst, st, unit_ColOffset=unit_ColOffset, col_offsets=col_offsets)
                 lst.append(":")
                 col_offsets.append(i + 1)
+                addColumnOffset(unit_ColOffset, line[i], i + 1)
+
                 st.add(":")
                 temp = ""
         else:
-            if (temp == ""):
-                col_offsets.append(i + 1)
-            if (line[i].isdigit()):
+            if (line[i].isdigit()): # check digit
+                savedI = i
+                while(i < ln and line[i].isdigit()):
+                    i += 1
+                lst.append("NUM")
                 st.add("NUM")
+                col_offsets.append(savedI + 1)
+                addColumnOffset(unit_ColOffset, "NUM", savedI + 1)
+                continue
+
+            if (temp == ""): # this means it is the first in the sequence
+                col_offsets.append(i + 1)
+                # addColumnOffset(unit_ColOffset, line[i], i + 1)
             temp += line[i]
         i += 1
     else:  # else for the while loop
@@ -168,7 +235,9 @@ def segmentLine(line):
             lst.append(temp)
             st.add(temp)
     # checkIsSlice = False
-    return lst, st, col_offsets
+    return lst, st, col_offsets, unit_ColOffset
+
+
 
 # make a dictionary that contains offsets of the tokens
 
@@ -191,6 +260,10 @@ def mutationsCanBeApplied(setTokens: set):
     if '%' in setTokens: lstMutations.append('MOD');# lstMutations.append('ARD')
     if '**' in setTokens: lstMutations.append('POW');# lstMutations.append('ARD')
     if '//' in setTokens: lstMutations.append('FLOORDIV');# lstMutations.append('ARD')
+
+
+    ################## Augmented Assign #####################
+    if 'AugAssign' in setTokens: lstMutations.append('AUG')
 
     ################ RELATIONAL OPERATORS ################
     if '<' in setTokens: lstMutations.append('ROR') # relational operator replacement
@@ -269,6 +342,11 @@ def checkTypeInput(val):
     if val.startswith("\"") and val.endswith("\""): # I know that it is string explicitly
         val = re.sub(r"\"", "\\\"", val)
         val = re.sub(r"_", " ", val)
+    elif val.startswith("[") and val.endswith("]"):  # temporary for testing
+        theList = val[1:-1].split(',')
+        for i in range(len(theList)):
+            theList[i] = checkTypeInput(theList[i])
+        val = theList
     elif val.lstrip("-").lstrip('+').lstrip('0').isdigit():
         val = int(val)
     elif "." in val:

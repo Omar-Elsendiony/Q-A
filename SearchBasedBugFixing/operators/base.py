@@ -104,9 +104,7 @@ class baseOperator(ast.NodeVisitor):
 
         if self.wanted_line(node.lineno, node.col_offset):
             if node.id in self.identifiers:
-                # print("OKKKKKKKKKKKKKKKKK")
                 self.mutatedSet.add(node)
-                # print(node.id)
 
                 selectedIdentifier = random.choice(self.identifiers)
                 while(selectedIdentifier == node.id and len(self.identifiers) > 1):

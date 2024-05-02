@@ -19,7 +19,7 @@ standard_operators = {
     PowerOperatorReplacement,
     FloorDivisionOperatorReplacement,
     UnaryOperatorDeletion,
-
+    AugmentedAssignReplacement,
     ## LOGICAL ##
     LogicalOperatorReplacement,
     RelationalOperatorReplacement,

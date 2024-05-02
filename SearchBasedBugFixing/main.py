@@ -12,8 +12,9 @@ import random
 from typing import List, Set, Dict, Callable
 from runCode import runCode
 import faultLocalizationUtils
-from mutationFunctions import *
+# from mutationFunctions import *
 import InsertVisitor
+import SwapVisitor
 
 def editFreq(cand):
     ## TODO ##
@@ -114,7 +115,7 @@ def selectPool(candidates:List, inputs:List, outputs:List) -> Set:
 
 
 
-def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_operator, pool):
+def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_operator, pool, limitLocations = 2):
     copier = copyMutation()
     splitted_cand = cand.split('\n')
     # faultyLineLocations = list(range(len(splitted_cand)))
@@ -122,7 +123,9 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
     ## for the future ##
     ## we check if the line still exists or not, so that we can mutate it
     ## we will send the column offset but after making sure that the line exists
-    locs = random.choices(faultyLineLocations, weights = weightsFaultyLineLocations, k=3)
+    limitKPossible = len(faultyLineLocations)
+    locationsExtracted = limitKPossible  if (limitKPossible < limitLocations) else limitLocations
+    locs = random.choices(faultyLineLocations, weights = weightsFaultyLineLocations, k=locationsExtracted)
 
     cand_dash = None
     cand_ast = ast.parse(cand)
@@ -130,7 +133,7 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
     # op_f = None
     for f in locs:
         try:
-            tokenList, tokenSet, offsets = utils.segmentLine(splitted_cand[f])
+            tokenList, tokenSet, offsets, unit_ColOffset = utils.segmentLine(splitted_cand[f - 1])
         except:
             continue
         op_f_list, op_f_weights = ops(tokenSet)
@@ -140,7 +143,7 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
         copied_cand = copier.visit(cand_ast)
         copied_cand.type_ignores = []
         operator = name_to_operator[op_f]
-        cand_dash = operator(target_node_lineno = f + 1, code_ast = cand_ast).visitC() # f + 1 because the line number starts from 1
+        cand_dash = operator(target_node_lineno = f, code_ast = cand_ast).visitC() # f + 1 because the line number starts from 1
         ast.fix_missing_locations(cand_dash)
         pool.add(cand_dash)
         # print(ast.dump(cand_dash, indent=4))
@@ -160,11 +163,20 @@ def insert(cand:str, pool:set):  # helper function to mutate the code
     # print(ast.unparse(cand_ast))
     pool.add(cand_ast)
     cand_ast.type_ignores = []
+    # ast.fix_missing_locations(cand_ast)
+    return
+
+def swap(cand:str, pool:set):  # helper function to mutate the code
+    cand_ast = ast.parse(cand)
+    cand_ast.type_ignores = []
+    SwapVisitor.swapNodes(cand_ast)
+    pool.add(cand_ast)
+    cand_ast.type_ignores = []
     return
 
 
 def mutate(cand:str, ops:Callable, name_to_operator:Dict, 
-           faultyLineLocations: List, weightsFaultyLineLocations:List ):  # helper function to mutate the code
+           faultyLineLocations: List, weightsFaultyLineLocations:List, L:int ):  # helper function to mutate the code
     
     pool = set()
     availableChoices = {"1": "Insertion", "2": "Swap", "3": "Update"}
@@ -177,35 +189,17 @@ def mutate(cand:str, ops:Callable, name_to_operator:Dict,
             weightsFaultyLineLocations=weightsFaultyLineLocations,
             ops=ops,
             name_to_operator=name_to_operator,
-            pool=pool
+            pool=pool,
+            limitLocations=L
         )
     elif availableChoices[choiceMutation] == "Insertion":
         insert(cand=cand, pool=pool)
-    elif availableChoices[choiceMutation] == "Update":
+    elif availableChoices[choiceMutation] == "Swap":
+        # swap(cand=cand, pool=pool)
         pass
-
     if (len(pool) == 0):
         return cand
     return selectPool(list(pool), inputs, outputs)
-
-# def mutate_2(cand:str, ops:Callable, inputs: List, outputs:List):  # helper function to mutate the code
-#     splitted_cand = cand.split('\n')
-#     faultyLineLocations = range(1, len(splitted_cand) + 1)
-
-#     ## for the future ##
-#     ## we check if the line still exists or not, so that we can mutate it
-#     ## we will send the column offset but after making sure that the line exists
-#     locs = random.choices(faultyLineLocations, k=1)
-#     pool = set()
-#     cand_dash = None
-#     for f in locs:
-#         op_f = ops(f)
-#         op_f = (random.choices(op_f, k=1)[0])
-#         copied_cand = copier.visit(cand)
-#         cand_dash = op_f(target_node_lineno = f, code_ast = copied_cand).visitC()
-#         pool.add(cand_dash)
-#         cand = copied_cand
-#     selectPool(pool, inputs, outputs)
 
 
 
@@ -217,7 +211,7 @@ def main(BugProgram:str,
         outputs:List, 
         FixPar:Callable, 
         ops:Callable,
-        popSize:int = 6, 
+        popSize:int = 16, 
         M:int = 4, 
         E:int = 5, 
         L:int = 5):
@@ -239,19 +233,19 @@ def main(BugProgram:str,
     for i in range(E):  # E number must be less than or equal to the population size
         Pop.append(BugProgram)  # seeding the population with candidates that were not exposed to mutation
     
-    name_to_operator = utils.getNameToOperatorMap(operators)
-    # while len(Pop) < popSize:
-    #     Pop.append(mutate([], ops))  # mutate the population
+    name_to_operator = utils.getNameToOperatorMap()
+    while len(Pop) < popSize:
+        Pop.append(mutate(BugProgram, ops, name_to_operator, FaultLocations, weightsFaultyLocations, L))  # mutate the population
 
 
     number_of_iterations = 0
-    while len(Solutions) < M and number_of_iterations < 10:
+    while len(Solutions) < M and number_of_iterations < 100:
         for p in Pop:
             if p not in Solutions:
                 if passesNegTests(p, MethodUnderTestName, inputs, outputs):
                     Solutions.add(p)
                 else:
-                    Pop[Pop.index(p)] = mutate(p, ops, name_to_operator, FaultLocations, weightsFaultyLocations)
+                    Pop[Pop.index(p)] = mutate(p, ops, name_to_operator, FaultLocations, weightsFaultyLocations, L)
                     # Pop.remove(p) # remove p from the population to be inserted again after mutation
                     # Pop.append(mutate(ops))
         number_of_iterations += 1
@@ -274,7 +268,7 @@ if __name__ == '__main__':
     inputCasesPath = 'SearchBasedBugFixing/testcases/Inputs'
     outputCasesPath = 'SearchBasedBugFixing/testcases/Outputs'
     metaDataPath = 'SearchBasedBugFixing/testcases/MetaData'
-    file_id = 1
+    file_id = 2
     file_name = f'{file_id}.txt'
     
     methodUnderTestName = None
@@ -326,7 +320,14 @@ if __name__ == '__main__':
     print(weightsFaultyLocations)
 
 
-    solutions = main(buggyProgram, methodUnderTestName, faultLocations, weightsFaultyLocations, inputs, outputs, None, ops)
+    solutions = main(BugProgram=buggyProgram, 
+                     MethodUnderTestName=methodUnderTestName, 
+                     FaultLocations=faultLocations, 
+                     weightsFaultyLocations=weightsFaultyLocations, 
+                     inputs=inputs, 
+                     outputs=outputs, 
+                     FixPar=None, 
+                     ops=ops)
     for solution in solutions:
         print(solution)
     # print(methodUnderTestName)

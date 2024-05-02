@@ -16,8 +16,6 @@ class SwapVisitor(ast.NodeVisitor):
 
 
 
-
-
 def swapNodes(parent_node):
     parentify(parent_node)
     changed = False
