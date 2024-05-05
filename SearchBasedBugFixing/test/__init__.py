@@ -48,19 +48,22 @@ class TestBase(unittest.TestCase):
             # print(baseOperator.get_identifiers())
             # print("------------------------------------")
 
-            numberMutationsNeeded = 17
+            numberMutationsNeeded = 1
             for m in range(numberMutationsNeeded):
                 for f in faultyLineLocations:
-                    tokenList, tokenSet, offsets = utils.segmentLine(splitted_cand[f])
-                    op_f_list, op_f_weights = utils.mutationsCanBeApplied(tokenSet)
+                    tokenList, tokenSet, offsets, units_offsets = utils.segmentLine(splitted_cand[f])
+                    op_f_list, op_f_weights, original_op = utils.mutationsCanBeApplied(tokenSet)
                     if (op_f_list == []):
                         continue
                     choice = (random.choices(op_f_list, weights=op_f_weights, k=1)[0])
-                    # start mutation
+                    colOffsets = units_offsets[original_op[op_f_list.index(choice)]]
+                    col_index = random.randint(0, len(colOffsets) - 1)
+                    # print(col_index)
                     op = name_to_operator[choice]
                     copied_line_ast = self.copier.visit(line_ast)
                     copied_line_ast.type_ignores = []
-                    mutant = op(target_node_lineno = f + 1, code_ast = line_ast).visitC()
+                    ast.fix_missing_locations(line_ast)
+                    mutant = op(target_node_lineno = f + 1, indexMutation = col_index, code_ast = line_ast).visitC()
                     mutant = ast.fix_missing_locations(mutant) # after mutation, we need to fix the missing locations
                     line_ast = copied_line_ast
                     # res = (SearchBasedBugFixing.unparser.unparser().visit(mutant))

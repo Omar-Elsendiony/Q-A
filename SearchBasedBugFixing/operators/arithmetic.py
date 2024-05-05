@@ -203,13 +203,15 @@ class PowerOperatorReplacement(ArithmeticOperator):
     mutations = [ast.Mult()]
 
     def visit_BinOp(self, node):
+        # print(node.op)
         if self.wanted_line(node.lineno, node.col_offset):
             self.finishedMutation = True
             self.mutatedSet.add(node)
             mutation = self.choose_mutation_random_dist(PowerOperatorReplacement.mutations)
-            return ast.BinOp(left=self.visit(node.left), op=mutation, right=self.visit(node.right))
+            return ast.BinOp(left = self.visit(node.left), op = mutation, right = self.visit(node.right))
         else:
-            return node # if you do not want to continue visiting child nodes, if not self.generic_visit(node)
+            # return node # if you do not want to continue visiting child nodes, if not self.generic_visit(node)
+            return ast.BinOp(left = self.visit(node.left), op = node.op, right = self.visit(node.right))
 
     @classmethod
     def name(cls):

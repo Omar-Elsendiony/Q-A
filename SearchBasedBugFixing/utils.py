@@ -250,91 +250,91 @@ def mutationsCanBeApplied(setTokens: set):
         list of mutations that can be applied
     """
     lstMutations = [] # list of mutations that can be applied
-    
+    lstToBeMutated = [] # list of tokens that can be mutated
     # Note: the follwing will be converted to  a loop over the list to get the column offset
     ################ ARITHMETIC OPERATORS ################
-    if '+' in setTokens: lstMutations.append('ADD');# lstMutations.append('ARD') # the only mutations coupled with other binary operators that are encompassed in a list to accomodate the operation name
-    if '-' in setTokens: lstMutations.append('SUB');# lstMutations.append('ARD')
-    if '*' in setTokens: lstMutations.append('MUL');# lstMutations.append('ARD')
-    if '/' in setTokens: lstMutations.append('DIV');# lstMutations.append('ARD')
-    if '%' in setTokens: lstMutations.append('MOD');# lstMutations.append('ARD')
-    if '**' in setTokens: lstMutations.append('POW');# lstMutations.append('ARD')
-    if '//' in setTokens: lstMutations.append('FLOORDIV');# lstMutations.append('ARD')
+    if '+' in setTokens: lstMutations.append('ADD'); lstToBeMutated.extend(['+', '+']); lstMutations.append('ARD')
+    if '-' in setTokens: lstMutations.append('SUB'); lstToBeMutated.extend(['-', '-']) ; lstMutations.append('ARD')
+    if '*' in setTokens: lstMutations.append('MUL'); lstToBeMutated.extend(['*', '*'])  ; lstMutations.append('ARD')
+    if '/' in setTokens: lstMutations.append('DIV'); lstToBeMutated.extend(['/', '/']) ; lstMutations.append('ARD')
+    if '%' in setTokens: lstMutations.append('MOD'); lstToBeMutated.extend(['%', '%']) ; lstMutations.append('ARD')
+    if '**' in setTokens: lstMutations.append('POW'); lstToBeMutated.extend(['**', '**']) ; lstMutations.append('ARD')
+    if '//' in setTokens: lstMutations.append('FLOORDIV'); lstToBeMutated.append(['//', '//']) ; lstMutations.append('ARD')
 
 
     ################## Augmented Assign #####################
-    if 'AugAssign' in setTokens: lstMutations.append('AUG')
+    if 'AugAssign' in setTokens: lstMutations.append('AUG'); lstToBeMutated.append('AugAssign')
 
     ################ RELATIONAL OPERATORS ################
-    if '<' in setTokens: lstMutations.append('ROR') # relational operator replacement
-    if '>' in setTokens: lstMutations.append('ROR')
-    if '<=' in setTokens: lstMutations.append('ROR')
-    if '>=' in setTokens: lstMutations.append('ROR')
+    if '<' in setTokens: lstMutations.append('ROR'); lstToBeMutated.append('<') # relational operator replacement
+    if '>' in setTokens: lstMutations.append('ROR'); lstToBeMutated.append('>') # relational operator replacement
+    if '<=' in setTokens: lstMutations.append('ROR'); lstToBeMutated.append('<=') # relational operator replacement
+    if '>=' in setTokens: lstMutations.append('ROR'); lstToBeMutated.append('>=') 
 
     ################ ASSIGNMENT OPERATORS ################
-    if '==' in setTokens: lstMutations.append('ROR')
-    if '!=' in setTokens: lstMutations.append('ROR')
+    if '==' in setTokens: lstMutations.append('ROR'); lstToBeMutated.append('==')
+    if '!=' in setTokens: lstMutations.append('ROR'); lstToBeMutated.append('!=')
 
     ################ LOGICAL OPERATORS ################
-    if 'and' in setTokens: lstMutations.append('LOR')
-    if 'or' in setTokens: lstMutations.append('LOR')
+    if 'and' in setTokens: lstMutations.append('LOR') ; lstToBeMutated.append('and')
+    if 'or' in setTokens: lstMutations.append('LOR'); lstToBeMutated.append('or')
     # if 'not' in setTokens: lstMutations.append('LOR')
 
     ################ BITWISE OPERATORS ################
-    if '&' in setTokens: lstMutations.append('BOR')
-    if '|' in setTokens: lstMutations.append('BOR')
-    if '~' in setTokens: lstMutations.append('BOR')
-    if '^' in setTokens: lstMutations.append('BOR')
-    if '<<' in setTokens: lstMutations.append('BOR')
-    if '>>' in setTokens: lstMutations.append('BOR')
+    if '&' in setTokens: lstMutations.append('BOR'); lstToBeMutated.append('&')
+    if '|' in setTokens: lstMutations.append('BOR') ; lstToBeMutated.append('|')
+    if '~' in setTokens: lstMutations.append('BOR') ; lstToBeMutated.append('~')
+    if '^' in setTokens: lstMutations.append('BOR') ; lstToBeMutated.append('^')
+    if '<<' in setTokens: lstMutations.append('BOR'); lstToBeMutated.append('<<')
+    if '>>' in setTokens: lstMutations.append('BOR'); lstToBeMutated.append('>>')
 
     ################ UNARY OPERATORS ################
     # if '-' in setTokens: lstMutations.append('UOR')
     # if '+' in setTokens: lstMutations.append('UOR')
-    if 'not' in setTokens: lstMutations.append('UOR')
-    if '~' in setTokens: lstMutations.append('UOR')
+    if 'not' in setTokens: lstMutations.append('UOR'); lstToBeMutated.append('not')
+    if '~' in setTokens: lstMutations.append('UOR'); lstToBeMutated.append('~')
 
     ################ MEMBERSHIP OPERATORS ################
-    if 'in' in setTokens: lstMutations.append('MER')
-    if 'not in' in setTokens: lstMutations.append('MER')
-    if 'is not' in setTokens: lstMutations.append('MER')
-    if 'is' in setTokens: lstMutations.append('MER')
+    if 'in' in setTokens: lstMutations.append('MER') ; lstToBeMutated.append('in')
+    if 'not in' in setTokens: lstMutations.append('MER'); lstToBeMutated.append('not in')
+    if 'is not' in setTokens: lstMutations.append('MER'); lstToBeMutated.append('is not')
+    if 'is' in setTokens: lstMutations.append('MER') ; lstToBeMutated.append('is')
 
     ############### LOOPS OPERATORS ################
-    if 'for' in setTokens: lstMutations.extend(['OIL', 'RIL', 'ZIL', 'LOD']) # one iteration loop, reverse iteration loop, zero iteration loop
-    if 'while' in setTokens: lstMutations.extend(['OIL', 'RIL', 'ZIL', 'LOD']) # added statement deletion
-    if 'range' in setTokens: lstMutations.append('OIL')
-    if 'enumerate' in setTokens: lstMutations.append('OIL')
-    if 'zip' in setTokens: lstMutations.append('OIL')
+    if 'for' in setTokens: lstMutations.extend(['OIL', 'RIL', 'ZIL', 'LOD']); lstToBeMutated.extend(['for', 'for', 'for', 'for'])
+    if 'while' in setTokens: lstMutations.extend(['OIL', 'RIL', 'ZIL', 'LOD']); lstToBeMutated.extend(['while', 'while', 'while', 'while'])
+    if 'range' in setTokens: lstMutations.append('OIL') ; lstToBeMutated.append('range')
+    if 'enumerate' in setTokens: lstMutations.append('OIL') ; lstToBeMutated.append('enumerate')
+    if 'zip' in setTokens: lstMutations.append('OIL'); lstToBeMutated.append('zip')
 
     ################ CONDITIONAL OPERATORS ################
-    if 'if' in setTokens: lstMutations.extend(['COI', 'COD'])
+    if 'if' in setTokens: lstMutations.extend(['COI', 'COD']) ; lstToBeMutated.extend(['if', 'if'])
 
     ################ SLICE OPERATORS ################
-    if ':' in setTokens: lstMutations.append('SIR') # make sure it is encompassed between square brackets
+    if ':' in setTokens: lstMutations.append('SIR'); lstToBeMutated.append(':') # make sure it is encompassed between square brackets
 
     ################ BREAK AND CONTINUE ################
-    if 'break' in setTokens: lstMutations.append('BCR')
-    if 'continue' in setTokens: lstMutations.append('BCR')
+    if 'break' in setTokens: lstMutations.append('BCR'); lstToBeMutated.append('break')
+    if 'continue' in setTokens: lstMutations.append('BCR'); lstToBeMutated.append('continue')
 
     ################ STATEMENT DELETION ################
     # these are very special, I will add with very low probability
     maxRand = 100
     prob = random.randint(1, maxRand) / maxRand
     if (prob > 0.95):  # Do not forget weights
-        if 'NUM' in setTokens: lstMutations.append('CNR') # constant replacement
-        if 'STR' in setTokens: lstMutations.append('CNR') # constant replacement
-        if 'return' in setTokens: lstMutations.append('STD')
+        if 'NUM' in setTokens: lstMutations.append('CNR'); lstToBeMutated.append('NUM') # constant replacement
+        if 'STR' in setTokens: lstMutations.append('CNR'); lstToBeMutated.append('STR') # constant replacement
+        if 'return' in setTokens: lstMutations.append('STD'); lstToBeMutated.append('return') # statement deletion
     
     ############### STRING MUTATIONS ################
-    if '"' in setTokens or '\'' in setTokens: lstMutations.append('CSR')
+    if '"' in setTokens or '\'' in setTokens: lstMutations.append('CSR'); lstToBeMutated.append('STR') # constant string replacement
 
     # if '()' in setTokens: lstMutations.append('MR')
     # if '[]' in setTokens: lstMutations.append('MR')
     # if '{}' in setTokens: lstMutations.append('MR')
     weights = [1] * len(lstMutations) # the weights are all equal for now
 
-    return lstMutations, weights
+    return lstMutations, weights, lstToBeMutated
 
 
 def checkTypeInput(val):
@@ -365,11 +365,20 @@ def processLine(line, i, testcaseList):
     Args:
         line: line to be processed
         i: line number (zero indexed)
-        testcaseList: list to store the testcases outputs or inputs
+        testcaseList: list to store the arguments of a test case
     """
     if line == '':
         print(f"Input is blank, please insert input at line {i + 1}")
         exit(-1)
+    line = line.strip()
+    isList = False
+    isTuple = False
+    isSet = False
+    if (line.startswith('[') and line.endswith(']')): isList = True
+    if (line.startswith('(') and line.endswith(')')): isTuple = True
+    if (line.startswith('{') and line.endswith('}')): isSet = True
+    if (isList or isTuple or isSet):
+        line = line[1:-1]
     extractedLine = line.strip().split(',')
     if len(extractedLine) == 1:  # I think this condition is unnecessary , but later
         testcaseList.append(checkTypeInput(extractedLine[0]))
@@ -377,6 +386,10 @@ def processLine(line, i, testcaseList):
         for i in range(len(extractedLine)):
             extractedLine[i] = checkTypeInput(extractedLine[i])
         testcaseList.append(extractedLine)
+    
+    if isList: pass # it is already a llist
+    elif isTuple: testcaseList = tuple(testcaseList)
+    elif isSet: testcaseList = set(testcaseList)
 
 
 def parentify(tree):

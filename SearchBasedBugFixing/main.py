@@ -133,17 +133,19 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
     # op_f = None
     for f in locs:
         try:
-            tokenList, tokenSet, offsets, unit_ColOffset = utils.segmentLine(splitted_cand[f - 1])
+            tokenList, tokenSet, offsets, units_ColOffset = utils.segmentLine(splitted_cand[f - 1])
         except:
             continue
-        op_f_list, op_f_weights = ops(tokenSet)
+        op_f_list, op_f_weights, original_op = ops(tokenSet)
         if (op_f_list == []):
             continue
         op_f = random.choices(op_f_list,weights=op_f_weights, k=1)[0]
         copied_cand = copier.visit(cand_ast)
         copied_cand.type_ignores = []
+        colOffsets = units_ColOffset[original_op[op_f_list.index(op_f)]]
+        col_index = random.randint(0, len(colOffsets) - 1)
         operator = name_to_operator[op_f]
-        cand_dash = operator(target_node_lineno = f, code_ast = cand_ast).visitC() # f + 1 because the line number starts from 1
+        cand_dash = operator(target_node_lineno = f, code_ast = cand_ast, indexMutation= col_index).visitC() # f + 1 because the line number starts from 1
         ast.fix_missing_locations(cand_dash)
         pool.add(cand_dash)
         # print(ast.dump(cand_dash, indent=4))
@@ -163,7 +165,7 @@ def insert(cand:str, pool:set):  # helper function to mutate the code
     # print(ast.unparse(cand_ast))
     pool.add(cand_ast)
     cand_ast.type_ignores = []
-    # ast.fix_missing_locations(cand_ast)
+    ast.fix_missing_locations(cand_ast)
     return
 
 def swap(cand:str, pool:set):  # helper function to mutate the code
@@ -172,6 +174,7 @@ def swap(cand:str, pool:set):  # helper function to mutate the code
     SwapVisitor.swapNodes(cand_ast)
     pool.add(cand_ast)
     cand_ast.type_ignores = []
+    ast.fix_missing_locations(cand_ast)
     return
 
 
@@ -211,9 +214,9 @@ def main(BugProgram:str,
         outputs:List, 
         FixPar:Callable, 
         ops:Callable,
-        popSize:int = 16, 
+        popSize:int = 20, 
         M:int = 4, 
-        E:int = 5, 
+        E:int = 10, 
         L:int = 5):
     """
     Inputs:
@@ -268,16 +271,17 @@ if __name__ == '__main__':
     inputCasesPath = 'SearchBasedBugFixing/testcases/Inputs'
     outputCasesPath = 'SearchBasedBugFixing/testcases/Outputs'
     metaDataPath = 'SearchBasedBugFixing/testcases/MetaData'
-    file_id = 2
+    file_id = 4
     file_name = f'{file_id}.txt'
-    
+    typeHintsInputs = []
+    typeHintsOutputs = []
     methodUnderTestName = None
 
     with open(f'{inputProgramPath}/{file_name}', 'r') as file:
         buggyProgram = file.read()
     with open(f'{metaDataPath}/{file_name}', 'r') as file:
-        methodUnderTestName = file.read().strip()
-        foundName = False
+        lines = file.readlines()
+        methodUnderTestName = lines[0].strip()
         function_names = re.findall(r'def\s+(\w+)', buggyProgram)
         for name in function_names:
             if name == methodUnderTestName:
@@ -285,27 +289,48 @@ if __name__ == '__main__':
                 break
         if not foundName:
             print("Function name not found")
-            exit(-1)
+            exit(-1)   
+        l = 1
+        typeHintsInputs.append(lines[l].strip())
+        l += 1
+        utils.processLine(lines[l], l, inputs)
+
     with open(f'{inputCasesPath}/{file_name}', 'r') as file:
         lines = file.readlines()
         i = 0
+        inputTestCase = []
         for line in lines:
-            utils.processLine(line, i, inputs)
+            if (line == '\n'):
+                inputs.append(inputTestCase)
+                inputTestCase = []
+            else:
+                utils.processLine(line, i, inputTestCase)
             i += 1
+        if (inputTestCase != []):
+            inputs.append(inputTestCase)
 
     with open(f'{outputCasesPath}/{file_name}', 'r') as file:
         lines = file.readlines()
         i = 0
+        outputTestCase = []
         for line in lines:
-            utils.processLine(line, i , outputs)
+            if (line == '\n'):
+                outputs.append(outputTestCase)
+                outputTestCase = []
+            else:
+                utils.processLine(line, i, outputTestCase)
             i += 1
+        if (outputTestCase != []):
+            outputs.append(outputTestCase)
 
+    print(inputs)
+    print(outputs)
     # faultLocations = range(len(buggyProgram.split('\n'))) # it is there for now
     # copyFolder(inputProgramPath, destinationLocalizationPath, file_id)
     # create_py_test(inputs, outputs, methodUnderTestName, destinationLocalizationPath)
 
-    faultLocalizationUtils.main(inputs, outputs, methodUnderTestName, inputProgramPath, destinationLocalizationPath, file_id)
-    faultLocations, weightsFaultyLocations = faultLocalizationUtils.getFaultyLines('..') # fauly locations are in the parent directory
+    # faultLocalizationUtils.main(inputs, outputs, methodUnderTestName, inputProgramPath, destinationLocalizationPath, file_id)
+    # faultLocations, weightsFaultyLocations = faultLocalizationUtils.getFaultyLines('..') # fauly locations are in the parent directory
     # destination_folder = destinationLocalizationPath
     # test_path = f'{destination_folder}/test.py'
     # src_path = f'{destination_folder}/source_code.py'
@@ -313,22 +338,22 @@ if __name__ == '__main__':
 
     # print(inputs)
     # print(outputs)
-    faultLocations = list(map(int, faultLocations))
-    weightsFaultyLocations = list(map(float, weightsFaultyLocations))
+    # faultLocations = list(map(int, faultLocations))
+    # weightsFaultyLocations = list(map(float, weightsFaultyLocations))
     
-    print(faultLocations)
-    print(weightsFaultyLocations)
+    # print(faultLocations)
+    # print(weightsFaultyLocations)
 
 
-    solutions = main(BugProgram=buggyProgram, 
-                     MethodUnderTestName=methodUnderTestName, 
-                     FaultLocations=faultLocations, 
-                     weightsFaultyLocations=weightsFaultyLocations, 
-                     inputs=inputs, 
-                     outputs=outputs, 
-                     FixPar=None, 
-                     ops=ops)
-    for solution in solutions:
-        print(solution)
+    # solutions = main(BugProgram=buggyProgram, 
+    #                  MethodUnderTestName=methodUnderTestName, 
+    #                  FaultLocations=faultLocations, 
+    #                  weightsFaultyLocations=weightsFaultyLocations, 
+    #                  inputs=inputs,
+    #                  outputs=outputs, 
+    #                  FixPar=None, 
+    #                  ops=ops)
+    # for solution in solutions:
+    #     print(solution)
     # print(methodUnderTestName)
     # print(buggyProgram)

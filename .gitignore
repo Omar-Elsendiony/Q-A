@@ -6,6 +6,8 @@ __pycache__/
 # C extensions
 *.so
 
+ctssb_data_1M
+
 # Distribution / packaging
 .Python
 build/

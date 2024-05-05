@@ -17,10 +17,12 @@ class baseOperator(ast.NodeVisitor):
         return cls.identifiers
 
 
-    def __init__(self, target_node_lineno = None, code_ast = None, target_node_col_offset=None):
+    def __init__(self, target_node_lineno = None, target_node_col_offset=None, code_ast = None, indexMutation = None):
         self.target_node_lineno = target_node_lineno
         self.node = code_ast
         self.target_node_col_offset= target_node_col_offset
+        self.indexMutation = indexMutation
+        self.currentIndex = 0
         self.finishedMutation = False
     
     def generic_visit(self, node):
@@ -92,7 +94,10 @@ class baseOperator(ast.NodeVisitor):
         This method is responsible for checking if the current line is the line we want to mutate.
         """
         if line_no == self.target_node_lineno:
-            return True
+            if (self.indexMutation is not None and self.indexMutation == self.currentIndex):
+                return True
+            self.currentIndex += 1
+            # return True
         return False
 
     def visit_Name(self, node):

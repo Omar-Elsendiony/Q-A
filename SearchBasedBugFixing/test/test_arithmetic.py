@@ -50,7 +50,7 @@ class TestArithmetic(TestBase):
         Testing mutation of the subtraction operator
         The result should be the replacement of the subtraction operator with the addition operator
         """
-        line = "div = 1 ** 2"
+        line = "div = 1 ** 2 ** 3"
         expected_results = ["div = 1 * 2", "div = 1 ** 2"]
         self.utility_2(line, expected_results)
 
