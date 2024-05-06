@@ -40,7 +40,7 @@ class ConditionalOperatorInsertion(baseOperator):
 
 class ConditionalDeletion(baseOperator):
     def visit_If(self, node):
-        if not self.wanted_line(node.lineno, node.col_offset):
+        if not self.wanted_line(node.lineno):
             return node
         # remove the second branch of the if statement
         # node.orelse = []

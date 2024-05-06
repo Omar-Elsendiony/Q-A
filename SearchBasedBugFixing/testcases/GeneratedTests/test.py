@@ -2,5 +2,5 @@ from source_code import *
 
 def test_0():
     pass
-    inputs = ([1, 2, 3],)
-    assert calculate_average(*inputs) == []
+    inputs = (Void,)
+    assert return_list_1_to_10_except_5(*inputs) == [[1, 2, 3, 4, 6, 7, 8, 9, 10]]

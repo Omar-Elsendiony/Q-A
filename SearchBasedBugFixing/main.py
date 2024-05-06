@@ -12,7 +12,7 @@ import random
 from typing import List, Set, Dict, Callable
 from runCode import runCode
 import faultLocalizationUtils
-# from mutationFunctions import *
+from SearchBasedBugFixing.identifier.identifierVisitor import IdentifierVisitor
 import InsertVisitor
 import SwapVisitor
 
@@ -47,16 +47,20 @@ def fitness_testCasesPassed(program:str, program_name:str, inputs:List, outputs:
             else:
                 editedProgram = program + f'\n\ntestcase = {testcase}\nres = {program_name}(*testcase)\n\nprint(res)'
             
-                res = runCode(editedProgram, globals())
+                res, isError = runCode(editedProgram, globals())
                 res = res.strip()
-                # if outputs[i] is not list:
-                #     outputs[i] = outputs[i][0]
+                # this mutation is of no avail and caused error
+                if (isError):
+                    passedTests -= 9
+                    return passedTests
                 if (eval(res) == outputs[i]):
                     passedTests += 1
         except Exception as e:
             print(e)
             return 0
-
+    # print(eval(res))
+    if (eval(res) is None and passedTests == 0):
+        passedTests -= 9
     return passedTests
 
 def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> bool:
@@ -89,7 +93,7 @@ def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> 
                 #     program += f'\n\ntestcase = {testcase}\nres = {program_name}(*testcase)\n\nprint(res)'
                 editedProgram = program + f'\n\ntestcase = {testcase}\nres = {program_name}(*testcase)\n\nprint(res)'
             
-                res = runCode(editedProgram, globals())
+                res, isError = runCode(editedProgram, globals())
                 res = res.strip()
                 # if outputs[i] is not list:
                 #     outputs[i] = outputs[i][0]
@@ -98,6 +102,7 @@ def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> 
         except Exception as e:
             print(e)
             return False
+    # print(eval(res))
     return True
 
 
@@ -105,7 +110,7 @@ def selectPool(candidates:List, inputs:List, outputs:List) -> Set:
     """Select pool determined by the number of testcases passed by the candidates"""
     scores = [] # list of scores that will be used to choose the candidate to be selected
     for cand in candidates:
-        scores.append(fitness_testCasesPassed(ast.unparse(cand), methodUnderTestName, inputs, outputs) + 1) # why +1, just to make it non-zero and also relatively, it stays the same.
+        scores.append(fitness_testCasesPassed(ast.unparse(cand), methodUnderTestName, inputs, outputs) + 10) # why +10, just to make it non-zero and also relatively, it stays the same.
     choice = random.choices(candidates, weights = scores, k=1)[0]
     return ast.unparse(choice)
 
@@ -116,55 +121,85 @@ def selectPool(candidates:List, inputs:List, outputs:List) -> Set:
 
 
 def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_operator, pool, limitLocations = 2):
+    # instance of the copy class to be used for copying ASTs
     copier = copyMutation()
+    # split the candidate into lines to be able to segment them into tokens and we are working line-wise fault location
     splitted_cand = cand.split('\n')
-    # faultyLineLocations = list(range(len(splitted_cand)))
 
-    ## for the future ##
-    ## we check if the line still exists or not, so that we can mutate it
-    ## we will send the column offset but after making sure that the line exists
+    # the maximum possible length of faulty locations are the length of the code itself
     limitKPossible = len(faultyLineLocations)
     locationsExtracted = limitKPossible  if (limitKPossible < limitLocations) else limitLocations
+    # choose from the locations based on a parameter sent by the user which sould not exceed max length, that is why a limit cap is present
     locs = random.choices(faultyLineLocations, weights = weightsFaultyLineLocations, k=locationsExtracted)
 
+    # candidate that will be mutated
     cand_dash = None
+    # parse the candidate
     cand_ast = ast.parse(cand)
+    # add this line as type ignores gets missed in the mutations and it is needed in ast.unparse
     cand_ast.type_ignores = []
-    # op_f = None
+
+    # parentify the candidate so it will be used by functions like mutate_DIV, mutate_ADD, etc.
+    utils.parentify(cand_ast)
+    # get the list of identifiers of an ast using IdentifierVisitor
+    idVistitor =  IdentifierVisitor()
+    idVistitor.visit(cand_ast)
+    # add the list of identifiers to the baseOperator class where it is seen by all its descendants
+    baseOperator.set_identifiers(list(idVistitor.get_identifiers))
+
     for f in locs:
         try:
+            # segment line into presumably tokens
             tokenList, tokenSet, offsets, units_ColOffset = utils.segmentLine(splitted_cand[f - 1])
         except:
             continue
+
+        # getting the mutations that can be applied, original tokens and weight of each mutation
         op_f_list, op_f_weights, original_op = ops(tokenSet)
+        # op_f_list may be empty as the lines are removed and added, etc. However, running the fault localization again will solve the issue
         if (op_f_list == []):
             continue
-        op_f = random.choices(op_f_list,weights=op_f_weights, k=1)[0]
+
+        # Choose the index with the higher probability
+        choice_index = (random.choices(range(len(op_f_list)), weights = op_f_weights, k=1)[0])
+        # Get the operation neumonic from operation list
+        op_f = op_f_list[choice_index]
+        # get the colum offset occurances of such an operation
+        colOffsets = units_ColOffset[original_op[op_f_list.index(op_f)]]
+        # get an index of the operation that you want to apply on
+        col_index = random.randint(0, len(colOffsets) - 1)
+        # get the operator class that holds all the logic from the 3 letters neumonic
+        operator = name_to_operator[op_f]
+
+        # copy the candidate as not to make the mutation affect the original candidate
         copied_cand = copier.visit(cand_ast)
         copied_cand.type_ignores = []
-        colOffsets = units_ColOffset[original_op[op_f_list.index(op_f)]]
-        col_index = random.randint(0, len(colOffsets) - 1)
-        operator = name_to_operator[op_f]
-        cand_dash = operator(target_node_lineno = f, code_ast = cand_ast, indexMutation= col_index).visitC() # f + 1 because the line number starts from 1
+
+        col_index = col_index if op_f != "ARD" else choice_index // 2
+        # apply the mutation and acquire a new candidate
+        cand_dash = operator(target_node_lineno = f, code_ast = cand_ast, indexMutation= col_index, specifiedOperator=original_op[choice_index]).visitC() # f + 1 because the line number starts from 1
+        # adds/corrects the line number as well as column offset
         ast.fix_missing_locations(cand_dash)
+        # add the candidate to the pool that you will select from
         pool.add(cand_dash)
-        # print(ast.dump(cand_dash, indent=4))
         cand_dash.type_ignores = []
-        # print("**********************************")
-        # print(op_f)
-        # print(ast.unparse(cand_dash))
+        # return cand to its original ast (despite different location in memory)
         cand = copied_cand
-        # print(ast.unparse(cand))
-        # print("**********************************")
+
 
 def insert(cand:str, pool:set):  # helper function to mutate the code
     # insert will be updated once more to add in certain locations
+
+    # parse the candidate
     cand_ast = ast.parse(cand)
+    # add type ignores
     cand_ast.type_ignores = []
+    # call the function that will insert the node and this function is present in the library insert visitor
     InsertVisitor.insertNode(cand_ast)
-    # print(ast.unparse(cand_ast))
+    # add to the possible candidates
     pool.add(cand_ast)
     cand_ast.type_ignores = []
+    # add the line numbers
     ast.fix_missing_locations(cand_ast)
     return
 
@@ -180,29 +215,33 @@ def swap(cand:str, pool:set):  # helper function to mutate the code
 
 def mutate(cand:str, ops:Callable, name_to_operator:Dict, 
            faultyLineLocations: List, weightsFaultyLineLocations:List, L:int ):  # helper function to mutate the code
-    
-    pool = set()
-    availableChoices = {"1": "Insertion", "2": "Swap", "3": "Update"}
-    weightsMutation = [0.1, 0.1, 0.8]
-    choiceMutation = random.choices(list(availableChoices.keys()),weights=weightsMutation, k=1)[0]
-    if availableChoices[choiceMutation] == "Update":
-        update(
-            cand=cand,
-            faultyLineLocations=faultyLineLocations,
-            weightsFaultyLineLocations=weightsFaultyLineLocations,
-            ops=ops,
-            name_to_operator=name_to_operator,
-            pool=pool,
-            limitLocations=L
-        )
-    elif availableChoices[choiceMutation] == "Insertion":
-        insert(cand=cand, pool=pool)
-    elif availableChoices[choiceMutation] == "Swap":
-        # swap(cand=cand, pool=pool)
-        pass
-    if (len(pool) == 0):
-        return cand
-    return selectPool(list(pool), inputs, outputs)
+    errorOccured = False
+    try:
+        pool = set()
+        availableChoices = {"1": "Insertion", "2": "Swap", "3": "Update"}
+        weightsMutation = [0.1, 0.1, 0.8]
+        choiceMutation = random.choices(list(availableChoices.keys()), weights=weightsMutation, k=1)[0]
+        if availableChoices[choiceMutation] == "Update":
+            update(
+                cand=cand,
+                faultyLineLocations=faultyLineLocations,
+                weightsFaultyLineLocations=weightsFaultyLineLocations,
+                ops=ops,
+                name_to_operator=name_to_operator,
+                pool=pool,
+                limitLocations=L
+            )
+        elif availableChoices[choiceMutation] == "Insertion":
+            insert(cand=cand, pool=pool)
+        elif availableChoices[choiceMutation] == "Swap":
+            swap(cand=cand, pool=pool)
+            # pass
+        if (len(pool) == 0):
+            return cand, False
+    except Exception as e:
+        # print(e)
+        return cand, True
+    return selectPool(list(pool), inputs, outputs), False
 
 
 
@@ -238,9 +277,11 @@ def main(BugProgram:str,
     
     name_to_operator = utils.getNameToOperatorMap()
     while len(Pop) < popSize:
-        Pop.append(mutate(BugProgram, ops, name_to_operator, FaultLocations, weightsFaultyLocations, L))  # mutate the population
+        newMutation, errorOccured = mutate(BugProgram, ops, name_to_operator, FaultLocations, weightsFaultyLocations, L)
+        if not errorOccured:
+            Pop.append(newMutation)  # mutate the population
 
-
+    print(len(Pop))
     number_of_iterations = 0
     while len(Solutions) < M and number_of_iterations < 100:
         for p in Pop:
@@ -248,12 +289,14 @@ def main(BugProgram:str,
                 if passesNegTests(p, MethodUnderTestName, inputs, outputs):
                     Solutions.add(p)
                 else:
-                    Pop[Pop.index(p)] = mutate(p, ops, name_to_operator, FaultLocations, weightsFaultyLocations, L)
+                    mutationCandidate, errorOccured = mutate(p, ops, name_to_operator, FaultLocations, weightsFaultyLocations, L)
+                    if (errorOccured): Pop.pop(Pop.index(p))
+                    else: Pop[Pop.index(p)] = mutationCandidate
                     # Pop.remove(p) # remove p from the population to be inserted again after mutation
                     # Pop.append(mutate(ops))
         number_of_iterations += 1
     # print(Pop)
-    return Solutions
+    return Solutions, Pop
 
 
 
@@ -271,7 +314,7 @@ if __name__ == '__main__':
     inputCasesPath = 'SearchBasedBugFixing/testcases/Inputs'
     outputCasesPath = 'SearchBasedBugFixing/testcases/Outputs'
     metaDataPath = 'SearchBasedBugFixing/testcases/MetaData'
-    file_id = 4
+    file_id = 1
     file_name = f'{file_id}.txt'
     typeHintsInputs = []
     typeHintsOutputs = []
@@ -291,10 +334,15 @@ if __name__ == '__main__':
             print("Function name not found")
             exit(-1)   
         l = 1
-        typeHintsInputs.append(lines[l].strip())
+        while(lines[l] != '\n'):
+            typeHintsInputs.append(lines[l].strip())
+            # utils.processLine(lines[l], l, inputs)
+            l += 1
         l += 1
-        utils.processLine(lines[l], l, inputs)
-
+        while(l < len(lines) and lines[l] != '\n'):
+            typeHintsOutputs.append(lines[l].strip())
+            # utils.processLine(lines[l], l, inputs)
+            l += 1
     with open(f'{inputCasesPath}/{file_name}', 'r') as file:
         lines = file.readlines()
         i = 0
@@ -323,37 +371,35 @@ if __name__ == '__main__':
         if (outputTestCase != []):
             outputs.append(outputTestCase)
 
-    print(inputs)
-    print(outputs)
-    # faultLocations = range(len(buggyProgram.split('\n'))) # it is there for now
+    # print(inputs)
+    # print(outputs)
     # copyFolder(inputProgramPath, destinationLocalizationPath, file_id)
     # create_py_test(inputs, outputs, methodUnderTestName, destinationLocalizationPath)
 
-    # faultLocalizationUtils.main(inputs, outputs, methodUnderTestName, inputProgramPath, destinationLocalizationPath, file_id)
-    # faultLocations, weightsFaultyLocations = faultLocalizationUtils.getFaultyLines('..') # fauly locations are in the parent directory
-    # destination_folder = destinationLocalizationPath
-    # test_path = f'{destination_folder}/test.py'
-    # src_path = f'{destination_folder}/source_code.py'
+    faultLocalizationUtils.main(inputs, outputs, methodUnderTestName, inputProgramPath, destinationLocalizationPath, file_id)
+    faultLocations, weightsFaultyLocations = faultLocalizationUtils.getFaultyLines('..') # fauly locations are in the parent directory
+    destination_folder = destinationLocalizationPath
+    test_path = f'{destination_folder}/test.py'
+    src_path = f'{destination_folder}/source_code.py'
     # s = faultLocalizationUtils.runFaultLocalization(test_path, src_path)
-
-    # print(inputs)
-    # print(outputs)
-    # faultLocations = list(map(int, faultLocations))
-    # weightsFaultyLocations = list(map(float, weightsFaultyLocations))
+    faultLocations = list(map(int, faultLocations))
+    weightsFaultyLocations = list(map(float, weightsFaultyLocations))
     
-    # print(faultLocations)
-    # print(weightsFaultyLocations)
 
-
-    # solutions = main(BugProgram=buggyProgram, 
-    #                  MethodUnderTestName=methodUnderTestName, 
-    #                  FaultLocations=faultLocations, 
-    #                  weightsFaultyLocations=weightsFaultyLocations, 
-    #                  inputs=inputs,
-    #                  outputs=outputs, 
-    #                  FixPar=None, 
-    #                  ops=ops)
-    # for solution in solutions:
-    #     print(solution)
+    solutions, population = main(BugProgram=buggyProgram, 
+                     MethodUnderTestName=methodUnderTestName, 
+                     FaultLocations=faultLocations, 
+                     weightsFaultyLocations=weightsFaultyLocations, 
+                     inputs=inputs,
+                     outputs=outputs, 
+                     FixPar=None, 
+                     ops=ops)
+    print("************************************************************")
+    for solution in solutions:
+        print(solution)
+    print("************************************************************")
+    # print(len(population))
+    # for p in population:
+    #     print(p)
     # print(methodUnderTestName)
     # print(buggyProgram)

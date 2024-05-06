@@ -48,22 +48,26 @@ class TestBase(unittest.TestCase):
             # print(baseOperator.get_identifiers())
             # print("------------------------------------")
 
-            numberMutationsNeeded = 1
+            numberMutationsNeeded = 10
             for m in range(numberMutationsNeeded):
                 for f in faultyLineLocations:
                     tokenList, tokenSet, offsets, units_offsets = utils.segmentLine(splitted_cand[f])
                     op_f_list, op_f_weights, original_op = utils.mutationsCanBeApplied(tokenSet)
                     if (op_f_list == []):
                         continue
-                    choice = (random.choices(op_f_list, weights=op_f_weights, k=1)[0])
-                    colOffsets = units_offsets[original_op[op_f_list.index(choice)]]
+                    # changed from choosing the actual element to choosing the index, as getting 
+                    # the operator attributed to the mutation is not possible with index
+                    choice_index = (random.choices(range(len(op_f_list)), weights = op_f_weights, k=1)[0])
+                    choice = op_f_list[choice_index]
+                    colOffsets = units_offsets[original_op[choice_index]]
                     col_index = random.randint(0, len(colOffsets) - 1)
                     # print(col_index)
                     op = name_to_operator[choice]
                     copied_line_ast = self.copier.visit(line_ast)
                     copied_line_ast.type_ignores = []
                     ast.fix_missing_locations(line_ast)
-                    mutant = op(target_node_lineno = f + 1, indexMutation = col_index, code_ast = line_ast).visitC()
+                    col_index = col_index if choice != "ARD" else choice_index // 2
+                    mutant = op(target_node_lineno = f + 1, indexMutation = col_index, code_ast = line_ast, specifiedOperator=original_op[choice_index]).visitC()
                     mutant = ast.fix_missing_locations(mutant) # after mutation, we need to fix the missing locations
                     line_ast = copied_line_ast
                     # res = (SearchBasedBugFixing.unparser.unparser().visit(mutant))
@@ -73,10 +77,10 @@ class TestBase(unittest.TestCase):
                     # print(res)
                     # print("------------------")
             for m in mutationsDone:
-                # print("*******************************************")
+                print("*******************************************")
                 print(m)
                 # print(expected_results[0])
-                # print("*******************************************")
+                print("*******************************************")
                 if mutationsDone in expected_results:
                     print("Mutation is correct")
                     break

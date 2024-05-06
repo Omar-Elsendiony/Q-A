@@ -45,23 +45,23 @@ class TestArithmetic(TestBase):
     #     self.utility_2(line, expected_results)
 
 
-    def test_division(self):
-        """
-        Testing mutation of the subtraction operator
-        The result should be the replacement of the subtraction operator with the addition operator
-        """
-        line = "div = 1 ** 2 ** 3"
-        expected_results = ["div = 1 * 2", "div = 1 ** 2"]
-        self.utility_2(line, expected_results)
-
-    # def test_remove_binary_op(self):
+    # def test_division(self):
     #     """
     #     Testing mutation of the subtraction operator
     #     The result should be the replacement of the subtraction operator with the addition operator
     #     """
-    #     line = "average = total_sum / (len(numbers) - 1)  # This is incorrect"
-    #     expected_results = ["average = total_sum / (len(numbers))"]
+    #     line = "div = 1 ** 2 ** 3"
+    #     expected_results = ["div = 1 * 2", "div = 1 ** 2"]
     #     self.utility_2(line, expected_results)
+
+    def test_remove_binary_op(self):
+        """
+        Testing mutation of the subtraction operator
+        The result should be the replacement of the subtraction operator with the addition operator
+        """
+        line = "average = total_sum / (len(numbers) - 1)  # This is incorrect"
+        expected_results = ["average = total_sum / (len(numbers))"]
+        self.utility_2(line, expected_results)
 
 if __name__ == '__main__':
     unittest.main()

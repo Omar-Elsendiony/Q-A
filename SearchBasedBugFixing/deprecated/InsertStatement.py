@@ -44,7 +44,7 @@ class insertionVisitor(ast.NodeVisitor):
     handleLst = [] # handles for candidates that can be inserted in the body of the parent node
     setBodyNodes = set()  # set of nodes that can be the vessel for another statements
     def visit(self, node):
-        if (hasattr(node.parent, 'body') and node.__class__.__name__ != "Compare" and node.__class__.__name__ != "arguments" and node.__class__.__name__ != "FunctionDef" and node.parent.__class__.__name__ != "FunctionDef" and node.__class__.__name__ != "Name"):  # check if it falls directly under a node that has body attr that can encompass it
+        if (hasattr(node.parent, 'body') and node.__class__.__name__ != "FunctionDef"):  # check if it falls directly under a node that has body attr that can encompass it
             if (isInBody(node)):
                 self.setBodyNodes.add(node.parent)
                 self.handleLst.append(node)
@@ -93,22 +93,27 @@ for i in range(13):
 
     # choose a random line in the vessel to insert your new code into
     indexBody = random.randint(0, len(vesselNode.body) - 1)
+    if vesselNode.parent == candInsertNode or vesselNode is candInsertNode:
+        continue
     print(vesselNode.__class__.__name__)
     print(candInsertNode.__class__.__name__)
     try:
         vesselNode.body.insert(indexBody, candInsertNode)
-        # print(ast.unparse(parent_node))
+        ast.fix_missing_locations(candInsertNode)
+        print(ast.unparse(parent_node))
 
     except Exception as e:
         # print(ast.dump(parent_node, indent=4))
         print(e)
         break
     except:
+        print("Error")
         break
 
-print(ast.dump(parent_node, indent=4))
-print('------------------------------------')
-print(ast.unparse(parent_node))
-print('------------------------------------')
+print("Finished!!!!!!!!!!!!!!!!!!!!!")
+# print(ast.dump(parent_node, indent=4))
+# print('------------------------------------')
+# print(ast.unparse(parent_node))
+# print('------------------------------------')
 
 

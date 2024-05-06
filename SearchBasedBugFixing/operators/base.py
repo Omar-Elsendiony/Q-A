@@ -17,13 +17,13 @@ class baseOperator(ast.NodeVisitor):
         return cls.identifiers
 
 
-    def __init__(self, target_node_lineno = None, target_node_col_offset=None, code_ast = None, indexMutation = None):
+    def __init__(self, target_node_lineno = None, code_ast = None, indexMutation = None, specifiedOperator = None):
         self.target_node_lineno = target_node_lineno
         self.node = code_ast
-        self.target_node_col_offset= target_node_col_offset
         self.indexMutation = indexMutation
         self.currentIndex = 0
         self.finishedMutation = False
+        self.specifiedOperator = specifiedOperator
     
     def generic_visit(self, node):
         for field, old_value in ast.iter_fields(node):
@@ -89,14 +89,22 @@ class baseOperator(ast.NodeVisitor):
         return choice
 
 
-    def wanted_line(self, line_no, col_offset):
+    def wanted_line(self, line_no, specifiedOp = None):
         """
         This method is responsible for checking if the current line is the line we want to mutate.
         """
         if line_no == self.target_node_lineno:
-            if (self.indexMutation is not None and self.indexMutation == self.currentIndex):
-                return True
-            self.currentIndex += 1
+            if (specifiedOp is not None):
+                if (self.specifiedOperator == specifiedOp):
+                    if (self.indexMutation == self.currentIndex):
+                        return True
+                    else:
+                        self.currentIndex += 1
+                        # return False
+            else:
+                if (self.indexMutation is not None and self.indexMutation == self.currentIndex):
+                    return True
+                self.currentIndex += 1
             # return True
         return False
 
@@ -107,7 +115,7 @@ class baseOperator(ast.NodeVisitor):
             return node
         
 
-        if self.wanted_line(node.lineno, node.col_offset):
+        if self.wanted_line(node.lineno):
             if node.id in self.identifiers:
                 self.mutatedSet.add(node)
 

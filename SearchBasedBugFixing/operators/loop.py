@@ -11,12 +11,12 @@ class OneIterationLoop(baseOperator):
         return node
 
     def visit_For(self, node):
-        if (not self.wanted_line(node.lineno, node.col_offset)):
+        if (not self.wanted_line(node.lineno)):
             return node
         return self.one_iteration(node)
 
     def visit_While(self, node):
-        if (not self.wanted_line(node.lineno, node.col_offset)):
+        if (not self.wanted_line(node.lineno)):
             return node
         return self.one_iteration(node)
 
@@ -27,7 +27,7 @@ class OneIterationLoop(baseOperator):
 
 class ReverseIterationLoop(baseOperator):
     def visit_For(self, node):
-        if (not self.wanted_line(node.lineno, node.col_offset)):
+        if (not self.wanted_line(node.lineno)):
             return node
         old_iter = node.iter
         node.iter = ast.Call(
@@ -50,12 +50,12 @@ class ZeroIterationLoop(baseOperator):
         return node
 
     def visit_For(self, node):
-        if (not self.wanted_line(node.lineno, node.col_offset)):
+        if (not self.wanted_line(node.lineno)):
             return node
         return self.zero_iteration(node)
 
     def visit_While(self, node):
-        if (not self.wanted_line(node.lineno, node.col_offset)):
+        if (not self.wanted_line(node.lineno)):
             return node
         return self.zero_iteration(node)
 
@@ -66,12 +66,12 @@ class ZeroIterationLoop(baseOperator):
 class LoopDeletion(baseOperator):
 
     def visit_While(self, node):
-        if not self.wanted_line(node.lineno, node.col_offset):
+        if not self.wanted_line(node.lineno):
             return node
         return None
 
     def visit_For(self, node):
-        if not self.wanted_line(node.lineno, node.col_offset):
+        if not self.wanted_line(node.lineno):
             return node
         return None
 

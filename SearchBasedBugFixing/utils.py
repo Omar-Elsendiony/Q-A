@@ -259,7 +259,7 @@ def mutationsCanBeApplied(setTokens: set):
     if '/' in setTokens: lstMutations.append('DIV'); lstToBeMutated.extend(['/', '/']) ; lstMutations.append('ARD')
     if '%' in setTokens: lstMutations.append('MOD'); lstToBeMutated.extend(['%', '%']) ; lstMutations.append('ARD')
     if '**' in setTokens: lstMutations.append('POW'); lstToBeMutated.extend(['**', '**']) ; lstMutations.append('ARD')
-    if '//' in setTokens: lstMutations.append('FLOORDIV'); lstToBeMutated.append(['//', '//']) ; lstMutations.append('ARD')
+    if '//' in setTokens: lstMutations.append('FLOORDIV'); lstToBeMutated.extend(['//', '//']) ; lstMutations.append('ARD')
 
 
     ################## Augmented Assign #####################

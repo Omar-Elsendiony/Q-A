@@ -26,11 +26,16 @@ class CustomThread(threading.Thread):
 
 
 def runCode(code: str, myglobals):
+    # save the old stdout that is reserved
     oldStdOUT = sys.stdout
+    # get the redirected output instance
     redirectedOutput = sys.stdout = StringIO()
     oldStdERR = sys.stderr
     redirectedOutput2 = sys.stderr = StringIO()
+    # result is initially empty
     result = ""
+    # there is error
+    isError = False
     if (myglobals.get('res')):
         del myglobals['res']
     thread = CustomThread()
@@ -39,18 +44,18 @@ def runCode(code: str, myglobals):
         exec(code, myglobals)
         result = redirectedOutput.getvalue()
     except Exception as e:
-        # print(repr(e))
+        isError = True
         result = repr(e)
     except SystemExit as s:
-        # print(repr(s))
+        isError = True
         result = redirectedOutput2.getvalue()
     except KeyboardInterrupt as k:
+        isError = True
         result = "timed out"
     thread.stop()
-    # myglobals.popitem()
     if (myglobals.get('testcase')):
         del myglobals['testcase']
     sys.stdout = oldStdOUT
     sys.stderr = oldStdERR
 
-    return result
+    return result, isError

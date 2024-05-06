@@ -4,12 +4,12 @@ from typing import Any
 
 class BreakContinueReplacement(baseOperator):
     def visit_Break(self, node):
-        if not self.wanted_line(node.lineno, node.col_offset):
+        if not self.wanted_line(node.lineno):
             return node
         return ast.Continue()
 
     def visit_Continue(self, node):
-        if not self.wanted_line(node.lineno, node.col_offset):
+        if not self.wanted_line(node.lineno):
             return node
         return ast.Break()
 
@@ -31,7 +31,7 @@ class SliceIndexRemove(baseOperator):
         return ast.Slice(lower=node.lower, upper=node.upper, step=None)
     
     def visit_Slice(self, node):
-        if not self.wanted_line(node.lineno, node.col_offset):
+        if not self.wanted_line(node.lineno):
             return node
         func = self.choose_mutation_random_dist([self.mutate_Slice_remove_lower, self.mutate_Slice_remove_upper, self.mutate_Slice_remove_step])
         return func(node)
@@ -71,7 +71,7 @@ class MembershipReplacement(baseOperator):
     """
 
     def visit_Compare(self, node: ast.Compare) -> Any:
-        if not self.wanted_line(node.lineno, node.col_offset):
+        if not self.wanted_line(node.lineno):
             return node
         print("--------------------------------------")
         # print(node.ops[0].__class__.__name__)
@@ -163,7 +163,7 @@ class ConstantNumericReplacement(baseOperator):
     #     return ast.Str(s="'")
 
     def visit_Constant(self, node):
-        if not self.wanted_line(node.lineno, node.col_offset):
+        if not self.wanted_line(node.lineno):
             return node
         func = self.choose_mutation_random_dist([self.mutate_Num_incr_1, self.mutate_Num_decr_1])
         self.finishedMutation = True
@@ -183,7 +183,7 @@ class ConstantStringReplacement(baseOperator):
     #     return ast.Constant(s='')
 
     def visit_Str(self, node):
-        if not self.wanted_line(node.lineno, node.col_offset):
+        if not self.wanted_line(node.lineno):
             return node
         return ast.Constant(s='')
 

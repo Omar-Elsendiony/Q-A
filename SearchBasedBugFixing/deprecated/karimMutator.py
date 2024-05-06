@@ -20,10 +20,6 @@ code_ast = ast.parse(code)
 # print(ast.dump(code_ast, indent = 4))
 
 
-from numpy import generic
-from sympy import I
-
-
 class kimoMutator(ast.NodeVisitor):
 
     def __init__(self):
