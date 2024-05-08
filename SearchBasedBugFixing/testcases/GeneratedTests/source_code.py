@@ -1,7 +1,4 @@
-def return_list_1_to_10_except_5():
-    lst = []
-    for i in range(1, 11):
-        if i == 5:
-            break        
-        lst.append(i)
-    return lst
+def factorial(n):
+    if n == 0:
+        return 1
+    return n * factorial(n - 1)

@@ -40,7 +40,9 @@ def fitness_testCasesPassed(program:str, program_name:str, inputs:List, outputs:
                     editedProgram = program + f'\n\nres = {program_name}()\n\nprint(res)'
                 else:
                     editedProgram = program + f'\n\ntestcase = {testcase}\nres = {program_name}({testcase})\n\nprint(res)'
-                res = runCode(editedProgram, globals())
+                res, isError = runCode(editedProgram, globals())
+                if (isError):
+                    return False
                 res = res.strip()
                 if (eval(res) != outputs[i]):
                     return False
@@ -56,12 +58,26 @@ def fitness_testCasesPassed(program:str, program_name:str, inputs:List, outputs:
                 if (eval(res) == outputs[i]):
                     passedTests += 1
         except Exception as e:
-            print(e)
-            return 0
+            # print(e)
+            return -9
     # print(eval(res))
     if (eval(res) is None and passedTests == 0):
         passedTests -= 9
     return passedTests
+
+
+def compare_input_output(res, output):
+    outputMod = output
+    if (type(output) is list):
+        if len(output) == 1:
+            outputMod = output[0]
+        else:
+            outputMod = tuple(output)
+
+    if (res == outputMod):
+        return True
+    return False
+    
 
 def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> bool:
     """
@@ -82,7 +98,9 @@ def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> 
                     editedProgram = program + f'\n\nres = {program_name}()\n\nprint(res)'
                 else:
                     editedProgram = program + f'\n\ntestcase = {testcase}\nres = {program_name}({testcase})\n\nprint(res)'
-                res = runCode(editedProgram, globals())
+                res, isError = runCode(editedProgram, globals())
+                if (isError):
+                    return False
                 res = res.strip()
                 # if len(outputs[i]) == 1:
                 #     outputs[i] = outputs[i][0]
@@ -94,13 +112,15 @@ def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> 
                 editedProgram = program + f'\n\ntestcase = {testcase}\nres = {program_name}(*testcase)\n\nprint(res)'
             
                 res, isError = runCode(editedProgram, globals())
+                if (isError):
+                    return False
                 res = res.strip()
                 # if outputs[i] is not list:
                 #     outputs[i] = outputs[i][0]
-                if (eval(res) != outputs[i]):
+                if (not compare_input_output(eval(res), outputs[i])):
+                # if (eval(res) != outputs[i]):
                     return False
         except Exception as e:
-            print(e)
             return False
     # print(eval(res))
     return True
@@ -145,7 +165,7 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
     idVistitor =  IdentifierVisitor()
     idVistitor.visit(cand_ast)
     # add the list of identifiers to the baseOperator class where it is seen by all its descendants
-    baseOperator.set_identifiers(list(idVistitor.get_identifiers))
+    # baseOperator.set_identifiers(list(idVistitor.get_identifiers))
 
     for f in locs:
         try:
@@ -153,7 +173,8 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
             tokenList, tokenSet, offsets, units_ColOffset = utils.segmentLine(splitted_cand[f - 1])
         except:
             continue
-
+        
+        
         # getting the mutations that can be applied, original tokens and weight of each mutation
         op_f_list, op_f_weights, original_op = ops(tokenSet)
         # op_f_list may be empty as the lines are removed and added, etc. However, running the fault localization again will solve the issue
@@ -165,7 +186,10 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
         # Get the operation neumonic from operation list
         op_f = op_f_list[choice_index]
         # get the colum offset occurances of such an operation
-        colOffsets = units_ColOffset[original_op[op_f_list.index(op_f)]]
+        try:
+            colOffsets = units_ColOffset[original_op[op_f_list.index(op_f)]]
+        except:
+              print("My life is a lie")  
         # get an index of the operation that you want to apply on
         col_index = random.randint(0, len(colOffsets) - 1)
         # get the operator class that holds all the logic from the 3 letters neumonic
@@ -216,31 +240,31 @@ def swap(cand:str, pool:set):  # helper function to mutate the code
 def mutate(cand:str, ops:Callable, name_to_operator:Dict, 
            faultyLineLocations: List, weightsFaultyLineLocations:List, L:int ):  # helper function to mutate the code
     errorOccured = False
-    try:
-        pool = set()
-        availableChoices = {"1": "Insertion", "2": "Swap", "3": "Update"}
-        weightsMutation = [0.1, 0.1, 0.8]
-        choiceMutation = random.choices(list(availableChoices.keys()), weights=weightsMutation, k=1)[0]
-        if availableChoices[choiceMutation] == "Update":
-            update(
-                cand=cand,
-                faultyLineLocations=faultyLineLocations,
-                weightsFaultyLineLocations=weightsFaultyLineLocations,
-                ops=ops,
-                name_to_operator=name_to_operator,
-                pool=pool,
-                limitLocations=L
-            )
-        elif availableChoices[choiceMutation] == "Insertion":
-            insert(cand=cand, pool=pool)
-        elif availableChoices[choiceMutation] == "Swap":
-            swap(cand=cand, pool=pool)
-            # pass
-        if (len(pool) == 0):
-            return cand, False
-    except Exception as e:
-        # print(e)
-        return cand, True
+    # try:
+    pool = set()
+    availableChoices = {"1": "Insertion", "2": "Swap", "3": "Update"}
+    weightsMutation = [0.1, 0.1, 0.8]
+    choiceMutation = random.choices(list(availableChoices.keys()), weights=weightsMutation, k=1)[0]
+    if availableChoices[choiceMutation] == "Update":
+        update(
+            cand=cand,
+            faultyLineLocations=faultyLineLocations,
+            weightsFaultyLineLocations=weightsFaultyLineLocations,
+            ops=ops,
+            name_to_operator=name_to_operator,
+            pool=pool,
+            limitLocations=L
+        )
+    elif availableChoices[choiceMutation] == "Insertion":
+        insert(cand=cand, pool=pool)
+    elif availableChoices[choiceMutation] == "Swap":
+        swap(cand=cand, pool=pool)
+        # pass
+    if (len(pool) == 0):
+        return cand, False
+    # except Exception as e:
+    #     # print(e)
+    #     return cand, True
     return selectPool(list(pool), inputs, outputs), False
 
 
@@ -301,10 +325,6 @@ def main(BugProgram:str,
 
 
 
-
-
-
-
 if __name__ == '__main__':
     ops = utils.mutationsCanBeApplied # ALIAS to operations that can be applied 
     inputs = []
@@ -314,69 +334,78 @@ if __name__ == '__main__':
     inputCasesPath = 'SearchBasedBugFixing/testcases/Inputs'
     outputCasesPath = 'SearchBasedBugFixing/testcases/Outputs'
     metaDataPath = 'SearchBasedBugFixing/testcases/MetaData'
-    file_id = 1
+    file_id = 3
     file_name = f'{file_id}.txt'
     typeHintsInputs = []
     typeHintsOutputs = []
     methodUnderTestName = None
 
-    with open(f'{inputProgramPath}/{file_name}', 'r') as file:
-        buggyProgram = file.read()
-    with open(f'{metaDataPath}/{file_name}', 'r') as file:
-        lines = file.readlines()
-        methodUnderTestName = lines[0].strip()
-        function_names = re.findall(r'def\s+(\w+)', buggyProgram)
-        for name in function_names:
-            if name == methodUnderTestName:
-                foundName = True
-                break
-        if not foundName:
-            print("Function name not found")
-            exit(-1)   
-        l = 1
-        while(lines[l] != '\n'):
-            typeHintsInputs.append(lines[l].strip())
-            # utils.processLine(lines[l], l, inputs)
+    try:
+        with open(f'{inputProgramPath}/{file_name}', 'r') as file:
+            buggyProgram = file.read()
+        with open(f'{metaDataPath}/{file_name}', 'r') as file:
+            lines = file.readlines()
+            methodUnderTestName = lines[0].strip()
+            function_names = re.findall(r'def\s+(\w+)', buggyProgram)
+            for name in function_names:
+                if name == methodUnderTestName:
+                    foundName = True
+                    break
+            if not foundName:
+                print("Function name not found")
+                exit(-1)   
+            l = 1
+            while(lines[l] != '\n'):
+                typeHintsInputs.append(lines[l].strip())
+                # utils.processLine(lines[l], l, inputs)
+                l += 1
             l += 1
-        l += 1
-        while(l < len(lines) and lines[l] != '\n'):
-            typeHintsOutputs.append(lines[l].strip())
-            # utils.processLine(lines[l], l, inputs)
-            l += 1
-    with open(f'{inputCasesPath}/{file_name}', 'r') as file:
-        lines = file.readlines()
-        i = 0
-        inputTestCase = []
-        for line in lines:
-            if (line == '\n'):
+            while(l < len(lines) and lines[l] != '\n'):
+                typeHintsOutputs.append(lines[l].strip())
+                # utils.processLine(lines[l], l, inputs)
+                l += 1
+        with open(f'{inputCasesPath}/{file_name}', 'r') as file:
+            lines = file.readlines()
+            i = 0
+            inputTestCase = []
+            for line in lines:
+                if (line == '\n'): 
+                    if (inputTestCase != []) : inputs.append(inputTestCase); inputTestCase = []
+                    else: continue
+                else: utils.processLine(line, i, inputTestCase)
+                i += 1
+            if (inputTestCase != []):
                 inputs.append(inputTestCase)
-                inputTestCase = []
-            else:
-                utils.processLine(line, i, inputTestCase)
-            i += 1
-        if (inputTestCase != []):
-            inputs.append(inputTestCase)
 
-    with open(f'{outputCasesPath}/{file_name}', 'r') as file:
-        lines = file.readlines()
-        i = 0
-        outputTestCase = []
-        for line in lines:
-            if (line == '\n'):
+        with open(f'{outputCasesPath}/{file_name}', 'r') as file:
+            lines = file.readlines()
+            i = 0
+            outputTestCase = []
+            for line in lines:
+                if (line == '\n'):
+                    if (outputTestCase != []) : outputs.append(outputTestCase);outputTestCase = []
+                    else: continue
+                else: utils.processLine(line, i, outputTestCase)
+                i += 1
+            if (outputTestCase != []):
                 outputs.append(outputTestCase)
-                outputTestCase = []
-            else:
-                utils.processLine(line, i, outputTestCase)
-            i += 1
-        if (outputTestCase != []):
-            outputs.append(outputTestCase)
-
+    except:
+        print("Problem in reading files, insufficient data")
+        exit(-1)
     # print(inputs)
     # print(outputs)
-    # copyFolder(inputProgramPath, destinationLocalizationPath, file_id)
-    # create_py_test(inputs, outputs, methodUnderTestName, destinationLocalizationPath)
 
-    faultLocalizationUtils.main(inputs, outputs, methodUnderTestName, inputProgramPath, destinationLocalizationPath, file_id)
+
+    faultLocalizationUtils.main(
+        inputs = inputs, 
+        outputs = outputs, 
+        function_name= methodUnderTestName, 
+        source_folder= inputProgramPath, 
+        destination_folder= destinationLocalizationPath, 
+        file_id= file_id,
+        inputHints=typeHintsInputs,
+        outputHints=typeHintsOutputs)
+    
     faultLocations, weightsFaultyLocations = faultLocalizationUtils.getFaultyLines('..') # fauly locations are in the parent directory
     destination_folder = destinationLocalizationPath
     test_path = f'{destination_folder}/test.py'
@@ -384,22 +413,21 @@ if __name__ == '__main__':
     # s = faultLocalizationUtils.runFaultLocalization(test_path, src_path)
     faultLocations = list(map(int, faultLocations))
     weightsFaultyLocations = list(map(float, weightsFaultyLocations))
-    
 
     solutions, population = main(BugProgram=buggyProgram, 
-                     MethodUnderTestName=methodUnderTestName, 
-                     FaultLocations=faultLocations, 
-                     weightsFaultyLocations=weightsFaultyLocations, 
-                     inputs=inputs,
-                     outputs=outputs, 
-                     FixPar=None, 
-                     ops=ops)
+                    MethodUnderTestName=methodUnderTestName, 
+                    FaultLocations=faultLocations, 
+                    weightsFaultyLocations=weightsFaultyLocations, 
+                    inputs=inputs,
+                    outputs=outputs, 
+                    FixPar=None, 
+                    ops=ops)
     print("************************************************************")
     for solution in solutions:
         print(solution)
     print("************************************************************")
     # print(len(population))
-    # for p in population:
-    #     print(p)
+    for p in population:
+        print(p)
     # print(methodUnderTestName)
     # print(buggyProgram)

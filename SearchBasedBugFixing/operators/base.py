@@ -73,11 +73,15 @@ class baseOperator(ast.NodeVisitor):
         """Visit a node."""
         # if isinstance(node, list): node = node[0] # as it will be a list with first element only
         method = 'visit_' + node.__class__.__name__
+        print('-----------------------------------')
+        print(method)
+        print('-----------------------------------')
+
         visitor = getattr(self, method, self.generic_visit)
         if (visitor != self.generic_visit and not self.finishedMutation): # this means that the mutation has already been done
             return visitor(node)
-        if (self.finishedMutation): # this means that the mutation has already been done
-            return node
+        # if (self.finishedMutation): # this means that the mutation has already been done
+        #     return node
         return visitor(node)
 
     def choose_mutation_random_dist(self, listChoices):
@@ -108,21 +112,30 @@ class baseOperator(ast.NodeVisitor):
             # return True
         return False
 
-    def visit_Name(self, node):
-        # generate a random number and according you will replace the node identifier with another in the identifiers list
-        gen = random.randint(0, self.maxRand) / self.maxRand
-        if (gen < 0.7):
-            return node
+    # def visit_Name(self, node):
+    #     # generate a random number and according you will replace the node identifier with another in the identifiers list
+    #     gen = random.randint(0, self.maxRand) / self.maxRand
+    #     if (gen < 0.7):
+    #         return node
         
 
-        if self.wanted_line(node.lineno):
-            if node.id in self.identifiers:
-                self.mutatedSet.add(node)
+    #     if self.wanted_line(node.lineno):
+    #         if node.id in self.identifiers:
+    #             self.mutatedSet.add(node)
 
-                selectedIdentifier = random.choice(self.identifiers)
-                while(selectedIdentifier == node.id and len(self.identifiers) > 1):
-                    selectedIdentifier = random.choice(self.identifiers)
-                node.id = selectedIdentifier
-                # print(node.id)
-                # self.finishedMutation = True # no this is not the intended mutation
-        return node
+    #             selectedIdentifier = random.choice(self.identifiers)
+    #             while(selectedIdentifier == node.id and len(self.identifiers) > 1):
+    #                 selectedIdentifier = random.choice(self.identifiers)
+    #             node.id = selectedIdentifier
+    #             # print(node.id)
+    #             # self.finishedMutation = True # no this is not the intended mutation
+    #     return node
+
+    # def visit_Call(self, node):
+    #     x = 2
+    #     t = 2
+    #     return node
+    
+    # def visit_Name(self, node):
+
+    #     return ast.BinOp(left=ast.Name(id=node.id, ctx=ast.Load()), op=ast.Sub(), right=ast.Constant(id='y', ctx=ast.Load()))

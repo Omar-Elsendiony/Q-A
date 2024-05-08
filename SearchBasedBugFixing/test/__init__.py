@@ -51,6 +51,7 @@ class TestBase(unittest.TestCase):
             numberMutationsNeeded = 10
             for m in range(numberMutationsNeeded):
                 for f in faultyLineLocations:
+                    utils.parentify(line_ast)
                     tokenList, tokenSet, offsets, units_offsets = utils.segmentLine(splitted_cand[f])
                     op_f_list, op_f_weights, original_op = utils.mutationsCanBeApplied(tokenSet)
                     if (op_f_list == []):

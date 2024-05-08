@@ -1,6 +1,8 @@
 import ast
 from .base import baseOperator
 from typing import Any
+import random
+
 
 class BreakContinueReplacement(baseOperator):
     def visit_Break(self, node):
@@ -150,17 +152,7 @@ class ConstantNumericReplacement(baseOperator):
     
     def mutate_Num_decr_1(self, node):
         return ast.Constant(n=node.n - 1)
-    # def mutate_Str_single_space(self, node):
-    #     if not node.s or self.is_docstring(node):
-    #         raise node
 
-    #     return ast.Str(s=' ')
-    
-    # def mutate_Str_single_quote(self, node):
-    #     if not node.s or self.is_docstring(node):
-    #         raise node
-
-    #     return ast.Str(s="'")
 
     def visit_Constant(self, node):
         if not self.wanted_line(node.lineno):
@@ -190,3 +182,23 @@ class ConstantStringReplacement(baseOperator):
     @classmethod
     def name(cls):
         return 'CSR'  # Constant Replacement
+
+    class IdentifierReplacement(baseOperator):
+        
+        def visit_Name(self, node):
+        # generate a random number and according you will replace the node identifier with another in the identifiers list
+            if self.wanted_line(node.lineno):
+                if node.id in self.identifiers:
+                    self.mutatedSet.add(node)
+
+                    selectedIdentifier = random.choice(self.identifiers)
+                    while(selectedIdentifier == node.id and len(self.identifiers) > 1):
+                        selectedIdentifier = random.choice(self.identifiers)
+                    node.id = selectedIdentifier
+                    # print(node.id)
+                    # self.finishedMutation = True # no this is not the intended mutation
+            return node
+
+        @classmethod
+        def name(cls):
+            return 'IDR'

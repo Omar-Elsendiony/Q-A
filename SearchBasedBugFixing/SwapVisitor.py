@@ -2,12 +2,19 @@ import ast
 import random
 from utils import parentify
 
+def isInBody(node):
+    for child in node.parent.body:
+        if (child is node):
+            return True
+    return False
+
 class SwapVisitor(ast.NodeVisitor):
     countNodes = 0
     handleLst = [] # handles for candidates that can be swaped in the body of the parent node
     def visit(self, node):
-        if (hasattr(node.parent, 'body') and node.__class__.__name__ != "Compare"):  # check if it falls directly under a node that has body attr that can encompass it
-            self.handleLst.append(node)
+        if (hasattr(node.parent, 'body') and node.__class__.__name__ != "FunctionDef" and node.__class__.__name__ != "Name"):  # check if it falls directly under a node that has body attr that can encompass it
+            if (isInBody(node)):
+                self.handleLst.append(node)
         return super().visit(node)
 
 

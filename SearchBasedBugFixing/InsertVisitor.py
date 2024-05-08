@@ -15,7 +15,7 @@ class InsertionVisitor(ast.NodeVisitor):
     handleLst = [] # handles for candidates that can be inserted in the body of the parent node
     setBodyNodes = set()  # set of nodes that can be the vessel for another statements
     def visit(self, node):
-        if (hasattr(node.parent, 'body') and node.__class__.__name__ != "FunctionDef"):  # check if it falls directly under a node that has body attr that can encompass it
+        if (hasattr(node.parent, 'body') and node.__class__.__name__ != "FunctionDef" and node.__class__.__name__ != "Name"):  # check if it falls directly under a node that has body attr that can encompass it
             if (isInBody(node)):
                 self.setBodyNodes.add(node.parent)
                 self.handleLst.append(node)

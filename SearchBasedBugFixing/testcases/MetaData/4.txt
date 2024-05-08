@@ -1,4 +1,4 @@
 calculate_average
 list
 
-int
+float

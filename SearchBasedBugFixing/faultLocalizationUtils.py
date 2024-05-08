@@ -64,7 +64,38 @@ def copyFolder(source_folder, destination_folder, file_id):
     print(f"File '{file_name}' copied from '{source_folder}' to '{destination_folder}'.")
 
 
-def create_py_test(inputs, outputs, function_name, destination_folder):
+def get_value(test_item, hint):
+    """
+    get_value: sent to it either the input or the output along with its hints
+    determine the value based on the hints and return it
+    Args:
+        inputHints: the hints of the input
+        outputHints: the hints of the output
+    Returns:
+        the value of the input or output
+    """
+    value = None
+    if hint == "int":
+        value = int(test_item)
+    elif hint == "float":
+        value = float(test_item)
+    elif hint == "str":
+        value = str(test_item)
+    elif hint == "bool":
+        value = bool(test_item)
+    elif hint == "list":
+        value = list(test_item)
+    elif hint == "tuple":
+        value = tuple(test_item)
+    elif hint == "set":
+        value = set(test_item)
+    elif hint == "dict":
+        value = dict(test_item)
+    elif hint == "None":
+        value = None
+    return value
+
+def create_py_test(inputs, outputs, function_name, destination_folder, inputHints, outputHints):
     pytest_file = ""
 
     module_ast = ast.parse(pytest_file)
@@ -78,50 +109,59 @@ def create_py_test(inputs, outputs, function_name, destination_folder):
     # outputs = [3, 7, 11]
     # function_name = "add"
     # function ast
+    hintIndex = 0
     for i in range(len(inputs)):
-        fn = f"""def test_{i}(): pass"""
-        fn_ast = ast.parse(fn).body[0]
-        input_str = f"inputs = "
+        # definitions of the variables
+        val_outputs = []
+        val_inputs = []
         assert_str = f"assert "
-        input_curr = inputs[i]
+        fn = f"""def test_{i}(): pass"""
 
-        if isinstance(input_curr, str):
-            input_str += '"' + input_curr + '"'
-            if (input_curr.lower() == "void"):
-                assert_str += f"{function_name}() == {outputs[i]}"
+        fn_ast = ast.parse(fn).body[0]
+        for j in range(len(inputs[i])):
+            input_str = f"input_{j} = "
+            val_inputs.append(f"input_{j}")
+            val_input = get_value(inputs[i][j], inputHints[j])
+            val_output = get_value(outputs[i][j], outputHints[j])
+            val_outputs.append(val_output)
+            input_str += f"{val_input}"
+            input_node = ast.parse(input_str).body[0]
+            fn_ast.body.append(input_node)
+
+        final_output = ""
+        # val outputs is the current output string
+        if len(val_outputs) == 1:
+            final_output = str(val_outputs[0])
         else:
-            for input in input_curr:
-                if (input == inputs[-1]):
-                    input_str += f"{input}"
-                else:
-                    input_str += f"{input},"
-            # input_node = ast.parse(input_str).body[0]
-            assert_str += f"{function_name}(*inputs) == {outputs[i]}"
+            final_output = str(tuple(val_outputs))
         
-        input_node = ast.parse(input_str).body[0]
+        final_input = ""
+        for v in val_inputs:
+            final_input += v + ", "
+        
+        if (val_input is None):
+            assert_str += f"{function_name}() == {final_output}"
+        else:
+            assert_str += f"{function_name}({final_input}) == {final_output}"
         assert_node = ast.parse(assert_str).body[0]
-        # fn_ast.body.pop()
 
-        fn_ast.body.append(input_node)
         fn_ast.body.append(assert_node)
         # print(ast.unparse(module_ast))
-
         module_ast.body.append(fn_ast)
-        # Check if the destination folder exists
-        if not os.path.exists(destination_folder):
-            # Create the destination folder if it doesn't exist
-            os.makedirs(destination_folder)
-            print(f"The folder '{destination_folder}' has been created.")
+    # Check if the destination folder exists
+    if not os.path.exists(destination_folder):
+        # Create the destination folder if it doesn't exist
+        os.makedirs(destination_folder)
+        print(f"The folder '{destination_folder}' has been created.")
 
-        # Create the file within the destination folder
-        file_path = os.path.join(destination_folder, "test.py")
-        with open(file_path, "w") as file:
-            # Convert the string to Python code
-            python_code = ast.unparse(module_ast)
-            file.write(python_code)
+    # Create the file within the destination folder
+    file_path = os.path.join(destination_folder, "test.py")
+    with open(file_path, "w") as file:
+        # Convert the string to Python code
+        python_code = ast.unparse(module_ast)
+        file.write(python_code)
 
         print(f"File 'test.py' created in '{destination_folder}' with the converted Python code.")
-        
     # print(ast.unparse(module_ast))
     # print(ast.dump(module_ast, indent=4))
 
@@ -132,7 +172,7 @@ def runFaultLocalization(test_path, src_path):
     return subprocess.run(["python3", "-m", "pytest", f"{test_path}", "--src", f"{src_path}", "--family", "sbfl", "--granularity", "statement", "--top-n" , "25"], stderr=subprocess.PIPE)
 
 
-def main(inputs, outputs, function_name, source_folder, destination_folder, file_id):
+def main(inputs, outputs, function_name, source_folder, destination_folder, file_id, inputHints, outputHints):
     # delete the folder of the fault localization if found
     folder_path = '..'
     deleteFolder(folder_path)
@@ -141,7 +181,7 @@ def main(inputs, outputs, function_name, source_folder, destination_folder, file
     copyFolder(source_folder, destination_folder, file_id)
 
     # Create the PyTest file with the test cases
-    create_py_test(inputs, outputs, function_name, destination_folder)
+    create_py_test(inputs, outputs, function_name, destination_folder, inputHints, outputHints)
 
     # Run the fault localization tool
     test_path = f'{destination_folder}/test.py'
