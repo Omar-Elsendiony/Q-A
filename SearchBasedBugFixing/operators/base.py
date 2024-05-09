@@ -3,7 +3,7 @@ import random
 
 
 class baseOperator(ast.NodeVisitor):
-    mutatedSet = set()  # set of ast nodes that were mutated
+    # mutatedSet = set()  # set of ast nodes that were mutated
     identifiers = []  # list of identifiers in the code
     maxRand = 100  # maximum random number
 
@@ -73,9 +73,6 @@ class baseOperator(ast.NodeVisitor):
         """Visit a node."""
         # if isinstance(node, list): node = node[0] # as it will be a list with first element only
         method = 'visit_' + node.__class__.__name__
-        print('-----------------------------------')
-        print(method)
-        print('-----------------------------------')
 
         visitor = getattr(self, method, self.generic_visit)
         if (visitor != self.generic_visit and not self.finishedMutation): # this means that the mutation has already been done
@@ -138,4 +135,10 @@ class baseOperator(ast.NodeVisitor):
     
     # def visit_Name(self, node):
 
-    #     return ast.BinOp(left=ast.Name(id=node.id, ctx=ast.Load()), op=ast.Sub(), right=ast.Constant(id='y', ctx=ast.Load()))
+    #     if not (hasattr(node, 'parent')): return node
+    #     if (node.parent.__class__.__name__ == "Call"):
+    #         # print(node.parent.func.id + "weeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
+    #         if (node.parent.func.id == node.id): return node
+    #         return ast.BinOp(left=ast.Name(id=node.id, ctx=ast.Load()), op=ast.Sub(), right=ast.Constant(value=1))
+    #     else:
+    #         return node

@@ -122,12 +122,15 @@ def create_py_test(inputs, outputs, function_name, destination_folder, inputHint
             input_str = f"input_{j} = "
             val_inputs.append(f"input_{j}")
             val_input = get_value(inputs[i][j], inputHints[j])
-            val_output = get_value(outputs[i][j], outputHints[j])
-            val_outputs.append(val_output)
+
             input_str += f"{val_input}"
             input_node = ast.parse(input_str).body[0]
             fn_ast.body.append(input_node)
-
+        
+        for j in range(len(outputs[i])):
+            val_output = get_value(outputs[i][j], outputHints[j])
+            val_outputs.append(val_output)
+        
         final_output = ""
         # val outputs is the current output string
         if len(val_outputs) == 1:
@@ -169,7 +172,7 @@ def runFaultLocalization(test_path, src_path):
     # test_path = "O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy\FaultLocalization/test/test_1.py"
     # src_path = "O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy\FaultLocalization/test/src.py"
     # python -m pytest .\MyMutpy\FaultLocalization\test\test_1.py   --src .\MyMutpy\FaultLocalization\test\src.py  --family sbfl  --granularity statement --top-n 14
-    return subprocess.run(["python3", "-m", "pytest", f"{test_path}", "--src", f"{src_path}", "--family", "sbfl", "--granularity", "statement", "--top-n" , "25"], stderr=subprocess.PIPE)
+    return subprocess.run(["python3", "-m", "pytest", f"{test_path}", "--src", f"{src_path}", "--family", "sbfl", "--granularity", "statement", "--top-n" , "25"], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 
 
 def main(inputs, outputs, function_name, source_folder, destination_folder, file_id, inputHints, outputHints):

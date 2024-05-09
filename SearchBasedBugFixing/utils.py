@@ -129,7 +129,7 @@ def segmentLine(line):
         elif (line[i] in operators_1 and ((line[i + 1] in operators_1 and line[i + 2] == '=') or line[i + 1] == '=')):
             # this is augmented Assignment
             col_offsets.append(i + 1)
-            addColumnOffset(unit_ColOffset, line[i], i + 1)
+            addColumnOffset(unit_ColOffset, 'AugAssign', i + 1)
 
             temp = checkSavedSequence(temp, lst, st, unit_ColOffset=unit_ColOffset, col_offsets=col_offsets)
             if ((line[i + 1] in operators_1 and line[i + 2] == '=')):
@@ -153,7 +153,7 @@ def segmentLine(line):
                 lst.append("=")
                 st.add("=")
                 addColumnOffset(unit_ColOffset, "=", i + 1)
-        
+        # this condition checks for infix operators of 2 characters like ** or //
         elif (line[i] in operators_1 and (temp != "" or line[i+1] != " ")): # this means that the operators and the operands are adherent
             lst.append(temp)
             st.add(temp)

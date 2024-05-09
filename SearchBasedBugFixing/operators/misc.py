@@ -159,7 +159,7 @@ class ConstantNumericReplacement(baseOperator):
             return node
         func = self.choose_mutation_random_dist([self.mutate_Num_incr_1, self.mutate_Num_decr_1])
         self.finishedMutation = True
-        self.mutatedSet.add(node)
+        # self.mutatedSet.add(node)
         return func(node)
 
     @classmethod
@@ -167,12 +167,6 @@ class ConstantNumericReplacement(baseOperator):
         return 'CNR'  # Constant Replacement
 
 class ConstantStringReplacement(baseOperator):
-
-    # def mutate_Str_empty(self, node):
-    #     if not node.s or self.is_docstring(node):
-    #         raise node
-
-    #     return ast.Constant(s='')
 
     def visit_Str(self, node):
         if not self.wanted_line(node.lineno):
@@ -186,11 +180,9 @@ class ConstantStringReplacement(baseOperator):
     class IdentifierReplacement(baseOperator):
         
         def visit_Name(self, node):
-        # generate a random number and according you will replace the node identifier with another in the identifiers list
             if self.wanted_line(node.lineno):
                 if node.id in self.identifiers:
-                    self.mutatedSet.add(node)
-
+                    # self.mutatedSet.add(node)
                     selectedIdentifier = random.choice(self.identifiers)
                     while(selectedIdentifier == node.id and len(self.identifiers) > 1):
                         selectedIdentifier = random.choice(self.identifiers)

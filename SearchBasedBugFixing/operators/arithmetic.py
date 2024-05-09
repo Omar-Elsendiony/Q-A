@@ -57,7 +57,7 @@ class ArithmeticOperatorDeletion(ArithmeticOperator):
         """
         if self.wanted_line(node.lineno):
             self.finishedMutation = True
-            self.mutatedSet.add(node)
+            # self.mutatedSet.add(node)
             return self.visit(node.left)
         else:
             return ast.BinOp(left = self.visit(node.left), op=node.op, right=self.visit(node.right)) # if you do not want to continue visiting child nodes, if not self.generic_visit(node)
@@ -86,9 +86,9 @@ class AdditionOperatorReplacement(ArithmeticOperator):
     def visit_Add(self, node):
         if node.parent is not None and self.wanted_line(node.parent.lineno, '+'):
             self.finishedMutation = True
-            self.mutatedSet.add(node)
+            # self.mutatedSet.add(node)
             return ast.Sub()
-        return super().visit_Add(node)
+        return node
 
 class SubtractionOperatorReplacement(ArithmeticOperator):
 
@@ -112,7 +112,7 @@ class SubtractionOperatorReplacement(ArithmeticOperator):
     def visit_Sub(self, node):
         if node.parent is not None and self.wanted_line(node.parent.lineno, '-'):
             self.finishedMutation = True
-            self.mutatedSet.add(node)
+            # self.mutatedSet.add(node)
             return ast.Add()
         return node
 
@@ -143,7 +143,7 @@ class MultiplicationOperatorReplacement(ArithmeticOperator):
     def visit_Mult(self, node):
         if node.parent is not None and self.wanted_line(node.parent.lineno, '*'):
             self.finishedMutation = True
-            self.mutatedSet.add(node)
+            # self.mutatedSet.add(node)
             return ast.Div()
         return node
 
@@ -171,7 +171,7 @@ class DivisionOperatorReplacement(ArithmeticOperator):
     def visit_Div(self, node):
         if node.parent is not None and self.wanted_line(node.parent.lineno, '/'):
             self.finishedMutation = True
-            self.mutatedSet.add(node)
+            # self.mutatedSet.add(node)
             return ast.Mult()
         return node
 
@@ -199,7 +199,7 @@ class FloorDivisionOperatorReplacement(ArithmeticOperator):
     def visit_FloorDiv(self, node):
         if node.parent is not None and self.wanted_line(node.parent.lineno, '//'):
             self.finishedMutation = True
-            self.mutatedSet.add(node)
+            # self.mutatedSet.add(node)
             return ast.Div()
         return node
     
@@ -229,7 +229,7 @@ class ModuloOperatorReplacement(ArithmeticOperator):
     def visit_Mod(self, node):
         if node.parent is not None and self.wanted_line(node.parent.lineno, '%'):
             self.finishedMutation = True
-            self.mutatedSet.add(node)
+            # self.mutatedSet.add(node)
             return ast.Div()
         return node
 
@@ -254,7 +254,7 @@ class PowerOperatorReplacement(ArithmeticOperator):
     def visit_Pow(self, node):
         if node.parent is not None and self.wanted_line(node.parent.lineno, '**'):
             self.finishedMutation = True
-            self.mutatedSet.add(node)
+            # self.mutatedSet.add(node)
             return ast.Mult()
         return node
 
@@ -271,7 +271,7 @@ class AugmentedAssignReplacement(ArithmeticOperator):
         if (lineno is None): parent = getattr(node, 'parent', None); lineno = getattr(parent, 'lineno', None)
         if lineno == self.target_node_lineno :
             self.finishedMutation = True
-            self.mutatedSet.add(node)
+            # self.mutatedSet.add(node)
             mutation = self.choose_mutation_random_dist(AugmentedAssignReplacement.mutations)
             return ast.AugAssign(target=self.visit(node.target), op=mutation, value=self.visit(node.value))
         else:

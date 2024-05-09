@@ -15,23 +15,11 @@ import faultLocalizationUtils
 from SearchBasedBugFixing.identifier.identifierVisitor import IdentifierVisitor
 import InsertVisitor
 import SwapVisitor
+import multiprocessing
 
 def editFreq(cand):
     ## TODO ##
     pass
-
-def compare_input_output(res, output):
-    outputMod = output
-    if (type(output) is list):
-        if len(output) == 1:
-            outputMod = output[0]
-        else:
-            outputMod = tuple(output)
-
-    if (res == outputMod):
-        return True
-    return False
-
 
 def fitness_testCasesPassed(program:str, program_name:str, inputs:List, outputs:List) -> int:
     """
@@ -55,10 +43,10 @@ def fitness_testCasesPassed(program:str, program_name:str, inputs:List, outputs:
                     editedProgram = program + f'\n\ntestcase = {testcase}\nres = {program_name}({testcase})\n\nprint(res)'
                 res, isError = runCode(editedProgram, globals())
                 if (isError):
-                    return -9
+                    return False
                 res = res.strip()
-                if (compare_input_output(eval(res), outputs[i])):
-                    passedTests += 1
+                if (eval(res) != outputs[i]):
+                    return False
             else:
                 editedProgram = program + f'\n\ntestcase = {testcase}\nres = {program_name}(*testcase)\n\nprint(res)'
             
@@ -68,7 +56,7 @@ def fitness_testCasesPassed(program:str, program_name:str, inputs:List, outputs:
                 if (isError):
                     passedTests -= 9
                     return passedTests
-                if (compare_input_output(eval(res), outputs[i])):
+                if (eval(res) == outputs[i]):
                     passedTests += 1
         except Exception as e:
             # print(e)
@@ -79,7 +67,17 @@ def fitness_testCasesPassed(program:str, program_name:str, inputs:List, outputs:
     return passedTests
 
 
+def compare_input_output(res, output):
+    outputMod = output
+    if (type(output) is list):
+        if len(output) == 1:
+            outputMod = output[0]
+        else:
+            outputMod = tuple(output)
 
+    if (res == outputMod):
+        return True
+    return False
     
 
 def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> bool:
@@ -107,7 +105,7 @@ def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> 
                 res = res.strip()
                 # if len(outputs[i]) == 1:
                 #     outputs[i] = outputs[i][0]
-                if (not compare_input_output(eval(res), outputs[i])):
+                if (eval(res) != outputs[i]):
                     return False
             else:
                 # if (i == 0): # add in the first iteration only
@@ -129,37 +127,13 @@ def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> 
     return True
 
 
-import subprocess
-def passesNegTests_2(program:str, program_name:str, inputs:List, outputs:List):
-    test_path = f'testcases/GeneratedTests/test.py'
-    src_path = f'testcases/GeneratedTests/source_code.py'
-    res = subprocess.run(["python3", "-m", "pytest", f"{test_path}"], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-    # print(str(res).split()[-1])
-    res = res.stdout.decode('utf-8')
-    splitted = res.split()
-    passed = None; Failed = None
-    passOrFailedNum = splitted[-5]
-    passOrFailedString = splitted[-4]
-    if (passOrFailedString == "passed"):
-        passed = passOrFailedNum
-    else:
-        Failed = passOrFailedNum
-        passed = 0
-    if passed == len(inputs):
-        return True
-    else:
-        return False
-
-
 def selectPool(candidates:List, inputs:List, outputs:List) -> Set:
     """Select pool determined by the number of testcases passed by the candidates"""
     scores = [] # list of scores that will be used to choose the candidate to be selected
-    # for cand in candidates:
-    #     scores.append(passesNegTests(ast.unparse(cand), methodUnderTestName, inputs, outputs) + 10) # why +10, just to make it non-zero and also relatively, it stays the same.
-    # choice = random.choices(range(len(candidates)), weights = scores, k=1)[0]
-
-    return ast.unparse(candidates[0])
-    # return (ast.unparse(candidates[0]))
+    for cand in candidates:
+        scores.append(fitness_testCasesPassed(ast.unparse(cand), methodUnderTestName, inputs, outputs) + 10) # why +10, just to make it non-zero and also relatively, it stays the same.
+    choice = random.choices(candidates, weights = scores, k=1)[0]
+    return ast.unparse(choice)
 
 
 # def selectPool(candidates:Set) -> Set:
@@ -186,7 +160,6 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
     # add this line as type ignores gets missed in the mutations and it is needed in ast.unparse
     cand_ast.type_ignores = []
 
-    # parentify the candidate so it will be used by functions like mutate_DIV, mutate_ADD, etc.
     utils.parentify(cand_ast)
     # get the list of identifiers of an ast using IdentifierVisitor
     idVistitor =  IdentifierVisitor()
@@ -195,26 +168,23 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
     # baseOperator.set_identifiers(list(idVistitor.get_identifiers))
 
     for f in locs:
-        # import time
         # parentify the candidate so it will be used by functions like mutate_DIV, mutate_ADD, etc.
         utils.parentify(cand_ast)
-        # start = time.time()
         try:
             # segment line into presumably tokens
             tokenList, tokenSet, offsets, units_ColOffset = utils.segmentLine(splitted_cand[f - 1])
         except:
-            # because the line may be removed by mutations
             continue
-        # print(time.time() - start)
-
+        
+        
         # getting the mutations that can be applied, original tokens and weight of each mutation
         op_f_list, op_f_weights, original_op = ops(tokenSet)
         # op_f_list may be empty as the lines are removed and added, etc. However, running the fault localization again will solve the issue
         if (op_f_list == []):
             continue
-        # start = time.time()
+
         # Choose the index with the higher probability
-        choice_index = random.choices(range(len(op_f_list)), weights = op_f_weights, k=1)[0]
+        choice_index = (random.choices(range(len(op_f_list)), weights = op_f_weights, k=1)[0])
         # Get the operation neumonic from operation list
         op_f = op_f_list[choice_index]
         # get the colum offset occurances of such an operation
@@ -237,16 +207,15 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
         # adds/corrects the line number as well as column offset
         ast.fix_missing_locations(cand_dash)
         # add the candidate to the pool that you will select from
-        pool.append(cand_dash)
+        pool.add(cand_dash)
         cand_dash.type_ignores = []
         # return cand to its original ast (despite different location in memory)
         cand = copied_cand
-        # print(time.time() - start)
-    # exit(0)
 
 
 def insert(cand:str, pool:set):  # helper function to mutate the code
     # insert will be updated once more to add in certain locations
+
     # parse the candidate
     cand_ast = ast.parse(cand)
     # add type ignores
@@ -254,7 +223,7 @@ def insert(cand:str, pool:set):  # helper function to mutate the code
     # call the function that will insert the node and this function is present in the library insert visitor
     InsertVisitor.insertNode(cand_ast)
     # add to the possible candidates
-    pool.append(cand_ast)
+    pool.add(cand_ast)
     cand_ast.type_ignores = []
     # add the line numbers
     ast.fix_missing_locations(cand_ast)
@@ -264,7 +233,7 @@ def swap(cand:str, pool:set):  # helper function to mutate the code
     cand_ast = ast.parse(cand)
     cand_ast.type_ignores = []
     SwapVisitor.swapNodes(cand_ast)
-    pool.append(cand_ast)
+    pool.add(cand_ast)
     cand_ast.type_ignores = []
     ast.fix_missing_locations(cand_ast)
     return
@@ -274,8 +243,7 @@ def mutate(cand:str, ops:Callable, name_to_operator:Dict,
            faultyLineLocations: List, weightsFaultyLineLocations:List, L:int ):  # helper function to mutate the code
     errorOccured = False
     # try:
-    pool = list()
-    # pool_list = []
+    pool = set()
     availableChoices = {"1": "Insertion", "2": "Swap", "3": "Update"}
     weightsMutation = [0.1, 0.1, 0.8]
     choiceMutation = random.choices(list(availableChoices.keys()), weights=weightsMutation, k=1)[0]
@@ -293,15 +261,13 @@ def mutate(cand:str, ops:Callable, name_to_operator:Dict,
         insert(cand=cand, pool=pool)
     elif availableChoices[choiceMutation] == "Swap":
         swap(cand=cand, pool=pool)
-        pass
+        # pass
     if (len(pool) == 0):
         return cand, False
     # except Exception as e:
     #     # print(e)
     #     return cand, True
-    # return cand, False
-    sp = selectPool((pool), inputs, outputs), False
-    return sp
+    return selectPool(list(pool), inputs, outputs), False
 
 
 
@@ -341,21 +307,38 @@ def main(BugProgram:str,
         if not errorOccured:
             Pop.append(newMutation)  # mutate the population
 
-    # print(len(Pop))
+    print(len(Pop))
+    global process_candidate
     number_of_iterations = 0
+    def process_candidate(candidate):
+        if candidate not in Solutions:
+            if passesNegTests(candidate, MethodUnderTestName, inputs, outputs):
+                Solutions.add(candidate)
+            else:
+                mutationCandidate, errorOccured = mutate(candidate, ops, name_to_operator, FaultLocations, weightsFaultyLocations, L)
+                if not errorOccured:
+                    return mutationCandidate
+        return candidate
+
     while len(Solutions) < M and number_of_iterations < 10:
-        print(number_of_iterations)
-        print(len(Pop))
-        for p in Pop:
-            if p not in Solutions:
-                if passesNegTests(p, MethodUnderTestName, inputs, outputs):
-                    Solutions.add(p)
-                else:
-                    mutationCandidate, errorOccured = mutate(p, ops, name_to_operator, FaultLocations, weightsFaultyLocations, L)
-                    if (errorOccured): Pop.pop(Pop.index(p))
-                    else: Pop[Pop.index(p)] = mutationCandidate
-                    # Pop.remove(p) # remove p from the population to be inserted again after mutation
-                    # Pop.append(mutate(ops))
+        # multiprocessing.set_start_method('fork')
+        
+        pool = multiprocessing.Pool()
+        results = pool.map_async(process_candidate, Pop).get(9999999)
+        pool.close()
+        pool.join()
+        
+        for result in results:
+            if result is not None:
+                # if (result[-1] != '\n'):
+                #     result += '\n'
+                try:
+                    Pop[Pop.index(result)] = result
+                except Exception as e:
+                    pass
+                    # rnd = random.randint(range(len(Pop)))
+                    # Pop[rnd] = result
+        
         number_of_iterations += 1
     # print(Pop)
     return Solutions, Pop
@@ -364,6 +347,7 @@ def main(BugProgram:str,
 
 
 if __name__ == '__main__':
+    # multiprocessing.set_start_method('fork')
     ops = utils.mutationsCanBeApplied # ALIAS to operations that can be applied 
     inputs = []
     outputs = []
@@ -381,6 +365,8 @@ if __name__ == '__main__':
     try:
         with open(f'{inputProgramPath}/{file_name}', 'r') as file:
             buggyProgram = file.read()
+            while(buggyProgram[-1] == '\n'):
+                buggyProgram = buggyProgram[:-1]
             try:
                 bp = ast.parse(buggyProgram)
             except:
