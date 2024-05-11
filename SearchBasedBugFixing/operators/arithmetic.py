@@ -267,7 +267,7 @@ class AugmentedAssignReplacement(ArithmeticOperator):
     def visit_AugAssign(self, node):
         lineno = getattr(node, 'lineno', None)
         if (lineno is None): parent = getattr(node, 'parent', None); lineno = getattr(parent, 'lineno', None)
-        if lineno == self.target_node_lineno :
+        if self.wanted_line(lineno):
             self.finishedMutation = True
             # self.mutatedSet.add(node)
             mutation = self.choose_mutation_random_dist(AugmentedAssignReplacement.mutations)

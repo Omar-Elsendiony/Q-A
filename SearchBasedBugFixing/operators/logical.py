@@ -14,6 +14,7 @@ MR: membership
 """
 import ast
 from .base import baseOperator
+from random import choice
 
 class LogicalOperator(baseOperator):
     """
@@ -42,25 +43,29 @@ class RelationalOperatorReplacement(LogicalOperator):
         """
         Visit a Compare node
         """
-        if (node.lineno != self.target_node_lineno):
+        if not (self.wanted_line(node.lineno)):
             return node
-
+        self.finishedMutation = True
+        operationChoice = choice([ast.Gt, ast.LtE, ast.GtE, ast.Eq, ast.NotEq])()
+        # print(operationChoice)
         if isinstance(node.ops[0], ast.Lt):
-            node.ops[0] = ast.Gt()
+            # choice([ast.Gt, ast.LtE, ast.GtE, ast.Eq, ast.NotEq])
+            node.ops[0] = operationChoice
         elif isinstance(node.ops[0], ast.Gt):
-            node.ops[0] = ast.Lt()
+            node.ops[0] = operationChoice
         elif isinstance(node.ops[0], ast.LtE):
-            node.ops[0] = ast.GtE()
+            node.ops[0] = operationChoice
         elif isinstance(node.ops[0], ast.GtE):
-            node.ops[0] = ast.LtE()
+            node.ops[0] = operationChoice
         elif isinstance(node.ops[0], ast.Eq):
-            node.ops[0] = ast.NotEq()
+            node.ops[0] = operationChoice
         elif isinstance(node.ops[0], ast.NotEq):
-            node.ops[0] = ast.Eq()
+            node.ops[0] = operationChoice
         elif isinstance(node.ops[0], ast.In):
             node.ops[0] = ast.NotIn()
         elif isinstance(node.ops[0], ast.NotIn):
             node.ops[0] = ast.In()
+        
         return node
 
     @classmethod

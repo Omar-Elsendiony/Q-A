@@ -90,17 +90,18 @@ def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> 
     outputs : List :  outputs of the program
     """
     # let's try by capturing the name of the function in regex and the list of names is compared with the name of the function
-    editedProgram = None
+    editedProgram = ""
     res = None
 
     for i in range(len(inputs)):
         try:
             testcase = inputs[i]
-            if (type(testcase) is not list):
+            if (len(testcase) == 1):
+                testcase = testcase[0]
                 if (testcase.lower() == 'void'):
                     editedProgram = program + f'\n\nres = {program_name}()\n\nprint(res)'
                 else:
-                    editedProgram = program + f'\n\ntestcase = {testcase}\nres = {program_name}({testcase})\n\nprint(res)'
+                    editedProgram = program + f'\n\ntestcase = {testcase}\nres = {program_name}(testcase)\n\nprint(res)'
                 res, isError = runCode(editedProgram, globals())
                 if (isError):
                     return False
@@ -110,9 +111,15 @@ def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> 
                 if (not compare_input_output(eval(res), outputs[i])):
                     return False
             else:
-                # if (i == 0): # add in the first iteration only
-                #     program += f'\n\ntestcase = {testcase}\nres = {program_name}(*testcase)\n\nprint(res)'
-                editedProgram = program + f'\n\ntestcase = {testcase}\nres = {program_name}(*testcase)\n\nprint(res)'
+                inputStrings = ""
+                outputStrings = ""
+                for argIndex, arg in enumerate(testcase):
+                    input_inp = f'input_{argIndex} = {arg}\n'
+                    inputStrings += input_inp
+                for argIndex in range(len(testcase)):
+                    output_out = f'input_{argIndex},'
+                    outputStrings += output_out
+                editedProgram = program + inputStrings + f'\nres = {program_name}({outputStrings})\n\nprint(res)'
             
                 res, isError = runCode(editedProgram, globals())
                 if (isError):
@@ -340,7 +347,7 @@ def main(BugProgram:str,
         outputs:List, 
         FixPar:Callable,
         ops:Callable,
-        popSize:int = 150, 
+        popSize:int = 220, 
         M:int = 4, 
         E:int = 10, 
         L:int = 5):
@@ -370,7 +377,7 @@ def main(BugProgram:str,
 
     # print(len(Pop))
     number_of_iterations = 0
-    while len(Solutions) < M and number_of_iterations < 10:
+    while len(Solutions) < M and number_of_iterations < 2:
         # print(number_of_iterations)
         # print('--------------------------')
         # for p in Pop:
@@ -408,7 +415,7 @@ if __name__ == '__main__':
     inputCasesPath = 'SearchBasedBugFixing/testcases/Inputs'
     outputCasesPath = 'SearchBasedBugFixing/testcases/Outputs'
     metaDataPath = 'SearchBasedBugFixing/testcases/MetaData'
-    file_id = 1
+    file_id = 7
     file_name = f'{file_id}.txt'
     typeHintsInputs = []
     typeHintsOutputs = []
@@ -471,42 +478,46 @@ if __name__ == '__main__':
     except:
         print("Problem in reading files, insufficient data")
         exit(-1)
-    # print(inputs)
-    # print(outputs)
+    print(inputs)
+    print(outputs)
 
 
-    faultLocalizationUtils.main(
-        inputs = inputs, 
-        outputs = outputs, 
-        function_name= methodUnderTestName, 
-        source_folder= inputProgramPath, 
-        destination_folder= destinationLocalizationPath, 
-        file_id= file_id,
-        inputHints=typeHintsInputs,
-        outputHints=typeHintsOutputs)
+    # faultLocalizationUtils.main(
+    #     inputs = inputs, 
+    #     outputs = outputs, 
+    #     function_name= methodUnderTestName, 
+    #     source_folder= inputProgramPath, 
+    #     destination_folder= destinationLocalizationPath, 
+    #     file_id= file_id,
+    #     inputHints=typeHintsInputs,
+    #     outputHints=typeHintsOutputs)
     
-    faultLocations, weightsFaultyLocations = faultLocalizationUtils.getFaultyLines('..') # fauly locations are in the parent directory
-    destination_folder = destinationLocalizationPath
-    test_path = f'{destination_folder}/test.py'
-    src_path = f'{destination_folder}/source_code.py'
-    # s = faultLocalizationUtils.runFaultLocalization(test_path, src_path)
-    faultLocations = list(map(int, faultLocations))
-    weightsFaultyLocations = list(map(float, weightsFaultyLocations))
+    # faultLocations, weightsFaultyLocations = faultLocalizationUtils.getFaultyLines('..') # fauly locations are in the parent directory
+    # destination_folder = destinationLocalizationPath
+    # test_path = f'{destination_folder}/test.py'
+    # src_path = f'{destination_folder}/source_code.py'
+    # # s = faultLocalizationUtils.runFaultLocalization(test_path, src_path)
+    # faultLocations = list(map(int, faultLocations))
+    # weightsFaultyLocations = list(map(float, weightsFaultyLocations))
 
-    solutions, population = main(BugProgram=buggyProgram, 
-                    MethodUnderTestName=methodUnderTestName, 
-                    FaultLocations=faultLocations, 
-                    weightsFaultyLocations=weightsFaultyLocations, 
-                    inputs=inputs,
-                    outputs=outputs, 
-                    FixPar=None, 
-                    ops=ops)
-    print("************************************************************")
-    for solution in solutions:
-        print(solution)
-    print("************************************************************")
+    # solutions, population = main(BugProgram=buggyProgram, 
+    #                 MethodUnderTestName=methodUnderTestName, 
+    #                 FaultLocations=faultLocations, 
+    #                 weightsFaultyLocations=weightsFaultyLocations, 
+    #                 inputs=inputs,
+    #                 outputs=outputs, 
+    #                 FixPar=None, 
+    #                 ops=ops)
+    # print("************************************************************")
+    # for solution in solutions:
+    #     print(solution)
+    # print("************************************************************")
     # print(len(population))
+    # i = 0
     # for p in population:
     #     print(p)
-    # print(methodUnderTestName)
-    # print(buggyProgram)
+    #     i += 1
+    #     if (i == 10):
+    #         break
+    # # print(methodUnderTestName)
+    # # print(buggyProgram)

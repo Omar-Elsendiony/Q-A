@@ -94,7 +94,7 @@ def checkSavedSequence(temp: str, lst: list, st: set, unit_ColOffset: dict, col_
 def segmentLine(line):
     unit_ColOffset = dict() # dictionary that holds unit and the places that it is in 
     segmentors = {' ', '(', ')', '[', ']', '{', '}', ',', '.', ';'}
-    operators_1 = {'+', '-', '*', '/', '%', '>', '<', '^'} # one character string
+    operators_1 = {'+', '-', '*', '/', '%', '^'} # one character string
     operators_2 = {'**', '//', '<<', '>>'}  # two characters string
     i = 0  # iterator to parse the line character by character
     ln = len(line)  # length of the line
@@ -376,25 +376,26 @@ def processLine(line, i, testcaseList):
         print(f"Input is blank, please insert input at line {i + 1}")
         exit(-1)
     line = line.strip()
-    isList = False
-    isTuple = False
-    isSet = False
-    if (line.startswith('[') and line.endswith(']')): isList = True
-    if (line.startswith('(') and line.endswith(')')): isTuple = True
-    if (line.startswith('{') and line.endswith('}')): isSet = True
-    if (isList or isTuple or isSet):
-        line = line[1:-1]
-    extractedLine = line.strip().split(',')
-    if len(extractedLine) == 1:  # I think this condition is unnecessary , but later
-        testcaseList.append(checkTypeInput(extractedLine[0]))
-    else:
-        for i in range(len(extractedLine)):
-            extractedLine[i] = checkTypeInput(extractedLine[i])
-        testcaseList.append(extractedLine)
+    testcaseList.append(ast.literal_eval(line))
+    # isList = False
+    # isTuple = False
+    # isSet = False
+    # if (line.startswith('[') and line.endswith(']')): isList = True
+    # if (line.startswith('(') and line.endswith(')')): isTuple = True
+    # if (line.startswith('{') and line.endswith('}')): isSet = True
+    # if (isList or isTuple or isSet):
+    #     line = line[1:-1]
+    # extractedLine = line.strip().split(',')
+    # if len(extractedLine) == 1:  # I think this condition is unnecessary , but later
+    #     testcaseList.append(checkTypeInput(extractedLine[0]))
+    # else:
+    #     for i in range(len(extractedLine)):
+    #         extractedLine[i] = checkTypeInput(extractedLine[i])
+    #     testcaseList.append(extractedLine)
     
-    if isList: pass # it is already a llist
-    elif isTuple: testcaseList = tuple(testcaseList)
-    elif isSet: testcaseList = set(testcaseList)
+    # if isList: pass # it is already a llist
+    # elif isTuple: testcaseList = tuple(testcaseList)
+    # elif isSet: testcaseList = set(testcaseList)
 
 
 def parentify(tree):

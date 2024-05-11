@@ -88,6 +88,7 @@ class baseOperator(ast.NodeVisitor):
             if (specifiedOp is not None):
                 if (self.specifiedOperator == specifiedOp):
                     if (self.indexMutation == self.currentIndex):
+                        self.currentIndex += 1
                         return True
                     else:
                         self.currentIndex += 1
