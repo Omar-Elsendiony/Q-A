@@ -1,5 +1,4 @@
 import ast
-import copy
 import re
 from operators import standard_operators, experimental_operators
 import random
@@ -234,7 +233,8 @@ def segmentLine(line):
         checkSavedSequence(temp, lst, st, unit_ColOffset=unit_ColOffset, col_offsets=col_offsets)
 
     # checkIsSlice = False
-    return lst, st, col_offsets, unit_ColOffset
+    # return lst, st, col_offsets, unit_ColOffset
+    return  st, unit_ColOffset
 
 
 
@@ -255,11 +255,13 @@ def mutationsCanBeApplied(setTokens: set):
 
     # statements that include deletion are added first so, the ones that do not need to be assigned
     # low weight like the deletion, will be given filled with ordinary weights(no low weights)
-    # if 'if' in setTokens: lstMutations.append('COD') ; lstToBeMutated.append('if'); weights.append(0.01)
-    # if 'for' in setTokens: lstMutations.append('LOD'); lstToBeMutated.append('for'); weights.append(0.01)
-    # if 'while' in setTokens: lstMutations.append('LOD'); lstToBeMutated.append('while'); weights.append(0.01)
+    if 'if' in setTokens: lstMutations.append('COD') ; lstToBeMutated.append('if'); weights.append(0.01)
+    if 'for' in setTokens: lstMutations.append('LOD'); lstToBeMutated.append('for'); weights.append(0.01)
+    if 'while' in setTokens: lstMutations.append('LOD'); lstToBeMutated.append('while'); weights.append(0.01)
+    # if 'for' in setTokens: lstMutations.extend(['OIL', 'RIL', 'ZIL']); lstToBeMutated.extend(['for', 'for', 'for']); weights.extend([0.01, 0.01, 0.01])
+    # if 'while' in setTokens: lstMutations.extend(['OIL', 'RIL', 'ZIL']); lstToBeMutated.extend(['while', 'while', 'while']); weights.extend([0.01, 0.01, 0.01])
 
-    ################ ARITHMETIC OPERATORS ################
+    ################ ARITHMETIC OPERATORS ###########################
     if '+' in setTokens: lstMutations.append('ADD'); lstToBeMutated.extend(['+', '+']); lstMutations.append('ARD')
     if '-' in setTokens: lstMutations.append('SUB'); lstToBeMutated.extend(['-', '-']) ; lstMutations.append('ARD')
     if '*' in setTokens: lstMutations.append('MUL'); lstToBeMutated.extend(['*', '*'])  ; lstMutations.append('ARD')
@@ -308,11 +310,10 @@ def mutationsCanBeApplied(setTokens: set):
     if 'is' in setTokens: lstMutations.append('MER') ; lstToBeMutated.append('is')
 
     ############### LOOPS OPERATORS ################
-    if 'for' in setTokens: lstMutations.extend(['OIL', 'RIL', 'ZIL']); lstToBeMutated.extend(['for', 'for', 'for'])
-    if 'while' in setTokens: lstMutations.extend(['OIL', 'RIL', 'ZIL']); lstToBeMutated.extend(['while', 'while', 'while'])
-    if 'range' in setTokens: lstMutations.append('OIL') ; lstToBeMutated.append('range')
-    if 'enumerate' in setTokens: lstMutations.append('OIL') ; lstToBeMutated.append('enumerate')
-    if 'zip' in setTokens: lstMutations.append('OIL'); lstToBeMutated.append('zip')
+
+    # if 'range' in setTokens: lstMutations.append('OIL') ; lstToBeMutated.append('range')
+    # if 'enumerate' in setTokens: lstMutations.append('OIL') ; lstToBeMutated.append('enumerate')
+    # if 'zip' in setTokens: lstMutations.append('OIL'); lstToBeMutated.append('zip')
 
     ################ CONDITIONAL OPERATORS ################
     if 'if' in setTokens: lstMutations.append('COI') ; lstToBeMutated.append('if')

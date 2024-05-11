@@ -81,7 +81,7 @@ def fitness_testCasesPassed(program:str, program_name:str, inputs:List, outputs:
 
 
     
-
+# @profile
 def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> bool:
     """
     Inputs:
@@ -150,12 +150,31 @@ def passesNegTests_2(program:str, program_name:str, inputs:List, outputs:List):
     else:
         return False
 
+def passesNegTests_3(program:str, program_name:str, inputs:List, outputs:List):
+    test_path = f'testcases/GeneratedTests/test.py'
+    src_path = f'testcases/GeneratedTests/source_code.py'
+    res = subprocess.run(["python3", "-m", "pytest", f"{test_path}"], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    # print(str(res).split()[-1])
+    res = res.stdout.decode('utf-8')
+    splitted = res.split()
+    passed = None; Failed = None
+    passOrFailedNum = splitted[-5]
+    passOrFailedString = splitted[-4]
+    if (passOrFailedString == "passed"):
+        passed = passOrFailedNum
+    else:
+        Failed = passOrFailedNum
+        passed = 0
+    return passed
 
-def selectPool(candidates:List, inputs:List, outputs:List) -> Set:
+
+# @profile
+def selectPool(candidates:List, inputs:List, outputs:List):
     """Select pool determined by the number of testcases passed by the candidates"""
-    scores = [] # list of scores that will be used to choose the candidate to be selected
+    # scores = [] # list of scores that will be used to choose the candidate to be selected
+    # # # print(str(len(candidates))+'---------------------------------------')
     # for cand in candidates:
-    #     scores.append(passesNegTests(ast.unparse(cand), methodUnderTestName, inputs, outputs) + 10) # why +10, just to make it non-zero and also relatively, it stays the same.
+    #     scores.append(passesNegTests_3(ast.unparse(cand), methodUnderTestName, inputs, outputs) + 10) # why +10, just to make it non-zero and also relatively, it stays the same.
     # choice = random.choices(range(len(candidates)), weights = scores, k=1)[0]
 
     return ast.unparse(candidates[0])
@@ -166,7 +185,7 @@ def selectPool(candidates:List, inputs:List, outputs:List) -> Set:
 #     pass
 
 
-
+# @profile
 def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_operator, pool, limitLocations = 2):
     # instance of the copy class to be used for copying ASTs
     copier = copyMutation()
@@ -201,7 +220,7 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
         # start = time.time()
         try:
             # segment line into presumably tokens
-            tokenList, tokenSet, offsets, units_ColOffset = utils.segmentLine(splitted_cand[f - 1])
+            tokenSet, units_ColOffset = utils.segmentLine(splitted_cand[f - 1])
         except:
             # because the line may be removed by mutations
             continue
@@ -217,11 +236,9 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
         choice_index = random.choices(range(len(op_f_list)), weights = op_f_weights, k=1)[0]
         # Get the operation neumonic from operation list
         op_f = op_f_list[choice_index]
+        # print(op_f)
         # get the colum offset occurances of such an operation
-        try:
-            colOffsets = units_ColOffset[original_op[choice_index]]
-        except Exception as e:
-              print("My life is a lie")  
+        colOffsets = units_ColOffset[original_op[choice_index]]
         # get an index of the operation that you want to apply on
         col_index = random.randint(0, len(colOffsets) - 1)
         # get the operator class that holds all the logic from the 3 letters neumonic
@@ -236,9 +253,9 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
         cand_dash = operator(target_node_lineno = f, code_ast = cand_ast, indexMutation= col_index, specifiedOperator=original_op[choice_index]).visitC() # f + 1 because the line number starts from 1
         # adds/corrects the line number as well as column offset
         ast.fix_missing_locations(cand_dash)
+        cand_dash.type_ignores = []
         # add the candidate to the pool that you will select from
         pool.append(cand_dash)
-        cand_dash.type_ignores = []
         # return cand to its original ast (despite different location in memory)
         cand = copied_cand
         # print(time.time() - start)
@@ -277,9 +294,9 @@ def mutate(cand:str, ops:Callable, name_to_operator:Dict,
     pool = list()
     # pool_list = []
     availableChoices = {"1": "Insertion", "2": "Swap", "3": "Update"}
-    weightsMutation = [0.1, 0.1, 0.8]
+    weightsMutation = [0.01, 0.01, 0.98]
     choiceMutation = random.choices(list(availableChoices.keys()), weights=weightsMutation, k=1)[0]
-    if availableChoices[choiceMutation] == "Update":
+    if availableChoices[choiceMutation] == "Update" or availableChoices[choiceMutation] == "Insertion":
         update(
             cand=cand,
             faultyLineLocations=faultyLineLocations,
@@ -289,31 +306,41 @@ def mutate(cand:str, ops:Callable, name_to_operator:Dict,
             pool=pool,
             limitLocations=L
         )
+        # insert(cand=cand, pool=pool)
     elif availableChoices[choiceMutation] == "Insertion":
-        insert(cand=cand, pool=pool)
+        # insert(cand=cand, pool=pool)
+        pass
     elif availableChoices[choiceMutation] == "Swap":
         swap(cand=cand, pool=pool)
         pass
     if (len(pool) == 0):
         return cand, False
+
+    scores = [] # list of scores that will be used to choose the candidate to be selected
+    # # print(str(len(candidates))+'---------------------------------------')
+    for cand in pool:
+        scores.append(fitness_testCasesPassed(ast.unparse(cand), methodUnderTestName, inputs, outputs) + 10) # why +10, just to make it non-zero and also relatively, it stays the same.
+    choice = random.choices(range(len(pool)), weights = scores, k=1)[0]
+    return ast.unparse(pool[0]), False
+    
     # except Exception as e:
     #     # print(e)
     #     return cand, True
+    # ast.unparse(pool[0])
     # return cand, False
-    sp = selectPool((pool), inputs, outputs), False
-    return sp
+    # return selectPool(pool, inputs, outputs), False
 
 
-
+# @profile
 def main(BugProgram:str, 
         MethodUnderTestName:str, 
         FaultLocations:List,
         weightsFaultyLocations:List,
         inputs:List, 
         outputs:List, 
-        FixPar:Callable, 
+        FixPar:Callable,
         ops:Callable,
-        popSize:int = 20, 
+        popSize:int = 150, 
         M:int = 4, 
         E:int = 10, 
         L:int = 5):
@@ -344,16 +371,25 @@ def main(BugProgram:str,
     # print(len(Pop))
     number_of_iterations = 0
     while len(Solutions) < M and number_of_iterations < 10:
-        print(number_of_iterations)
-        print(len(Pop))
-        for p in Pop:
+        # print(number_of_iterations)
+        # print('--------------------------')
+        # for p in Pop:
+        #     print(p)
+        # print('--------------------------')
+        # if (number_of_iterations == 1):
+        #     x = 2;
+        # print(len(Pop))
+        for p_index, p in enumerate(Pop):
             if p not in Solutions:
                 if passesNegTests(p, MethodUnderTestName, inputs, outputs):
                     Solutions.add(p)
                 else:
                     mutationCandidate, errorOccured = mutate(p, ops, name_to_operator, FaultLocations, weightsFaultyLocations, L)
-                    if (errorOccured): Pop.pop(Pop.index(p))
-                    else: Pop[Pop.index(p)] = mutationCandidate
+                    # if (errorOccured): 
+                    #     Pop.pop(p_index)
+                    # else:
+                    #     Pop[p_index] = mutationCandidate
+                    Pop[p_index] = mutationCandidate
                     # Pop.remove(p) # remove p from the population to be inserted again after mutation
                     # Pop.append(mutate(ops))
         number_of_iterations += 1
@@ -372,7 +408,7 @@ if __name__ == '__main__':
     inputCasesPath = 'SearchBasedBugFixing/testcases/Inputs'
     outputCasesPath = 'SearchBasedBugFixing/testcases/Outputs'
     metaDataPath = 'SearchBasedBugFixing/testcases/MetaData'
-    file_id = 6
+    file_id = 1
     file_name = f'{file_id}.txt'
     typeHintsInputs = []
     typeHintsOutputs = []
@@ -470,7 +506,7 @@ if __name__ == '__main__':
         print(solution)
     print("************************************************************")
     # print(len(population))
-    for p in population:
-        print(p)
+    # for p in population:
+    #     print(p)
     # print(methodUnderTestName)
     # print(buggyProgram)

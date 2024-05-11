@@ -2,7 +2,6 @@ import os
 import shutil
 import ast
 import subprocess
-from subprocess import PIPE
 
 
 def getFaultyLines(folder_path):
@@ -169,9 +168,7 @@ def create_py_test(inputs, outputs, function_name, destination_folder, inputHint
     # print(ast.dump(module_ast, indent=4))
 
 def runFaultLocalization(test_path, src_path):
-    # test_path = "O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy\FaultLocalization/test/test_1.py"
-    # src_path = "O:\DriveFiles\GP_Projects\Bug-Repair\Q-A\MyMutpy\FaultLocalization/test/src.py"
-    # python -m pytest .\MyMutpy\FaultLocalization\test\test_1.py   --src .\MyMutpy\FaultLocalization\test\src.py  --family sbfl  --granularity statement --top-n 14
+
     return subprocess.run(["python3", "-m", "pytest", f"{test_path}", "--src", f"{src_path}", "--family", "sbfl", "--granularity", "statement", "--top-n" , "25"], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 
 

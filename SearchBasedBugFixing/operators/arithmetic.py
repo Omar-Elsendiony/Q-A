@@ -13,8 +13,6 @@ These includes:
 
 """
 import ast
-import random # useful for choosing random mutation from a pool of applicable mutations
-# import base
 from .base import baseOperator
 
 class ArithmeticOperator(baseOperator):

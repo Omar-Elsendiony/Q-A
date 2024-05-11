@@ -1,5 +1,5 @@
 import ast
-import random
+from random import choice, randint
 from utils import parentify
 
 
@@ -32,18 +32,18 @@ def insertNode(parent_node):
     if (len(vesselNodes) == 0):
         return
     try:
-        vesselNode = random.choice(vesselNodes)
+        vesselNode = choice(vesselNodes)
     except:
         return
         
     candInsertNode = None
     for j in range(5): # only 5 trials :)
-        candInsertNode = random.choice(candInsertNodes)
+        candInsertNode = choice(candInsertNodes)
         if (candInsertNode.__class__.__name__ != "While" and candInsertNode.__class__.__name__ != "If"):
             break
     if vesselNode.parent == candInsertNode or vesselNode is candInsertNode:
         return
     # choose a random line in the vessel to insert your new code into
-    indexBody = random.randint(0, len(vesselNode.body) - 1)
+    indexBody = randint(0, len(vesselNode.body) - 1)
     vesselNode.body.insert(indexBody, candInsertNode)
 

@@ -1,5 +1,5 @@
 import ast
-import random
+from random import choices
 from utils import parentify
 
 def isInBody(node):
@@ -31,7 +31,7 @@ def swapNodes(parent_node):
     SwapVisitor().visit(parent_node)
     candidates = SwapVisitor.handleLst
     while (not changed and u < upperLimit):
-        cand_dash = random.choices(candidates, k=2)
+        cand_dash = choices(candidates, k=2)
         if (cand_dash[0].parent.__class__.__name__ == cand_dash[1].parent.__class__.__name__):
             changed = True
             try:

@@ -56,17 +56,7 @@ class baseOperator(ast.NodeVisitor):
             The result of the visit on the copied node.
         """
         node = self.node
-        # if getattr(node, 'parent', None):
-        #     node = copy.copy(node)
-        #     if hasattr(node, 'lineno'):
-        #         del node.lineno
-        # node.parent = getattr(self, 'parent', None)
-        # node.children = []
-        # self.parent = node
         result_node = self.visit(node)
-        # self.parent = node.parent
-        # if self.parent:
-        #     self.parent.children += [node] + node.children
         return result_node
 
     def visit(self, node):
@@ -77,8 +67,8 @@ class baseOperator(ast.NodeVisitor):
         visitor = getattr(self, method, self.generic_visit)
         if (visitor != self.generic_visit and not self.finishedMutation): # this means that the mutation has already been done
             return visitor(node)
-        # if (self.finishedMutation): # this means that the mutation has already been done
-        #     return node
+        if (self.finishedMutation): # this means that the mutation has already been done
+            return node
         return visitor(node)
 
     def choose_mutation_random_dist(self, listChoices):

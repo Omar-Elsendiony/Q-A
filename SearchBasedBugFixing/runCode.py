@@ -1,6 +1,4 @@
-from ast import Dict
 import sys
-
 from time import sleep
 import threading
 from _thread import interrupt_main
@@ -20,7 +18,7 @@ class CustomThread(threading.Thread):
         return self._stopper.is_set()
 
     def run(self):
-        sleep(5)
+        sleep(1)
         while not self.stopped():
             interrupt_main()
 
