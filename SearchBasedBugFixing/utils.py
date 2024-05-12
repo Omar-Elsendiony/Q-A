@@ -378,7 +378,7 @@ def checkTypeInput(val):
     # if not within all of the previous conditions, val will return as it is
     return val
 
-def processLine(line, i, testcaseList):
+def processLine(line, i, testcaseList, hint = None):
     """
     process the line of either the input txt file or output text file
     Args:
@@ -393,7 +393,11 @@ def processLine(line, i, testcaseList):
     if (line.lower() == 'void'):
         testcaseList.append('void')
     else:
-        testcaseList.append(ast.literal_eval(line))
+        evaluate = ast.literal_eval(line)
+        if (hint == 'list'):
+            testcaseList.append(list(evaluate))
+        else:
+            testcaseList.append(evaluate)
     # isList = False
     # isTuple = False
     # isSet = False
@@ -419,6 +423,6 @@ def parentify(tree):
     tree.parent = None
     for node in ast.walk(tree):
         for child in ast.iter_child_nodes(node):
-            child.parent = node
+            child.parent = node 
 
 

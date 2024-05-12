@@ -21,6 +21,7 @@ def editFreq(cand):
     pass
 
 def compare_input_output(res, output):
+    
     outputMod = output
     if (type(output) is list):
         if len(output) == 1:
@@ -48,34 +49,42 @@ def fitness_testCasesPassed(program:str, program_name:str, inputs:List, outputs:
     for i in range(len(inputs)):
         try:
             testcase = inputs[i]
-            if (type(testcase) is not list):
+            if (len(testcase) == 1):
+                testcase = testcase[0]
                 if (testcase.lower() == 'void'):
                     editedProgram = program + f'\n\nres = {program_name}()\n\nprint(res)'
                 else:
                     editedProgram = program + f'\n\ntestcase = {testcase}\nres = {program_name}({testcase})\n\nprint(res)'
                 res, isError = runCode(editedProgram, globals())
                 if (isError):
-                    return -9
+                    return 0
                 res = res.strip()
                 if (compare_input_output(eval(res), outputs[i])):
                     passedTests += 1
             else:
-                editedProgram = program + f'\n\ntestcase = {testcase}\nres = {program_name}(*testcase)\n\nprint(res)'
-            
+                inputStrings = ""
+                outputStrings = ""
+                for argIndex, arg in enumerate(testcase):
+                    input_inp = f'input_{argIndex} = {arg}\n'
+                    inputStrings += input_inp
+                for argIndex in range(len(testcase)):
+                    output_out = f'input_{argIndex},'
+                    outputStrings += output_out
+                editedProgram = program + '\n' + inputStrings + f'\nres = {program_name}({outputStrings})\n\nprint(res)'
+
                 res, isError = runCode(editedProgram, globals())
                 res = res.strip()
                 # this mutation is of no avail and caused error
                 if (isError):
-                    passedTests -= 9
-                    return passedTests
+                    return 0
                 if (compare_input_output(eval(res), outputs[i])):
                     passedTests += 1
         except Exception as e:
             # print(e)
-            return -9
+            return 0
     # print(eval(res))
-    if (eval(res) is None and passedTests == 0):
-        passedTests -= 9
+    # if (eval(res) is None and passedTests == 0):
+    #     passedTests = 0
     return passedTests
 
 
@@ -105,7 +114,7 @@ def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> 
                 res, isError = runCode(editedProgram, globals())
                 if (isError):
                     return False
-                res = res.strip()
+                # res = res.strip()
 
                 if (not compare_input_output(eval(res), outputs[i])):
                     return False
@@ -118,16 +127,13 @@ def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> 
                 for argIndex in range(len(testcase)):
                     output_out = f'input_{argIndex},'
                     outputStrings += output_out
-                editedProgram = program + inputStrings + f'\nres = {program_name}({outputStrings})\n\nprint(res)'
+                editedProgram = program + '\n' + inputStrings + f'\nres = {program_name}({outputStrings})\n\nprint(res)'
             
                 res, isError = runCode(editedProgram, globals())
                 if (isError):
                     return False
                 res = res.strip()
-                # if outputs[i] is not list:
-                #     outputs[i] = outputs[i][0]
                 if (not compare_input_output(eval(res), outputs[i])):
-                # if (eval(res) != outputs[i]):
                     return False
         except Exception as e:
             return False
@@ -214,49 +220,63 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
     # parentify the candidate so it will be used by functions like mutate_DIV, mutate_ADD, etc.
     utils.parentify(cand_ast)
     # get the list of identifiers of an ast using IdentifierVisitor
-    idVistitor =  IdentifierVisitor()
+    idVistitor = IdentifierVisitor()
     idVistitor.visit(cand_ast)
-    # add the list of identifiers to the baseOperator class where it is seen by all its descendants
-    # baseOperator.set_identifiers((idVistitor.get_identifiers))
+    baseOperator.set_identifiers(idVistitor.get_identifiers())
+    baseOperator.set_functionIdentifiers(idVistitor.get_function_identifiers())
 
     for f in locs:
-        # import time
         # parentify the candidate so it will be used by functions like mutate_DIV, mutate_ADD, etc.
         utils.parentify(cand_ast)
-        # start = time.time()
         try:
             # segment line into presumably tokens
             tokenSet, units_ColOffset = utils.segmentLine(splitted_cand[f - 1])
         except:
             # because the line may be removed by mutations
             continue
-        # print(time.time() - start)
-
         # getting the mutations that can be applied, original tokens and weight of each mutation
         op_f_list, op_f_weights, original_op = ops(tokenSet)
         # op_f_list may be empty as the lines are removed and added, etc. However, running the fault localization again will solve the issue
         if (op_f_list == []):
             continue
-        # start = time.time()
+        
+        # copy the candidate as not to make the mutation affect the original candidate
+        copied_cand = copier.visit(cand_ast)
+        copied_cand.type_ignores = []
+        # changed from choosing the actual element to choosing the index, as getting 
+        # the operator attributed to the mutation is not possible with index
+        if f in idVistitor.get_function_identifiers_occurences().keys():
+            op_f_list.append("FAR")
+            op_f_weights.append(4)
+        if f in idVistitor.get_identifiers_occurences().keys():
+            op_f_list.append("IDR")
+            op_f_weights.append(2)
+
         # Choose the index with the higher probability
         choice_index = random.choices(range(len(op_f_list)), weights = op_f_weights, k=1)[0]
         # Get the operation neumonic from operation list
         op_f = op_f_list[choice_index]
-        # print(op_f)
-        # get the colum offset occurances of such an operation
-        colOffsets = units_ColOffset[original_op[choice_index]]
-        # get an index of the operation that you want to apply on
-        col_index = random.randint(0, len(colOffsets) - 1)
-        # get the operator class that holds all the logic from the 3 letters neumonic
-        operator = name_to_operator[op_f]
+        
+        if (choice == "FAR" or choice == "IDR"):
+            print(choice)
+            operator = name_to_operator[choice]
+            col_index = random.randint(0, idVistitor.get_identifiers_occurences().get(f))
+            print(col_index)
+            cand_dash = operator(target_node_lineno = f, indexMutation = col_index, code_ast = cand_ast).visitC()
 
-        # copy the candidate as not to make the mutation affect the original candidate
-        copied_cand = copier.visit(cand_ast)
-        copied_cand.type_ignores = []
+        else:
+            # get the colum offset occurances of such an operation
+            colOffsets = units_ColOffset[original_op[choice_index]]
+            # get an index of the operation that you want to apply on
+            col_index = random.randint(0, len(colOffsets) - 1)
+            # get the operator class that holds all the logic from the 3 letters neumonic
+            operator = name_to_operator[op_f]
+            col_index = col_index if op_f != "ARD" else choice_index // 2
+            # apply the mutation and acquire a new candidate
+            cand_dash = operator(target_node_lineno = f, code_ast = cand_ast, indexMutation= col_index, specifiedOperator=original_op[choice_index]).visitC() # f + 1 because the line number starts from 1
 
-        col_index = col_index if op_f != "ARD" else choice_index // 2
-        # apply the mutation and acquire a new candidate
-        cand_dash = operator(target_node_lineno = f, code_ast = cand_ast, indexMutation= col_index, specifiedOperator=original_op[choice_index]).visitC() # f + 1 because the line number starts from 1
+
+
         # adds/corrects the line number as well as column offset
         ast.fix_missing_locations(cand_dash)
         cand_dash.type_ignores = []
@@ -321,7 +341,7 @@ def mutate(cand:str, ops:Callable, name_to_operator:Dict,
 
     scores = [] # list of scores that will be used to choose the candidate to be selected
     for cand in pool:
-        scores.append(fitness_testCasesPassed(ast.unparse(cand), methodUnderTestName, inputs, outputs) + 10) # why +10, just to make it non-zero and also relatively, it stays the same.
+        scores.append(fitness_testCasesPassed(ast.unparse(cand), methodUnderTestName, inputs, outputs) * 10 + 1) # why +10, just to make it non-zero and also relatively, it stays the same.
     choice = random.choices(range(len(pool)), weights = scores, k=1)[0]
     return ast.unparse(pool[choice]), False
 
@@ -337,7 +357,7 @@ def main(BugProgram:str,
         FixPar:Callable,
         ops:Callable,
         popSize:int = 220, 
-        M:int = 4, 
+        M:int = 1, 
         E:int = 10, 
         L:int = 5):
     """
@@ -397,7 +417,7 @@ if __name__ == '__main__':
     inputCasesPath = 'SearchBasedBugFixing/testcases/Inputs'
     outputCasesPath = 'SearchBasedBugFixing/testcases/Outputs'
     metaDataPath = 'SearchBasedBugFixing/testcases/MetaData'
-    file_id = 2
+    file_id = 1
     file_name = f'{file_id}.txt'
     typeHintsInputs = []
     typeHintsOutputs = []
@@ -435,26 +455,32 @@ if __name__ == '__main__':
         with open(f'{inputCasesPath}/{file_name}', 'r') as file:
             lines = file.readlines()
             i = 0
+            k = 0
             inputTestCase = []
             for line in lines:
                 if (line == '\n'): 
-                    if (inputTestCase != []) : inputs.append(inputTestCase); inputTestCase = []
-                    else: continue
-                else: utils.processLine(line, i, inputTestCase)
-                i += 1
+                    if (inputTestCase != []) : inputs.append(inputTestCase); inputTestCase = []; k = 0
+                    else:
+                        continue
+                else: 
+                    utils.processLine(line, i, inputTestCase, typeHintsInputs[k])
+                    i += 1; k += 1
             if (inputTestCase != []):
                 inputs.append(inputTestCase)
 
         with open(f'{outputCasesPath}/{file_name}', 'r') as file:
             lines = file.readlines()
             i = 0
+            k = 0
             outputTestCase = []
             for line in lines:
                 if (line == '\n'):
-                    if (outputTestCase != []) : outputs.append(outputTestCase);outputTestCase = []
-                    else: continue
-                else: utils.processLine(line, i, outputTestCase)
-                i += 1
+                    if (outputTestCase != []) : outputs.append(outputTestCase);outputTestCase = [];k = 0
+                    else: 
+                        continue
+                else: 
+                    utils.processLine(line, i, outputTestCase, typeHintsOutputs[k])
+                    i += 1 ; k += 1
             if (outputTestCase != []):
                 outputs.append(outputTestCase)
     except Exception as e:
@@ -464,6 +490,15 @@ if __name__ == '__main__':
     print(inputs)
     print(outputs)
 
+    pr = """def return_list_1_to_10_except_5():
+    lst = []
+    for i in range(1, 11):
+        if not i != 5:
+            continue
+        lst.append(i)
+    return lst"""
+    x = fitness_testCasesPassed(pr, 'return_list_1_to_10_except_5', inputs, outputs)
+    print(x)
 
     faultLocalizationUtils.main(
         inputs = inputs, 
@@ -495,12 +530,12 @@ if __name__ == '__main__':
     for solution in solutions:
         print(solution)
     print("************************************************************")
-    # print(len(population))
-    # i = 0
-    # for p in population:
-    #     print(population[i + 100])
-    #     i += 1
-    #     if (i == 10):
-    #         break
-    # print(methodUnderTestName)
-    # print(buggyProgram)
+    print(len(population))
+    i = 0
+    for p in population:
+        print(population[i + 100])
+        i += 1
+        if (i == 10):
+            break
+    print(methodUnderTestName)
+    print(buggyProgram)

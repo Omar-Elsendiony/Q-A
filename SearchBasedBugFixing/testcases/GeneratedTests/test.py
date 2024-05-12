@@ -2,12 +2,8 @@ from source_code import *
 
 def test_0():
     pass
-    input_0 = 1
-    input_1 = 2
-    assert add(input_0, input_1) == 3
+    assert return_list_1_to_10_except_5() == [1, 2, 3, 4, 6, 7, 8, 9, 10]
 
 def test_1():
     pass
-    input_0 = 789774
-    input_1 = 51515
-    assert add(input_0, input_1) == 841289
+    assert return_list_1_to_10_except_5() == [1, 2, 3, 4, 6, 7, 8, 9, 10]

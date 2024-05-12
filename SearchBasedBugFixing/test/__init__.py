@@ -62,18 +62,18 @@ class TestBase(unittest.TestCase):
                     # the operator attributed to the mutation is not possible with index
                     if f + 1 in idVistitor.get_function_identifiers_occurences().keys():
                         op_f_list.append("FAR")
-                        op_f_weights.append(1)
+                        op_f_weights.append(4)
                     if f + 1 in idVistitor.get_identifiers_occurences().keys():
                         op_f_list.append("IDR")
-                        op_f_weights.append(1)
+                        op_f_weights.append(2)
                     
                     choice_index = (random.choices(range(len(op_f_list)), weights = op_f_weights, k=1)[0])
                     choice = op_f_list[choice_index]
                     if (choice == "FAR" or choice == "IDR"):
-                        # choice = "IDR"
-                        print("Here we gooo!")
+                        print(choice)
                         op = name_to_operator[choice]
                         col_index = random.randint(0, idVistitor.get_identifiers_occurences().get(f + 1))
+                        print(col_index)
                         mutant = op(target_node_lineno = f + 1, indexMutation = col_index, code_ast = line_ast).visitC()
 
                     else:
