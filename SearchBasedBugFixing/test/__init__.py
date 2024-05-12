@@ -41,14 +41,13 @@ class TestBase(unittest.TestCase):
             line_ast = ast.parse(line)
             line_ast.type_ignores = []
             utils.parentify(line_ast)
+
             idVistitor = IdentifierVisitor()
             idVistitor.visit(line_ast)
-            baseOperator.set_identifiers(list(idVistitor.get_identifiers))
-            # print("------------------------------------")
-            # print(baseOperator.get_identifiers())
-            # print("------------------------------------")
+            baseOperator.set_identifiers(idVistitor.get_identifiers())
+            baseOperator.set_functionIdentifiers(idVistitor.get_function_identifiers())
 
-            numberMutationsNeeded = 1
+            numberMutationsNeeded = 10
             for m in range(numberMutationsNeeded):
                 for f in faultyLineLocations:
                     utils.parentify(line_ast)
@@ -56,19 +55,35 @@ class TestBase(unittest.TestCase):
                     op_f_list, op_f_weights, original_op = utils.mutationsCanBeApplied(tokenSet)
                     if (op_f_list == []):
                         continue
-                    # changed from choosing the actual element to choosing the index, as getting 
-                    # the operator attributed to the mutation is not possible with index
-                    choice_index = (random.choices(range(len(op_f_list)), weights = op_f_weights, k=1)[0])
-                    choice = op_f_list[choice_index]
-                    colOffsets = units_offsets[original_op[choice_index]]
-                    col_index = random.randint(0, len(colOffsets) - 1)
-                    # print(col_index)
-                    op = name_to_operator[choice]
+                    # copy before any choice
                     copied_line_ast = self.copier.visit(line_ast)
                     copied_line_ast.type_ignores = []
-                    ast.fix_missing_locations(line_ast)
-                    col_index = col_index if choice != "ARD" else choice_index // 2
-                    mutant = op(target_node_lineno = f + 1, indexMutation = col_index, code_ast = line_ast, specifiedOperator=original_op[choice_index]).visitC()
+                    # changed from choosing the actual element to choosing the index, as getting 
+                    # the operator attributed to the mutation is not possible with index
+                    if f + 1 in idVistitor.get_function_identifiers_occurences().keys():
+                        op_f_list.append("FAR")
+                        op_f_weights.append(1)
+                    if f + 1 in idVistitor.get_identifiers_occurences().keys():
+                        op_f_list.append("IDR")
+                        op_f_weights.append(1)
+                    
+                    choice_index = (random.choices(range(len(op_f_list)), weights = op_f_weights, k=1)[0])
+                    choice = op_f_list[choice_index]
+                    if (choice == "FAR" or choice == "IDR"):
+                        # choice = "IDR"
+                        print("Here we gooo!")
+                        op = name_to_operator[choice]
+                        col_index = random.randint(0, idVistitor.get_identifiers_occurences().get(f + 1))
+                        mutant = op(target_node_lineno = f + 1, indexMutation = col_index, code_ast = line_ast).visitC()
+
+                    else:
+                        colOffsets = units_offsets[original_op[choice_index]]
+                        col_index = random.randint(0, len(colOffsets) - 1)
+                        op = name_to_operator[choice]
+                        
+                        col_index = col_index if choice != "ARD" else choice_index // 2
+                        mutant = op(target_node_lineno = f + 1, indexMutation = col_index, code_ast = line_ast, specifiedOperator=original_op[choice_index]).visitC()
+                    
                     mutant = ast.fix_missing_locations(mutant) # after mutation, we need to fix the missing locations
                     line_ast = copied_line_ast
                     # res = (SearchBasedBugFixing.unparser.unparser().visit(mutant))

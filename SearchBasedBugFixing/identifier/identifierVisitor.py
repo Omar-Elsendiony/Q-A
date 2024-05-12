@@ -2,20 +2,39 @@ import ast
 
 class IdentifierVisitor(ast.NodeVisitor):
     def __init__(self):
-        self.assignmentIdentifiers = set()
-        self.functionIdentifiers = set()
-        self.unknownIdentifiers = set()
+        # self.assignmentIdentifiers = set()
+        # self.unknownIdentifiers = set()
+        # self.unknownIdentifiersOccurences = dict()
+        self.functionIdentifiers = list()
+        self.identifiers = list()
+        self.identifiersOccurences = dict()
+        self.functionIdentifiersOccurences = dict()
 
     def visit_Name(self, node):
-        if isinstance(node.parent, ast.Assign):
-            self.assignmentIdentifiers.add(node.id)
-        elif isinstance(node.parent, ast.Call):
-            self.functionIdentifiers.add(node.id)
+        # print(node.lineno)
+        if isinstance(node.parent, ast.Call) and node is not node.parent.func:
+            self.functionIdentifiers.append(node.id)
+            if self.functionIdentifiersOccurences.get(node.lineno) is None:
+                self.functionIdentifiersOccurences[node.lineno] = 0
+            else:
+                self.functionIdentifiersOccurences[node.lineno] += 1
         else:
-            self.unknownIdentifiers.add(node.id)
-        # self.identifiers.add(node.id)
+            self.identifiers.append(node.id)
+            
+            if self.identifiersOccurences.get(node.lineno) is None:
+                self.identifiersOccurences[node.lineno] = 0
+            else:
+                self.identifiersOccurences[node.lineno] += 1
 
-    @property
     def get_identifiers(self):
-        return self.assignmentIdentifiers |  self.unknownIdentifiers
+        return self.identifiers
+
+    def get_function_identifiers(self):
+        return self.functionIdentifiers
+    
+    def get_identifiers_occurences(self):
+        return self.identifiersOccurences
+    
+    def get_function_identifiers_occurences(self):
+        return self.functionIdentifiersOccurences
 

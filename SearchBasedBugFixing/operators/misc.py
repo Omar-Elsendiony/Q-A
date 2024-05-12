@@ -177,20 +177,4 @@ class ConstantStringReplacement(baseOperator):
     def name(cls):
         return 'CSR'  # Constant Replacement
 
-    class IdentifierReplacement(baseOperator):
-        
-        def visit_Name(self, node):
-            if self.wanted_line(node.lineno):
-                if node.id in self.identifiers:
-                    # self.mutatedSet.add(node)
-                    selectedIdentifier = random.choice(self.identifiers)
-                    while(selectedIdentifier == node.id and len(self.identifiers) > 1):
-                        selectedIdentifier = random.choice(self.identifiers)
-                    node.id = selectedIdentifier
-                    # print(node.id)
-                    # self.finishedMutation = True # no this is not the intended mutation
-            return node
-
-        @classmethod
-        def name(cls):
-            return 'IDR'
+    

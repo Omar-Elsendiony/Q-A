@@ -2,10 +2,6 @@ from source_code import *
 
 def test_0():
     pass
-    input_0 = None
-    assert return_list_1_to_10_except_5() == [1, 2, 3, 4, 6, 7, 8, 9, 10]
-
-def test_1():
-    pass
-    input_0 = None
-    assert return_list_1_to_10_except_5() == [1, 2, 3, 4, 6, 7, 8, 9, 10]
+    input_0 = 100
+    input_1 = [[60, 10], [50, 8], [20, 4], [20, 4], [8, 3], [3, 2]]
+    assert knapsack(input_0, input_1) == 19

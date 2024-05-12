@@ -218,7 +218,7 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
     idVistitor =  IdentifierVisitor()
     idVistitor.visit(cand_ast)
     # add the list of identifiers to the baseOperator class where it is seen by all its descendants
-    # baseOperator.set_identifiers(list(idVistitor.get_identifiers))
+    # baseOperator.set_identifiers((idVistitor.get_identifiers))
 
     for f in locs:
         # import time
@@ -482,42 +482,42 @@ if __name__ == '__main__':
     print(outputs)
 
 
-    # faultLocalizationUtils.main(
-    #     inputs = inputs, 
-    #     outputs = outputs, 
-    #     function_name= methodUnderTestName, 
-    #     source_folder= inputProgramPath, 
-    #     destination_folder= destinationLocalizationPath, 
-    #     file_id= file_id,
-    #     inputHints=typeHintsInputs,
-    #     outputHints=typeHintsOutputs)
+    faultLocalizationUtils.main(
+        inputs = inputs, 
+        outputs = outputs, 
+        function_name= methodUnderTestName, 
+        source_folder= inputProgramPath, 
+        destination_folder= destinationLocalizationPath, 
+        file_id= file_id,
+        inputHints=typeHintsInputs,
+        outputHints=typeHintsOutputs)
     
-    # faultLocations, weightsFaultyLocations = faultLocalizationUtils.getFaultyLines('..') # fauly locations are in the parent directory
-    # destination_folder = destinationLocalizationPath
-    # test_path = f'{destination_folder}/test.py'
-    # src_path = f'{destination_folder}/source_code.py'
-    # # s = faultLocalizationUtils.runFaultLocalization(test_path, src_path)
-    # faultLocations = list(map(int, faultLocations))
-    # weightsFaultyLocations = list(map(float, weightsFaultyLocations))
+    faultLocations, weightsFaultyLocations = faultLocalizationUtils.getFaultyLines('..') # fauly locations are in the parent directory
+    destination_folder = destinationLocalizationPath
+    test_path = f'{destination_folder}/test.py'
+    src_path = f'{destination_folder}/source_code.py'
+    # s = faultLocalizationUtils.runFaultLocalization(test_path, src_path)
+    faultLocations = list(map(int, faultLocations))
+    weightsFaultyLocations = list(map(float, weightsFaultyLocations))
 
-    # solutions, population = main(BugProgram=buggyProgram, 
-    #                 MethodUnderTestName=methodUnderTestName, 
-    #                 FaultLocations=faultLocations, 
-    #                 weightsFaultyLocations=weightsFaultyLocations, 
-    #                 inputs=inputs,
-    #                 outputs=outputs, 
-    #                 FixPar=None, 
-    #                 ops=ops)
-    # print("************************************************************")
-    # for solution in solutions:
-    #     print(solution)
-    # print("************************************************************")
-    # print(len(population))
-    # i = 0
-    # for p in population:
-    #     print(p)
-    #     i += 1
-    #     if (i == 10):
-    #         break
-    # # print(methodUnderTestName)
-    # # print(buggyProgram)
+    solutions, population = main(BugProgram=buggyProgram, 
+                    MethodUnderTestName=methodUnderTestName, 
+                    FaultLocations=faultLocations, 
+                    weightsFaultyLocations=weightsFaultyLocations, 
+                    inputs=inputs,
+                    outputs=outputs, 
+                    FixPar=None, 
+                    ops=ops)
+    print("************************************************************")
+    for solution in solutions:
+        print(solution)
+    print("************************************************************")
+    print(len(population))
+    i = 0
+    for p in population:
+        print(p)
+        i += 1
+        if (i == 10):
+            break
+    # print(methodUnderTestName)
+    # print(buggyProgram)

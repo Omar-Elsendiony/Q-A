@@ -5,8 +5,8 @@ import random
 class baseOperator(ast.NodeVisitor):
     # mutatedSet = set()  # set of ast nodes that were mutated
     identifiers = []  # list of identifiers in the code
+    functionArgumentsIdentifiers = []  # list of function arguments identifiers in the code
     maxRand = 100  # maximum random number
-
 
     @classmethod
     def set_identifiers(cls, identifiers):
@@ -16,6 +16,13 @@ class baseOperator(ast.NodeVisitor):
     def get_identifiers(cls):
         return cls.identifiers
 
+    @classmethod
+    def set_functionIdentifiers(cls, identifiers):
+        cls.identifiers = identifiers
+
+    @classmethod
+    def get_functionIdentifiers(cls):
+        return cls.identifiers
 
     def __init__(self, target_node_lineno = None, code_ast = None, indexMutation = None, specifiedOperator = None):
         self.target_node_lineno = target_node_lineno
@@ -24,7 +31,7 @@ class baseOperator(ast.NodeVisitor):
         self.currentIndex = 0
         self.finishedMutation = False
         self.specifiedOperator = specifiedOperator
-    
+
     def generic_visit(self, node):
         for field, old_value in ast.iter_fields(node):
             if isinstance(old_value, list):
@@ -47,7 +54,6 @@ class baseOperator(ast.NodeVisitor):
                     setattr(node, field, new_node)
         return node
     
-
     def visitC(self):
         """
         This method is responsible for performing an intermediate visit on a node.
@@ -125,7 +131,6 @@ class baseOperator(ast.NodeVisitor):
     #     return node
     
     # def visit_Name(self, node):
-
     #     if not (hasattr(node, 'parent')): return node
     #     if (node.parent.__class__.__name__ == "Call"):
     #         # print(node.parent.func.id + "weeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")

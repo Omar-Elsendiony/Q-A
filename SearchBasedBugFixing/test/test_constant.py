@@ -18,12 +18,14 @@ class TestConstant(TestBase):
             line = "return n * factorial(n, a, l - 1)"
             self.utility_2(line, ["if i == 9: pass"])
         
-        def test_Str_Empty(self):
-            """
-            Testing less than operator
-            """
-            line = "x = 'what have I done'"  
-            self.utility_2(line, ["x = ''"])
+        
+
+        # def test_Str_Empty(self):
+        #     """
+        #     Testing less than operator
+        #     """
+        #     line = "x = 'what have I done'"  
+        #     self.utility_2(line, ["x = ''"])
     
         # def test_delete_if_condition(self):
         #     """

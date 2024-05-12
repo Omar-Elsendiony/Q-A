@@ -4,7 +4,7 @@ from .logical import *
 from .conditional import *
 from .loop import *
 from .misc import *
-
+from .identifier import *
 
 
 standard_operators = {
@@ -20,6 +20,7 @@ standard_operators = {
     FloorDivisionOperatorReplacement,
     UnaryOperatorDeletion,
     AugmentedAssignReplacement,
+    
     ## LOGICAL ##
     LogicalOperatorReplacement,
     RelationalOperatorReplacement,
@@ -43,12 +44,15 @@ standard_operators = {
     ConstantNumericReplacement,
     ConstantStringReplacement,
 
+    ## IDENTIFIER ##
+    IdentifierReplacement,
+    FunctionArgumentReplacement,
+    
     ## MEMBERSHIP ##
     MembershipReplacement,
 
     ## ASSIGNMENT ##
     ## UNARY ##
-
 }
 
 experimental_operators = set()

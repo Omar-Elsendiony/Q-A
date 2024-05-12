@@ -152,6 +152,20 @@ def segmentLine(line):
                 lst.append("=")
                 st.add("=")
                 addColumnOffset(unit_ColOffset, "=", i + 1)
+        elif line[i] == "!":
+            col_offsets.append(i + 1)
+            
+            temp = checkSavedSequence(temp, lst, st, unit_ColOffset=unit_ColOffset, col_offsets=col_offsets)
+            if (line[i + 1] == "="):
+                lst.append("!=")
+                st.add("!=")
+                addColumnOffset(unit_ColOffset, "!=", i + 1)
+                i += 1
+            else:
+                lst.append("!")
+                st.add("!")
+                addColumnOffset(unit_ColOffset, "!", i + 1)
+        
         # this condition checks for infix operators of 2 characters like ** or //
         elif (line[i] in operators_1 and (temp != "" or line[i+1] != " ")): # this means that the operators and the operands are adherent
             lst.append(temp)
@@ -281,8 +295,8 @@ def mutationsCanBeApplied(setTokens: set):
     if '>=' in setTokens: lstMutations.append('ROR'); lstToBeMutated.append('>=') 
 
     ################ ASSIGNMENT OPERATORS ################
-    if '==' in setTokens: lstMutations.append('ROR'); lstToBeMutated.append('==')
-    if '!=' in setTokens: lstMutations.append('ROR'); lstToBeMutated.append('!=')
+    if '==' in setTokens: lstMutations.append('MER'); lstToBeMutated.append('==')
+    if '!=' in setTokens: lstMutations.append('MER'); lstToBeMutated.append('!=')
 
     ################ LOGICAL OPERATORS ################
     if 'and' in setTokens: lstMutations.append('LOR') ; lstToBeMutated.append('and')

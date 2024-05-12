@@ -120,14 +120,17 @@ def create_py_test(inputs, outputs, function_name, destination_folder, inputHint
         for j in range(len(inputs[i])):
             input_str = f"input_{j} = "
             val_inputs.append(f"input_{j}")
-            val_input = get_value(inputs[i][j], inputHints[j])
-
+            # print(inputs[i][j])
+            # print('-----------------------------------')
+            val_input = (inputs[i][j])
+            
             input_str += f"{val_input}"
             input_node = ast.parse(input_str).body[0]
             fn_ast.body.append(input_node)
         
         for j in range(len(outputs[i])):
-            val_output = get_value(outputs[i][j], outputHints[j])
+            # val_output = get_value(outputs[i][j], outputHints[j])
+            val_output = (outputs[i][j])
             val_outputs.append(val_output)
         
         final_output = ""
