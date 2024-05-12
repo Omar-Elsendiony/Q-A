@@ -75,9 +75,6 @@ class MembershipReplacement(baseOperator):
     def visit_Compare(self, node: ast.Compare) -> Any:
         if not self.wanted_line(node.lineno):
             return node
-        print("--------------------------------------")
-        # print(node.ops[0].__class__.__name__)
-        print("--------------------------------------")
 
         if isinstance(node.ops[0], ast.Is):
             operation = ast.IsNot()

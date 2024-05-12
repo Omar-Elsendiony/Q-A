@@ -23,7 +23,7 @@ class IdentifierReplacement(baseOperator):
         def visit_Name(self, node):
             if self.wanted_line(node.lineno):
                 l = self.get_identifiers()
-                print(l)
+                # print(l)
                 if node.id in self.get_identifiers():
                     # self.mutatedSet.add(node)
                     selectedIdentifier = random.choice(self.identifiers)

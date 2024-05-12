@@ -18,11 +18,11 @@ class baseOperator(ast.NodeVisitor):
 
     @classmethod
     def set_functionIdentifiers(cls, identifiers):
-        cls.identifiers = identifiers
+        cls.functionArgumentsIdentifiers = identifiers
 
     @classmethod
     def get_functionIdentifiers(cls):
-        return cls.identifiers
+        return cls.functionArgumentsIdentifiers
 
     def __init__(self, target_node_lineno = None, code_ast = None, indexMutation = None, specifiedOperator = None):
         self.target_node_lineno = target_node_lineno

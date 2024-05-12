@@ -106,8 +106,7 @@ def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> 
                 if (isError):
                     return False
                 res = res.strip()
-                # if len(outputs[i]) == 1:
-                #     outputs[i] = outputs[i][0]
+
                 if (not compare_input_output(eval(res), outputs[i])):
                     return False
             else:
@@ -136,56 +135,56 @@ def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> 
     return True
 
 
-import subprocess
-def passesNegTests_2(program:str, program_name:str, inputs:List, outputs:List):
-    test_path = f'testcases/GeneratedTests/test.py'
-    src_path = f'testcases/GeneratedTests/source_code.py'
-    res = subprocess.run(["python3", "-m", "pytest", f"{test_path}"], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-    # print(str(res).split()[-1])
-    res = res.stdout.decode('utf-8')
-    splitted = res.split()
-    passed = None; Failed = None
-    passOrFailedNum = splitted[-5]
-    passOrFailedString = splitted[-4]
-    if (passOrFailedString == "passed"):
-        passed = passOrFailedNum
-    else:
-        Failed = passOrFailedNum
-        passed = 0
-    if passed == len(inputs):
-        return True
-    else:
-        return False
+# import subprocess
+# def passesNegTests_2(program:str, program_name:str, inputs:List, outputs:List):
+#     test_path = f'testcases/GeneratedTests/test.py'
+#     src_path = f'testcases/GeneratedTests/source_code.py'
+#     res = subprocess.run(["python3", "-m", "pytest", f"{test_path}"], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+#     # print(str(res).split()[-1])
+#     res = res.stdout.decode('utf-8')
+#     splitted = res.split()
+#     passed = None; Failed = None
+#     passOrFailedNum = splitted[-5]
+#     passOrFailedString = splitted[-4]
+#     if (passOrFailedString == "passed"):
+#         passed = passOrFailedNum
+#     else:
+#         Failed = passOrFailedNum
+#         passed = 0
+#     if passed == len(inputs):
+#         return True
+#     else:
+#         return False
 
-def passesNegTests_3(program:str, program_name:str, inputs:List, outputs:List):
-    test_path = f'testcases/GeneratedTests/test.py'
-    src_path = f'testcases/GeneratedTests/source_code.py'
-    res = subprocess.run(["python3", "-m", "pytest", f"{test_path}"], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-    # print(str(res).split()[-1])
-    res = res.stdout.decode('utf-8')
-    splitted = res.split()
-    passed = None; Failed = None
-    passOrFailedNum = splitted[-5]
-    passOrFailedString = splitted[-4]
-    if (passOrFailedString == "passed"):
-        passed = passOrFailedNum
-    else:
-        Failed = passOrFailedNum
-        passed = 0
-    return passed
+# def passesNegTests_3(program:str, program_name:str, inputs:List, outputs:List):
+#     test_path = f'testcases/GeneratedTests/test.py'
+#     src_path = f'testcases/GeneratedTests/source_code.py'
+#     res = subprocess.run(["python3", "-m", "pytest", f"{test_path}"], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+#     # print(str(res).split()[-1])
+#     res = res.stdout.decode('utf-8')
+#     splitted = res.split()
+#     passed = None; Failed = None
+#     passOrFailedNum = splitted[-5]
+#     passOrFailedString = splitted[-4]
+#     if (passOrFailedString == "passed"):
+#         passed = passOrFailedNum
+#     else:
+#         Failed = passOrFailedNum
+#         passed = 0
+#     return passed
 
 
 # @profile
-def selectPool(candidates:List, inputs:List, outputs:List):
-    """Select pool determined by the number of testcases passed by the candidates"""
-    # scores = [] # list of scores that will be used to choose the candidate to be selected
-    # # # print(str(len(candidates))+'---------------------------------------')
-    # for cand in candidates:
-    #     scores.append(passesNegTests_3(ast.unparse(cand), methodUnderTestName, inputs, outputs) + 10) # why +10, just to make it non-zero and also relatively, it stays the same.
-    # choice = random.choices(range(len(candidates)), weights = scores, k=1)[0]
+# def selectPool(candidates:List, inputs:List, outputs:List):
+#     """Select pool determined by the number of testcases passed by the candidates"""
+#     # scores = [] # list of scores that will be used to choose the candidate to be selected
+#     # # # print(str(len(candidates))+'---------------------------------------')
+#     # for cand in candidates:
+#     #     scores.append(passesNegTests_3(ast.unparse(cand), methodUnderTestName, inputs, outputs) + 10) # why +10, just to make it non-zero and also relatively, it stays the same.
+#     # choice = random.choices(range(len(candidates)), weights = scores, k=1)[0]
 
-    return ast.unparse(candidates[0])
-    # return (ast.unparse(candidates[0]))
+#     return ast.unparse(candidates[0])
+#     # return (ast.unparse(candidates[0]))
 
 
 # def selectPool(candidates:Set) -> Set:
@@ -296,7 +295,6 @@ def swap(cand:str, pool:set):  # helper function to mutate the code
 
 def mutate(cand:str, ops:Callable, name_to_operator:Dict, 
            faultyLineLocations: List, weightsFaultyLineLocations:List, L:int ):  # helper function to mutate the code
-    errorOccured = False
     # try:
     pool = list()
     # pool_list = []
@@ -315,27 +313,18 @@ def mutate(cand:str, ops:Callable, name_to_operator:Dict,
         )
         # insert(cand=cand, pool=pool)
     elif availableChoices[choiceMutation] == "Insertion":
-        # insert(cand=cand, pool=pool)
-        pass
+        insert(cand=cand, pool=pool)
     elif availableChoices[choiceMutation] == "Swap":
         swap(cand=cand, pool=pool)
-        pass
     if (len(pool) == 0):
         return cand, False
 
     scores = [] # list of scores that will be used to choose the candidate to be selected
-    # # print(str(len(candidates))+'---------------------------------------')
     for cand in pool:
         scores.append(fitness_testCasesPassed(ast.unparse(cand), methodUnderTestName, inputs, outputs) + 10) # why +10, just to make it non-zero and also relatively, it stays the same.
     choice = random.choices(range(len(pool)), weights = scores, k=1)[0]
-    return ast.unparse(pool[0]), False
-    
-    # except Exception as e:
-    #     # print(e)
-    #     return cand, True
-    # ast.unparse(pool[0])
-    # return cand, False
-    # return selectPool(pool, inputs, outputs), False
+    return ast.unparse(pool[choice]), False
+
 
 
 # @profile
@@ -377,15 +366,8 @@ def main(BugProgram:str,
 
     # print(len(Pop))
     number_of_iterations = 0
-    while len(Solutions) < M and number_of_iterations < 2:
+    while len(Solutions) < M and number_of_iterations < 3:
         # print(number_of_iterations)
-        # print('--------------------------')
-        # for p in Pop:
-        #     print(p)
-        # print('--------------------------')
-        # if (number_of_iterations == 1):
-        #     x = 2;
-        # print(len(Pop))
         for p_index, p in enumerate(Pop):
             if p not in Solutions:
                 if passesNegTests(p, MethodUnderTestName, inputs, outputs):
@@ -415,7 +397,7 @@ if __name__ == '__main__':
     inputCasesPath = 'SearchBasedBugFixing/testcases/Inputs'
     outputCasesPath = 'SearchBasedBugFixing/testcases/Outputs'
     metaDataPath = 'SearchBasedBugFixing/testcases/MetaData'
-    file_id = 7
+    file_id = 2
     file_name = f'{file_id}.txt'
     typeHintsInputs = []
     typeHintsOutputs = []
@@ -475,8 +457,9 @@ if __name__ == '__main__':
                 i += 1
             if (outputTestCase != []):
                 outputs.append(outputTestCase)
-    except:
+    except Exception as e:
         print("Problem in reading files, insufficient data")
+        print(e)
         exit(-1)
     print(inputs)
     print(outputs)
@@ -512,12 +495,12 @@ if __name__ == '__main__':
     for solution in solutions:
         print(solution)
     print("************************************************************")
-    print(len(population))
-    i = 0
-    for p in population:
-        print(p)
-        i += 1
-        if (i == 10):
-            break
+    # print(len(population))
+    # i = 0
+    # for p in population:
+    #     print(population[i + 100])
+    #     i += 1
+    #     if (i == 10):
+    #         break
     # print(methodUnderTestName)
     # print(buggyProgram)

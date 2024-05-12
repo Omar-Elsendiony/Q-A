@@ -2,6 +2,12 @@ from source_code import *
 
 def test_0():
     pass
-    input_0 = 100
-    input_1 = [[60, 10], [50, 8], [20, 4], [20, 4], [8, 3], [3, 2]]
-    assert knapsack(input_0, input_1) == 19
+    input_0 = 1
+    input_1 = 2
+    assert add(input_0, input_1) == 3
+
+def test_1():
+    pass
+    input_0 = 789774
+    input_1 = 51515
+    assert add(input_0, input_1) == 841289

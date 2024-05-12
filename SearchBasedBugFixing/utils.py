@@ -390,7 +390,10 @@ def processLine(line, i, testcaseList):
         print(f"Input is blank, please insert input at line {i + 1}")
         exit(-1)
     line = line.strip()
-    testcaseList.append(ast.literal_eval(line))
+    if (line.lower() == 'void'):
+        testcaseList.append('void')
+    else:
+        testcaseList.append(ast.literal_eval(line))
     # isList = False
     # isTuple = False
     # isSet = False

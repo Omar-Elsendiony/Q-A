@@ -118,11 +118,13 @@ def create_py_test(inputs, outputs, function_name, destination_folder, inputHint
 
         fn_ast = ast.parse(fn).body[0]
         for j in range(len(inputs[i])):
-            input_str = f"input_{j} = "
-            val_inputs.append(f"input_{j}")
             # print(inputs[i][j])
             # print('-----------------------------------')
             val_input = (inputs[i][j])
+            if val_input == "void":
+                break
+            input_str = f"input_{j} = "
+            val_inputs.append(f"input_{j}")
             
             input_str += f"{val_input}"
             input_node = ast.parse(input_str).body[0]
