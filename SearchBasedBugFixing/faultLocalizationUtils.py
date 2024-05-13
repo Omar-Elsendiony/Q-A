@@ -2,6 +2,16 @@ import os
 import shutil
 import ast
 import subprocess
+from subprocess import TimeoutExpired
+import psutil
+
+def kill(proc_pid):
+    if psutil.pid_exists(proc_pid):
+        process = psutil.Process(proc_pid)
+        for proc in process.children(recursive=True):
+            if psutil.pid_exists(proc.pid):
+                proc.kill()
+        process.kill()
 
 
 def getFaultyLines(folder_path):
@@ -171,10 +181,14 @@ def create_py_test(inputs, outputs, function_name, destination_folder, inputHint
         print(f"File 'test.py' created in '{destination_folder}' with the converted Python code.")
     # print(ast.unparse(module_ast))
     # print(ast.dump(module_ast, indent=4))
-
 def runFaultLocalization(test_path, src_path):
-
-    return subprocess.run(["python3", "-m", "pytest", f"{test_path}", "--src", f"{src_path}", "--family", "sbfl", "--granularity", "statement", "--top-n" , "25"], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    p = subprocess.Popen(["python3", "-m", "pytest", f"{test_path}", "--src", f"{src_path}", "--family", "sbfl", "--granularity", "statement", "--top-n" , "25"], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    try:
+        outs, errs = p.communicate(timeout=15)
+    except TimeoutExpired:
+        kill(p.pid)
+        return -1; # means there is error incurred
+    return 0 # means no error
 
 
 def main(inputs, outputs, function_name, source_folder, destination_folder, file_id, inputHints, outputHints):
@@ -191,5 +205,5 @@ def main(inputs, outputs, function_name, source_folder, destination_folder, file
     # Run the fault localization tool
     test_path = f'{destination_folder}/test.py'
     src_path = f'{destination_folder}/source_code.py'
-    runFaultLocalization(test_path, src_path)
-
+    error = runFaultLocalization(test_path, src_path)
+    return error

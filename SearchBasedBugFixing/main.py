@@ -10,11 +10,81 @@ from operators import *
 import utils
 import random
 from typing import List, Set, Dict, Callable
-from runCode import runCode
+# from runCode import runCode
 import faultLocalizationUtils
 from SearchBasedBugFixing.identifier.identifierVisitor import IdentifierVisitor
 import InsertVisitor
 import SwapVisitor
+
+####################################################################
+import sys
+from time import sleep
+import threading
+from _thread import interrupt_main
+import sys
+from io import StringIO
+
+
+# class CustomThread(threading.Thread):
+#     def __init__(self, *args, **kwargs):
+#         super(CustomThread, self).__init__(*args, **kwargs)
+#         self._stopper = threading.Event()
+
+#     def stop(self):
+#         self._stopper.set()
+
+#     def stopped(self):
+#         return self._stopper.is_set()
+
+#     def run(self):
+#         sleep(1)
+#         while not self.stopped():
+#             interrupt_main()
+
+# thread = CustomThread()
+import signal
+def handler(signum, frame):
+    # print('Signal handler called with signal', signum)
+    raise KeyboardInterrupt("Couldn't open device!")
+
+def runCode(code: str, myglobals):
+    # save the old stdout that is reserved
+    oldStdOUT = sys.stdout
+    # get the redirected output instance
+    redirectedOutput = sys.stdout = StringIO()
+    oldStdERR = sys.stderr
+    redirectedOutput2 = sys.stderr = StringIO()
+    # result is initially empty
+    result = ""
+    # there is error
+    isError = False
+    if (myglobals.get('res')):
+        del myglobals['res']
+    try:
+        # thread.start()
+        signal.signal(signal.SIGALRM, handler)
+        signal.alarm(5)
+        exec(code, myglobals)
+        result = redirectedOutput.getvalue()
+    except Exception as e:
+        isError = True
+        result = repr(e)
+    except SystemExit as s:
+        isError = True
+        result = redirectedOutput2.getvalue()
+    except KeyboardInterrupt as k:
+        isError = True
+        result = "timed out"
+    # thread.stop()
+    if (myglobals.get('testcase')):
+        del myglobals['testcase']
+    sys.stdout = oldStdOUT
+    sys.stderr = oldStdERR
+
+    return result, isError
+####################################################################
+
+
 
 def editFreq(cand):
     ## TODO ##
@@ -107,7 +177,7 @@ def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> 
             testcase = inputs[i]
             if (len(testcase) == 1):
                 testcase = testcase[0]
-                if (testcase.lower() == 'void'):
+                if (isinstance(testcase, str)  and testcase.lower() == 'void'):
                     editedProgram = program + f'\n\nres = {program_name}()\n\nprint(res)'
                 else:
                     editedProgram = program + f'\n\ntestcase = {testcase}\nres = {program_name}(testcase)\n\nprint(res)'
@@ -208,7 +278,7 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
     limitKPossible = len(faultyLineLocations)
     locationsExtracted = limitKPossible  if (limitKPossible < limitLocations) else limitLocations
     # choose from the locations based on a parameter sent by the user which sould not exceed max length, that is why a limit cap is present
-    locs = random.choices(faultyLineLocations, weights = weightsFaultyLineLocations, k=locationsExtracted)
+    locs = random.choices(faultyLineLocations, weights = weightsFaultyLineLocations, k=1)
 
     # candidate that will be mutated
     cand_dash = None
@@ -222,12 +292,14 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
     # get the list of identifiers of an ast using IdentifierVisitor
     idVistitor = IdentifierVisitor()
     idVistitor.visit(cand_ast)
-    baseOperator.set_identifiers(idVistitor.get_identifiers())
-    baseOperator.set_functionIdentifiers(idVistitor.get_function_identifiers())
+    idOcc = idVistitor.get_identifiers_occurences()
+    fOcc = idVistitor.get_function_identifiers_occurences()
+    baseOperator.set_identifiers(idOcc)
+    baseOperator.set_functionIdentifiers(fOcc)
 
     for f in locs:
         # parentify the candidate so it will be used by functions like mutate_DIV, mutate_ADD, etc.
-        utils.parentify(cand_ast)
+        # utils.parentify(cand_ast)
         try:
             # segment line into presumably tokens
             tokenSet, units_ColOffset = utils.segmentLine(splitted_cand[f - 1])
@@ -245,23 +317,22 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
         copied_cand.type_ignores = []
         # changed from choosing the actual element to choosing the index, as getting 
         # the operator attributed to the mutation is not possible with index
-        if f in idVistitor.get_function_identifiers_occurences().keys():
+        if f in fOcc.keys():
             op_f_list.append("FAR")
             op_f_weights.append(4)
-        if f in idVistitor.get_identifiers_occurences().keys():
+        if f in idOcc.keys():
             op_f_list.append("IDR")
             op_f_weights.append(2)
 
         # Choose the index with the higher probability
         choice_index = random.choices(range(len(op_f_list)), weights = op_f_weights, k=1)[0]
         # Get the operation neumonic from operation list
-        op_f = op_f_list[choice_index]
+        op_f = op_f_list[choice_index] #op_f is the choice selected from list of plausible operations
         
-        if (choice == "FAR" or choice == "IDR"):
-            print(choice)
-            operator = name_to_operator[choice]
-            col_index = random.randint(0, idVistitor.get_identifiers_occurences().get(f))
-            print(col_index)
+        if (op_f == "FAR" or op_f == "IDR"):
+            operator = name_to_operator[op_f]
+            col_index = random.randint(0, idOcc.get(f))
+            # print(col_index)
             cand_dash = operator(target_node_lineno = f, indexMutation = col_index, code_ast = cand_ast).visitC()
 
         else:
@@ -275,8 +346,6 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
             # apply the mutation and acquire a new candidate
             cand_dash = operator(target_node_lineno = f, code_ast = cand_ast, indexMutation= col_index, specifiedOperator=original_op[choice_index]).visitC() # f + 1 because the line number starts from 1
 
-
-
         # adds/corrects the line number as well as column offset
         ast.fix_missing_locations(cand_dash)
         cand_dash.type_ignores = []
@@ -284,8 +353,6 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
         pool.append(cand_dash)
         # return cand to its original ast (despite different location in memory)
         cand = copied_cand
-        # print(time.time() - start)
-    # exit(0)
 
 
 def insert(cand:str, pool:set):  # helper function to mutate the code
@@ -315,9 +382,8 @@ def swap(cand:str, pool:set):  # helper function to mutate the code
 
 def mutate(cand:str, ops:Callable, name_to_operator:Dict, 
            faultyLineLocations: List, weightsFaultyLineLocations:List, L:int ):  # helper function to mutate the code
-    # try:
+
     pool = list()
-    # pool_list = []
     availableChoices = {"1": "Insertion", "2": "Swap", "3": "Update"}
     weightsMutation = [0.01, 0.01, 0.98]
     choiceMutation = random.choices(list(availableChoices.keys()), weights=weightsMutation, k=1)[0]
@@ -337,13 +403,13 @@ def mutate(cand:str, ops:Callable, name_to_operator:Dict,
     elif availableChoices[choiceMutation] == "Swap":
         swap(cand=cand, pool=pool)
     if (len(pool) == 0):
-        return cand, False
+        return cand
 
     scores = [] # list of scores that will be used to choose the candidate to be selected
     for cand in pool:
         scores.append(fitness_testCasesPassed(ast.unparse(cand), methodUnderTestName, inputs, outputs) * 10 + 1) # why +10, just to make it non-zero and also relatively, it stays the same.
     choice = random.choices(range(len(pool)), weights = scores, k=1)[0]
-    return ast.unparse(pool[choice]), False
+    return ast.unparse(pool[choice])
 
 
 
@@ -356,8 +422,8 @@ def main(BugProgram:str,
         outputs:List, 
         FixPar:Callable,
         ops:Callable,
-        popSize:int = 220, 
-        M:int = 1, 
+        popSize:int = 400, 
+        M:int = 7,
         E:int = 10, 
         L:int = 5):
     """
@@ -380,27 +446,23 @@ def main(BugProgram:str,
     
     name_to_operator = utils.getNameToOperatorMap()
     while len(Pop) < popSize:
-        newMutation, errorOccured = mutate(BugProgram, ops, name_to_operator, FaultLocations, weightsFaultyLocations, L)
-        if not errorOccured:
-            Pop.append(newMutation)  # mutate the population
+        newMutation= mutate(BugProgram, ops, name_to_operator, FaultLocations, weightsFaultyLocations, L)
+        # if not errorOccured:
+        Pop.append(newMutation)  # mutate the population
 
     # print(len(Pop))
     number_of_iterations = 0
-    while len(Solutions) < M and number_of_iterations < 3:
-        # print(number_of_iterations)
+    while len(Solutions) < M and number_of_iterations < 4:
+        print(number_of_iterations)
         for p_index, p in enumerate(Pop):
             if p not in Solutions:
                 if passesNegTests(p, MethodUnderTestName, inputs, outputs):
                     Solutions.add(p)
                 else:
-                    mutationCandidate, errorOccured = mutate(p, ops, name_to_operator, FaultLocations, weightsFaultyLocations, L)
-                    # if (errorOccured): 
-                    #     Pop.pop(p_index)
-                    # else:
-                    #     Pop[p_index] = mutationCandidate
+                    mutationCandidate = mutate(p, ops, name_to_operator, FaultLocations, weightsFaultyLocations, L)
+                    
                     Pop[p_index] = mutationCandidate
-                    # Pop.remove(p) # remove p from the population to be inserted again after mutation
-                    # Pop.append(mutate(ops))
+
         number_of_iterations += 1
     # print(Pop)
     return Solutions, Pop
@@ -458,7 +520,7 @@ if __name__ == '__main__':
             k = 0
             inputTestCase = []
             for line in lines:
-                if (line == '\n'): 
+                if (line == '\n'):
                     if (inputTestCase != []) : inputs.append(inputTestCase); inputTestCase = []; k = 0
                     else:
                         continue
@@ -487,20 +549,20 @@ if __name__ == '__main__':
         print("Problem in reading files, insufficient data")
         print(e)
         exit(-1)
-    print(inputs)
-    print(outputs)
+    # print(inputs)
+    # print(outputs)
 
-    pr = """def return_list_1_to_10_except_5():
-    lst = []
-    for i in range(1, 11):
-        if not i != 5:
-            continue
-        lst.append(i)
-    return lst"""
-    x = fitness_testCasesPassed(pr, 'return_list_1_to_10_except_5', inputs, outputs)
-    print(x)
+    # pr = """def return_list_1_to_10_except_5():
+    # lst = []
+    # for i in range(1, 11):
+    #     if not i != 5:
+    #         continue
+    #     lst.append(i)
+    # return lst"""
+    # x = fitness_testCasesPassed(pr, 'return_list_1_to_10_except_5', inputs, outputs)
+    # print(x)
 
-    faultLocalizationUtils.main(
+    error = faultLocalizationUtils.main(
         inputs = inputs, 
         outputs = outputs, 
         function_name= methodUnderTestName, 
@@ -509,14 +571,19 @@ if __name__ == '__main__':
         file_id= file_id,
         inputHints=typeHintsInputs,
         outputHints=typeHintsOutputs)
-    
-    faultLocations, weightsFaultyLocations = faultLocalizationUtils.getFaultyLines('..') # fauly locations are in the parent directory
-    destination_folder = destinationLocalizationPath
-    test_path = f'{destination_folder}/test.py'
-    src_path = f'{destination_folder}/source_code.py'
-    # s = faultLocalizationUtils.runFaultLocalization(test_path, src_path)
-    faultLocations = list(map(int, faultLocations))
-    weightsFaultyLocations = list(map(float, weightsFaultyLocations))
+    print('returned from fault localization\n')
+    if (error == 0): # 0 means no error
+        faultLocations, weightsFaultyLocations = faultLocalizationUtils.getFaultyLines('..') # fauly locations are in the parent directory
+        destination_folder = destinationLocalizationPath
+        test_path = f'{destination_folder}/test.py'
+        src_path = f'{destination_folder}/source_code.py'
+        # s = faultLocalizationUtils.runFaultLocalization(test_path, src_path)
+        faultLocations = list(map(int, faultLocations))
+        weightsFaultyLocations = list(map(float, weightsFaultyLocations))
+    else:
+        allLines = len(buggyProgram.split())
+        faultLocations = range(1, allLines + 1)
+        weightsFaultyLocations = [1] * (allLines - 1)
 
     solutions, population = main(BugProgram=buggyProgram, 
                     MethodUnderTestName=methodUnderTestName, 
@@ -533,9 +600,9 @@ if __name__ == '__main__':
     print(len(population))
     i = 0
     for p in population:
-        print(population[i + 100])
+        print(population[i])
         i += 1
         if (i == 10):
             break
-    print(methodUnderTestName)
-    print(buggyProgram)
+    # print(methodUnderTestName)
+    # print(buggyProgram)

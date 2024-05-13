@@ -1,0 +1,8 @@
+pip install torch
+pip install datasets
+pip install graphviz
+pip install networkx
+pip install matplotlib
+pip install numpy
+pip install pandas
+
