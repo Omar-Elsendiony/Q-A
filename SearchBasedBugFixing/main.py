@@ -45,7 +45,7 @@ from io import StringIO
 import signal
 def handler(signum, frame):
     # print('Signal handler called with signal', signum)
-    raise KeyboardInterrupt("Couldn't open device!")
+    raise Exception("Couldn't open device!")
 
 def runCode(code: str, myglobals):
     # save the old stdout that is reserved
@@ -63,8 +63,11 @@ def runCode(code: str, myglobals):
     try:
         # thread.start()
         signal.signal(signal.SIGALRM, handler)
-        signal.alarm(5)
+        signal.setitimer(signal.ITIMER_REAL, 0.05)
         exec(code, myglobals)
+        # signal.alarm(0)
+        signal.setitimer(signal.ITIMER_REAL, 0)
+
         result = redirectedOutput.getvalue()
     except Exception as e:
         isError = True
@@ -75,7 +78,10 @@ def runCode(code: str, myglobals):
     except KeyboardInterrupt as k:
         isError = True
         result = "timed out"
+        # print('timey')
     # thread.stop()
+    # signal.alarm(0)
+    signal.setitimer(signal.ITIMER_REAL, 0)
     if (myglobals.get('testcase')):
         del myglobals['testcase']
     sys.stdout = oldStdOUT
@@ -121,7 +127,7 @@ def fitness_testCasesPassed(program:str, program_name:str, inputs:List, outputs:
             testcase = inputs[i]
             if (len(testcase) == 1):
                 testcase = testcase[0]
-                if (testcase.lower() == 'void'):
+                if (isinstance(testcase, str)  and testcase.lower() == 'void'):
                     editedProgram = program + f'\n\nres = {program_name}()\n\nprint(res)'
                 else:
                     editedProgram = program + f'\n\ntestcase = {testcase}\nres = {program_name}({testcase})\n\nprint(res)'
@@ -278,7 +284,7 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
     limitKPossible = len(faultyLineLocations)
     locationsExtracted = limitKPossible  if (limitKPossible < limitLocations) else limitLocations
     # choose from the locations based on a parameter sent by the user which sould not exceed max length, that is why a limit cap is present
-    locs = random.choices(faultyLineLocations, weights = weightsFaultyLineLocations, k=1)
+    locs = random.choices(faultyLineLocations, weights = weightsFaultyLineLocations, k=locationsExtracted)
 
     # candidate that will be mutated
     cand_dash = None
@@ -333,7 +339,7 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
             operator = name_to_operator[op_f]
             col_index = random.randint(0, idOcc.get(f))
             # print(col_index)
-            cand_dash = operator(target_node_lineno = f, indexMutation = col_index, code_ast = cand_ast).visitC()
+            cand_dash = operator(target_node_lineno = f, indexMutation = col_index, code_ast = copied_cand).visitC()
 
         else:
             # get the colum offset occurances of such an operation
@@ -344,7 +350,7 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
             operator = name_to_operator[op_f]
             col_index = col_index if op_f != "ARD" else choice_index // 2
             # apply the mutation and acquire a new candidate
-            cand_dash = operator(target_node_lineno = f, code_ast = cand_ast, indexMutation= col_index, specifiedOperator=original_op[choice_index]).visitC() # f + 1 because the line number starts from 1
+            cand_dash = operator(target_node_lineno = f, code_ast = copied_cand, indexMutation= col_index, specifiedOperator=original_op[choice_index]).visitC() # f + 1 because the line number starts from 1
 
         # adds/corrects the line number as well as column offset
         ast.fix_missing_locations(cand_dash)
@@ -352,7 +358,7 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
         # add the candidate to the pool that you will select from
         pool.append(cand_dash)
         # return cand to its original ast (despite different location in memory)
-        cand = copied_cand
+        # cand = copied_cand
 
 
 def insert(cand:str, pool:set):  # helper function to mutate the code
@@ -479,7 +485,7 @@ if __name__ == '__main__':
     inputCasesPath = 'SearchBasedBugFixing/testcases/Inputs'
     outputCasesPath = 'SearchBasedBugFixing/testcases/Outputs'
     metaDataPath = 'SearchBasedBugFixing/testcases/MetaData'
-    file_id = 1
+    file_id = 7
     file_name = f'{file_id}.txt'
     typeHintsInputs = []
     typeHintsOutputs = []
@@ -552,14 +558,13 @@ if __name__ == '__main__':
     # print(inputs)
     # print(outputs)
 
-    # pr = """def return_list_1_to_10_except_5():
-    # lst = []
-    # for i in range(1, 11):
-    #     if not i != 5:
-    #         continue
-    #     lst.append(i)
-    # return lst"""
-    # x = fitness_testCasesPassed(pr, 'return_list_1_to_10_except_5', inputs, outputs)
+    # pr = """def infinite_loop(number):
+    # k = 0
+    # while number > 0:
+    #     k += 1
+    #     number -= 1  # Decrease number by 1
+    # return k"""
+    # x = fitness_testCasesPassed(pr, 'infinite_loop', inputs, outputs)
     # print(x)
 
     error = faultLocalizationUtils.main(
@@ -581,9 +586,10 @@ if __name__ == '__main__':
         faultLocations = list(map(int, faultLocations))
         weightsFaultyLocations = list(map(float, weightsFaultyLocations))
     else:
-        allLines = len(buggyProgram.split())
-        faultLocations = range(1, allLines + 1)
-        weightsFaultyLocations = [1] * (allLines - 1)
+        splittedBuggyProgram = buggyProgram.split('\n')
+        allLines = len(splittedBuggyProgram)
+        faultLocations = list(range(1, allLines + 1))
+        weightsFaultyLocations = [1] * (allLines)
 
     solutions, population = main(BugProgram=buggyProgram, 
                     MethodUnderTestName=methodUnderTestName, 

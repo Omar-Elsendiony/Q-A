@@ -2,5 +2,5 @@ def infinite_loop(number):
     k = 0
     while number > 0:
         k += 1
-        number -= 1  # Decrease number by 1
+        number += 1  # Decrease number by 1
     return k

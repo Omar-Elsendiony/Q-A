@@ -184,7 +184,7 @@ def create_py_test(inputs, outputs, function_name, destination_folder, inputHint
 def runFaultLocalization(test_path, src_path):
     p = subprocess.Popen(["python3", "-m", "pytest", f"{test_path}", "--src", f"{src_path}", "--family", "sbfl", "--granularity", "statement", "--top-n" , "25"], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     try:
-        outs, errs = p.communicate(timeout=15)
+        outs, errs = p.communicate(timeout=3)
     except TimeoutExpired:
         kill(p.pid)
         return -1; # means there is error incurred
