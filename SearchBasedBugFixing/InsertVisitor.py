@@ -30,11 +30,11 @@ def insertNode(parent_node):
     candInsertNodes = InsertionVisitor.handleLst
     vesselNodes = list(InsertionVisitor.setBodyNodes)
     if (len(vesselNodes) == 0):
-        return
+        return False
     try:
         vesselNode = choice(vesselNodes)
     except:
-        return
+        return False
         
     candInsertNode = None
     for j in range(5): # only 5 trials :)
@@ -42,8 +42,13 @@ def insertNode(parent_node):
         if (candInsertNode.__class__.__name__ != "While" and candInsertNode.__class__.__name__ != "If"):
             break
     if vesselNode.parent == candInsertNode or vesselNode is candInsertNode:
-        return
+        return False
     # choose a random line in the vessel to insert your new code into
     indexBody = randint(0, len(vesselNode.body) - 1)
     vesselNode.body.insert(indexBody, candInsertNode)
+    # try:
+    #     ast.unparse(parent_node)
+    # except:
+    #     return False
+    return True
 

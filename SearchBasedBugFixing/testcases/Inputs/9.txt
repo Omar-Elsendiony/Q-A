@@ -1,0 +1,8 @@
+'electron'
+'neutron'
+
+'kitten'
+'sitting'
+
+'rosettacode'
+'raisethysword'

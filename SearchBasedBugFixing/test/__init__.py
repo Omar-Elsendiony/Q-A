@@ -33,6 +33,8 @@ class TestBase(unittest.TestCase):
             Testing greater than operator
             Checking the result conforms with the expected results
             """
+            appliedMutations = set()
+
             mutationsDone = []
             splitted_cand = line.split('\n')
             faultyLineLocations = list(range(len(splitted_cand)))
@@ -50,6 +52,7 @@ class TestBase(unittest.TestCase):
             numberMutationsNeeded = 10
             for m in range(numberMutationsNeeded):
                 for f in faultyLineLocations:
+                    numberSearching = 0 
                     utils.parentify(line_ast)
                     tokenSet, units_offsets = utils.segmentLine(splitted_cand[f])
                     op_f_list, op_f_weights, original_op = utils.mutationsCanBeApplied(tokenSet)
@@ -70,9 +73,19 @@ class TestBase(unittest.TestCase):
                     choice_index = (random.choices(range(len(op_f_list)), weights = op_f_weights, k=1)[0])
                     choice = op_f_list[choice_index]
                     if (choice == "FAR" or choice == "IDR"):
-                        print(choice)
+                        # print(choice)
                         op = name_to_operator[choice]
-                        col_index = random.randint(0, idVistitor.get_identifiers_occurences().get(f + 1))
+                        if (choice == "FAR"):
+                            col_index = random.randint(0, idVistitor.get_function_identifiers_occurences().get(f + 1))
+                            while ((choice, f + 1, col_index) in appliedMutations and numberSearching < 2):
+                                col_index = random.randint(0, idVistitor.get_function_identifiers_occurences().get(f + 1))
+                                numberSearching += 1
+                        else:
+                            col_index = random.randint(0, idVistitor.get_identifiers_occurences().get(f + 1))
+                            while ((choice, f + 1, col_index) in appliedMutations and numberSearching < 2):
+                                    col_index = random.randint(0, idVistitor.get_identifiers_occurences().get(f + 1))
+                                    numberSearching += 1
+                        appliedMutations.add((choice, f + 1, col_index))
                         print(col_index)
                         mutant = op(target_node_lineno = f + 1, indexMutation = col_index, code_ast = line_ast).visitC()
 

@@ -45,7 +45,7 @@ from io import StringIO
 import signal
 def handler(signum, frame):
     # print('Signal handler called with signal', signum)
-    raise Exception("Couldn't open device!")
+    raise Exception("Infinite loop may occured!")
 
 def runCode(code: str, myglobals):
     # save the old stdout that is reserved
@@ -141,6 +141,8 @@ def fitness_testCasesPassed(program:str, program_name:str, inputs:List, outputs:
                 inputStrings = ""
                 outputStrings = ""
                 for argIndex, arg in enumerate(testcase):
+                    if isinstance(arg, str):
+                        arg = '\"' + arg + '\"'
                     input_inp = f'input_{argIndex} = {arg}\n'
                     inputStrings += input_inp
                 for argIndex in range(len(testcase)):
@@ -198,6 +200,8 @@ def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> 
                 inputStrings = ""
                 outputStrings = ""
                 for argIndex, arg in enumerate(testcase):
+                    if isinstance(arg, str):
+                        arg = '\"' + arg + '\"'
                     input_inp = f'input_{argIndex} = {arg}\n'
                     inputStrings += input_inp
                 for argIndex in range(len(testcase)):
@@ -206,6 +210,7 @@ def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> 
                 editedProgram = program + '\n' + inputStrings + f'\nres = {program_name}({outputStrings})\n\nprint(res)'
             
                 res, isError = runCode(editedProgram, globals())
+                # print(res)
                 if (isError):
                     return False
                 res = res.strip()
@@ -273,7 +278,7 @@ def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> 
 #     pass
 
 
-# @profile
+appliedMutations = set()
 def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_operator, pool, limitLocations = 2):
     # instance of the copy class to be used for copying ASTs
     copier = copyMutation()
@@ -284,12 +289,15 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
     limitKPossible = len(faultyLineLocations)
     locationsExtracted = limitKPossible  if (limitKPossible < limitLocations) else limitLocations
     # choose from the locations based on a parameter sent by the user which sould not exceed max length, that is why a limit cap is present
-    locs = random.choices(faultyLineLocations, weights = weightsFaultyLineLocations, k=locationsExtracted)
+    locs = random.choices(faultyLineLocations, weights = weightsFaultyLineLocations, k=1)
 
     # candidate that will be mutated
     cand_dash = None
     # parse the candidate
-    cand_ast = ast.parse(cand)
+    try:
+        cand_ast = ast.parse(cand)
+    except:
+        return False
     # add this line as type ignores gets missed in the mutations and it is needed in ast.unparse
     cand_ast.type_ignores = []
 
@@ -300,12 +308,14 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
     idVistitor.visit(cand_ast)
     idOcc = idVistitor.get_identifiers_occurences()
     fOcc = idVistitor.get_function_identifiers_occurences()
-    baseOperator.set_identifiers(idOcc)
-    baseOperator.set_functionIdentifiers(fOcc)
+    id = idVistitor.get_identifiers()
+    f = idVistitor.get_function_identifiers()
+    baseOperator.set_identifiers(id)
+    baseOperator.set_functionIdentifiers(f)
 
     for f in locs:
         # parentify the candidate so it will be used by functions like mutate_DIV, mutate_ADD, etc.
-        # utils.parentify(cand_ast)
+        numberSearching = 0 
         try:
             # segment line into presumably tokens
             tokenSet, units_ColOffset = utils.segmentLine(splitted_cand[f - 1])
@@ -321,6 +331,7 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
         # copy the candidate as not to make the mutation affect the original candidate
         copied_cand = copier.visit(cand_ast)
         copied_cand.type_ignores = []
+        utils.parentify(copied_cand)
         # changed from choosing the actual element to choosing the index, as getting 
         # the operator attributed to the mutation is not possible with index
         if f in fOcc.keys():
@@ -337,8 +348,20 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
         
         if (op_f == "FAR" or op_f == "IDR"):
             operator = name_to_operator[op_f]
-            col_index = random.randint(0, idOcc.get(f))
-            # print(col_index)
+            if (op_f == "FAR"):
+                col_index = random.randint(0, fOcc.get(f))
+                if f == 11:
+                    # print(col_index)
+                    col_index = 2
+                # while ((op_f, f, col_index) in appliedMutations and numberSearching < 2):
+                #     col_index = random.randint(0, fOcc.get(f))
+                #     numberSearching += 1
+            else:
+                col_index = random.randint(0, idOcc.get(f))
+                while ((choice, f , col_index) in appliedMutations and numberSearching < 2):
+                    col_index = random.randint(0, idOcc.get(f))
+                    numberSearching += 1
+            appliedMutations.add((choice, f , col_index))
             cand_dash = operator(target_node_lineno = f, indexMutation = col_index, code_ast = copied_cand).visitC()
 
         else:
@@ -359,6 +382,7 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
         pool.append(cand_dash)
         # return cand to its original ast (despite different location in memory)
         # cand = copied_cand
+    return True
 
 
 def insert(cand:str, pool:set):  # helper function to mutate the code
@@ -368,21 +392,26 @@ def insert(cand:str, pool:set):  # helper function to mutate the code
     # add type ignores
     cand_ast.type_ignores = []
     # call the function that will insert the node and this function is present in the library insert visitor
-    InsertVisitor.insertNode(cand_ast)
+    isOk = InsertVisitor.insertNode(cand_ast)
     # add to the possible candidates
-    pool.append(cand_ast)
-    cand_ast.type_ignores = []
-    # add the line numbers
-    ast.fix_missing_locations(cand_ast)
+    if (isOk):
+        pool.append(cand_ast)
+        cand_ast.type_ignores = []
+        # add the line numbers
+        ast.fix_missing_locations(cand_ast)
     return
 
 def swap(cand:str, pool:set):  # helper function to mutate the code
-    cand_ast = ast.parse(cand)
-    cand_ast.type_ignores = []
-    SwapVisitor.swapNodes(cand_ast)
-    pool.append(cand_ast)
-    cand_ast.type_ignores = []
-    ast.fix_missing_locations(cand_ast)
+    try:
+        cand_ast = ast.parse(cand)
+        cand_ast.type_ignores = []
+    except:
+        return
+    noError = SwapVisitor.swapNodes(cand_ast)
+    if (noError):
+        pool.append(cand_ast)
+        cand_ast.type_ignores = []
+        ast.fix_missing_locations(cand_ast)
     return
 
 
@@ -413,7 +442,11 @@ def mutate(cand:str, ops:Callable, name_to_operator:Dict,
 
     scores = [] # list of scores that will be used to choose the candidate to be selected
     for cand in pool:
-        scores.append(fitness_testCasesPassed(ast.unparse(cand), methodUnderTestName, inputs, outputs) * 10 + 1) # why +10, just to make it non-zero and also relatively, it stays the same.
+        try:
+            parsedCand = ast.unparse(cand)
+            scores.append(fitness_testCasesPassed(parsedCand, methodUnderTestName, inputs, outputs) * 10 + 1) # why +10, just to make it non-zero and also relatively, it stays the same.
+        except:
+            scores.append(0.000000000000001)
     choice = random.choices(range(len(pool)), weights = scores, k=1)[0]
     return ast.unparse(pool[choice])
 
@@ -428,8 +461,8 @@ def main(BugProgram:str,
         outputs:List, 
         FixPar:Callable,
         ops:Callable,
-        popSize:int = 400, 
-        M:int = 7,
+        popSize:int = 700, 
+        M:int = 1,
         E:int = 10, 
         L:int = 5):
     """
@@ -485,7 +518,7 @@ if __name__ == '__main__':
     inputCasesPath = 'SearchBasedBugFixing/testcases/Inputs'
     outputCasesPath = 'SearchBasedBugFixing/testcases/Outputs'
     metaDataPath = 'SearchBasedBugFixing/testcases/MetaData'
-    file_id = 7
+    file_id = 6
     file_name = f'{file_id}.txt'
     typeHintsInputs = []
     typeHintsOutputs = []
@@ -503,6 +536,7 @@ if __name__ == '__main__':
             lines = file.readlines()
             methodUnderTestName = lines[0].strip()
             function_names = re.findall(r'def\s+(\w+)', buggyProgram)
+            foundName = False
             for name in function_names:
                 if name == methodUnderTestName:
                     foundName = True
@@ -555,17 +589,26 @@ if __name__ == '__main__':
         print("Problem in reading files, insufficient data")
         print(e)
         exit(-1)
-    # print(inputs)
-    # print(outputs)
+    print(inputs)
+    print(outputs)
 
-    # pr = """def infinite_loop(number):
-    # k = 0
-    # while number > 0:
-    #     k += 1
-    #     number -= 1  # Decrease number by 1
-    # return k"""
-    # x = fitness_testCasesPassed(pr, 'infinite_loop', inputs, outputs)
-    # print(x)
+#     pr = """import sys
+# sys.setrecursionlimit(10**6)    
+# def levenshtein(source, target):
+#     if source == '' or target == '':
+#         return len(source) or len(target)
+
+#     elif source[0] == target[0]:
+#         return levenshtein(source[1:], target[1:])
+
+#     else:
+#         return 1 + min(
+#             levenshtein(source,     target[1:]),
+#             levenshtein(source[1:], target[1:]),
+#             levenshtein(source[1:], target)
+#         )"""
+#     x = passesNegTests(pr, 'levenshtein', inputs, outputs)
+#     print(x)
 
     error = faultLocalizationUtils.main(
         inputs = inputs, 
@@ -597,7 +640,7 @@ if __name__ == '__main__':
                     weightsFaultyLocations=weightsFaultyLocations, 
                     inputs=inputs,
                     outputs=outputs, 
-                    FixPar=None, 
+                    FixPar=None,
                     ops=ops)
     print("************************************************************")
     for solution in solutions:
@@ -606,7 +649,8 @@ if __name__ == '__main__':
     print(len(population))
     i = 0
     for p in population:
-        print(population[i])
+        splt = p.split()
+        print(population[i + 100])
         i += 1
         if (i == 10):
             break

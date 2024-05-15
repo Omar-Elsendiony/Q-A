@@ -341,13 +341,13 @@ def mutationsCanBeApplied(setTokens: set):
 
     ################ STATEMENT DELETION ################
     # these are very special, I will add with very low probability
-    maxRand = 100
-    prob = random.randint(1, maxRand) / maxRand
-    if (prob > 0.95):  # Do not forget weights
-        if 'NUM' in setTokens: lstMutations.append('CNR'); lstToBeMutated.append('NUM') # constant replacement
-        if 'STR' in setTokens: lstMutations.append('CNR'); lstToBeMutated.append('STR') # constant replacement
+    # maxRand = 100
+    # prob = random.randint(1, maxRand) / maxRand
+    # if (prob > 0.95):  # Do not forget weights
+    if 'NUM' in setTokens: lstMutations.append('CNR'); lstToBeMutated.append('NUM') # constant replacement
+    if 'STR' in setTokens: lstMutations.append('CSR'); lstToBeMutated.append('STR') # constant replacement
         # if 'return' in setTokens: lstMutations.append('STD'); lstToBeMutated.append('return') # statement deletion
-    
+    if 'return' in setTokens: lstMutations.append('RER'); lstToBeMutated.append('return') # statement deletion
     ############### STRING MUTATIONS ################
     if '"' in setTokens or '\'' in setTokens: lstMutations.append('CSR'); lstToBeMutated.append('STR') # constant string replacement
 
@@ -423,6 +423,6 @@ def parentify(tree):
     tree.parent = None
     for node in ast.walk(tree):
         for child in ast.iter_child_nodes(node):
-            child.parent = node 
+            child.parent = node
 
 

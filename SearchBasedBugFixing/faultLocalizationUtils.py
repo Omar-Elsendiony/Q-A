@@ -131,6 +131,8 @@ def create_py_test(inputs, outputs, function_name, destination_folder, inputHint
             # print(inputs[i][j])
             # print('-----------------------------------')
             val_input = (inputs[i][j])
+            if (isinstance(val_input, str)):
+                val_input = "\'" + val_input + "\'"
             if val_input == "void":
                 break
             input_str = f"input_{j} = "

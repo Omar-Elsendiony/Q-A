@@ -69,7 +69,12 @@ class copyMutation(ast.NodeTransformer):
         return ast.copy_location(ast.UnaryOp(op=node.op, operand=self.visit(node.operand)), node)
     
     def visit_BinOp(self, node):
-        return ast.copy_location(ast.BinOp(left=self.visit(node.left), op=node.op, right=self.visit(node.right)), node)
+        try:
+            l = None if node.left is None else self.visit(node.left)
+            r = None if node.right is None else self.visit(node.right)
+        except:
+            print(node)
+        return ast.copy_location(ast.BinOp(left=l, op=node.op, right=r), node)
     
     def visit_BoolOp(self, node):
         return ast.copy_location(ast.BoolOp(op=node.op, values=[self.visit(x) for x in node.values]), node)
@@ -91,7 +96,8 @@ class copyMutation(ast.NodeTransformer):
     
     def visit_FunctionDef(self, node):
         returns = None if node.returns is None else self.visit(node.returns)
-        return ast.copy_location(ast.FunctionDef(name=node.name, args=self.visit(node.args), body=[self.visit(x) for x in node.body], decorator_list=[self.visit(x) for x in node.decorator_list], returns=returns), node)
+        args = None if node.args is None else self.visit(node.args)
+        return ast.copy_location(ast.FunctionDef(name=node.name, args=args, body=[self.visit(x) for x in node.body], decorator_list=[self.visit(x) for x in node.decorator_list], returns=returns), node)
     
     def visit_Lambda(self, node):
         return ast.copy_location(ast.Lambda(args=self.visit(node.args), body=self.visit(node.body)), node)
@@ -108,7 +114,11 @@ class copyMutation(ast.NodeTransformer):
         return ast.copy_location(ast.arg(arg=node.arg, annotation=annotation), node)
     
     def visit_Return(self, node):
-        return ast.copy_location(ast.Return(value=self.visit(node.value)), node)
+        try:
+            val = None if (node.value is None) else self.visit(node.value)
+        except:
+            print("meeeeeeeeeeeeeeee")
+        return ast.copy_location(ast.Return(value=val), node)
     
     def visit_Delete(self, node):
         return ast.copy_location(ast.Delete(targets=[self.visit(x) for x in node.targets]), node)

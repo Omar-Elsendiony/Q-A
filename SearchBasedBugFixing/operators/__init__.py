@@ -50,7 +50,7 @@ standard_operators = {
     
     ## MEMBERSHIP ##
     MembershipReplacement,
-
+    returnReplacement
     ## ASSIGNMENT ##
     ## UNARY ##
 }

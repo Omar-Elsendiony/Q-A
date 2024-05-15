@@ -262,7 +262,7 @@ class UnaryOperator(ast.NodeTransformer):
     
 
 class AugmentedAssignReplacement(ArithmeticOperator):
-    mutations = [ast.BitXor(), ast.Add(), ast.Sub(), ast.Mult(), ast.Div(), ast.FloorDiv(), ast.Mod(), ast.Pow()]
+    mutations = [ast.BitXor(), ast.Add(), ast.Sub(), ast.Mult(), ast.Div(), ast.FloorDiv(), ast.Mod(), ast.Pow(), ast.BitAnd(), ast.BitOr(), ast.LShift(), ast.RShift()]
 
     def visit_AugAssign(self, node):
         lineno = getattr(node, 'lineno', None)

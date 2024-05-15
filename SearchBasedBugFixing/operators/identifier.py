@@ -6,13 +6,13 @@ import random
 class FunctionArgumentReplacement(baseOperator):
 
     def visit_Name(self, node):
-        if not (hasattr(node, 'parent')): return node
-        if (node.parent.__class__.__name__ == "Call"):
-            # print(node.parent.func.id + "weeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
-            if (node.parent.func.id == node.id): return node
-            return ast.BinOp(left=ast.Name(id=node.id, ctx=ast.Load()), op=ast.Sub(), right=ast.Constant(value=1))
-        else:
-            return node
+        if (node.id in self.get_functionIdentifiers()):   
+            if (self.wanted_line(node.lineno)):
+                if (node.parent.__class__.__name__ == "Call" and node.parent.func.id != node.id) or node.parent.__class__.__name__ == "Tuple":
+                    self.finishedMutation = True
+                    return ast.BinOp(left=ast.Name(id=node.id, ctx=ast.Load()), op=ast.Sub(), right=ast.Constant(value=1))
+        # else:
+        return node
     
     @classmethod
     def name(cls):
@@ -21,17 +21,18 @@ class FunctionArgumentReplacement(baseOperator):
 
 class IdentifierReplacement(baseOperator):
         def visit_Name(self, node):
-            if self.wanted_line(node.lineno):
-                l = self.get_identifiers()
-                # print(l)
-                if node.id in self.get_identifiers():
-                    # self.mutatedSet.add(node)
-                    selectedIdentifier = random.choice(self.identifiers)
-                    while(selectedIdentifier == node.id and len(self.identifiers) > 1):
+            id = self.get_identifiers()
+            if node.id in id:
+                if self.wanted_line(node.lineno):
+                        # self.mutatedSet.add(node)
                         selectedIdentifier = random.choice(self.identifiers)
-                    node.id = selectedIdentifier
-                    # print(node.id)
-                    self.finishedMutation = True
+                        numRepeat = 0
+                        while(selectedIdentifier == node.id and len(self.identifiers) > 1 and numRepeat < 2):
+                            selectedIdentifier = random.choice(self.identifiers)
+                            numRepeat += 1
+                        node.id = selectedIdentifier
+                        # print(node.id)
+                        self.finishedMutation = True
             return node
 
         @classmethod

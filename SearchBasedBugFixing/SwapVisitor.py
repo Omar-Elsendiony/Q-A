@@ -3,8 +3,13 @@ from random import choices
 from utils import parentify
 
 def isInBody(node):
-    for child in node.parent.body:
-        if (child is node):
+    parentBody = node.parent.body
+    if (isinstance(parentBody, list)):
+        for child in parentBody:
+            if (child is node):
+                return True
+    else:
+        if (parentBody is node):
             return True
     return False
 
@@ -33,9 +38,13 @@ def swapNodes(parent_node):
     while (not changed and u < upperLimit):
         cand_dash = choices(candidates, k=2)
         if (cand_dash[0].parent.__class__.__name__ == cand_dash[1].parent.__class__.__name__):
-            changed = True
             try:
                 cand_dash[0].parent.body[cand_dash[0].parent.body.index(cand_dash[0])], cand_dash[1].parent.body[cand_dash[1].parent.body.index(cand_dash[1])] = cand_dash[1], cand_dash[0]
+                changed = True
             except: pass
-    return
+    try:
+        ast.unparse(parent_node)
+    except:
+        return False
+    return True
         

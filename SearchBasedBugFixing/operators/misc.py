@@ -174,4 +174,24 @@ class ConstantStringReplacement(baseOperator):
     def name(cls):
         return 'CSR'  # Constant Replacement
 
+class returnReplacement(baseOperator):
+    def visit_Return(self, node):
+        if not self.wanted_line(node.lineno):
+            return node
+        p = s = a = ast.Pass()
+        if (node.value is not None):
+            s = ast.BinOp(left=node.value, op=ast.Sub(), right=ast.Constant(value=1))
+            a = ast.BinOp(left=node.value, op=ast.Add(), right=ast.Constant(value=1))
+        valueChosen = random.choice([s, a, p])
+        
+        # valueChosen = random.choice([s, a, p])
+        # else:  
+        #     valueChosen = None
+        if valueChosen == p:
+            return ast.Return()
+        return ast.Return(value=valueChosen)
+
+    @classmethod
+    def name(cls):
+        return 'RER'  # Return Replacement
     
