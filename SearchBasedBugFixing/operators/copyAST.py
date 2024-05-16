@@ -51,7 +51,8 @@ class copyMutation(ast.NodeTransformer):
         return ast.copy_location(ast.IfExp(test=self.visit(node.test), body=self.visit(node.body), orelse=self.visit(node.orelse)), node)
 
     def visit_Compare(self, node):
-        return ast.copy_location(ast.Compare(left=self.visit(node.left), ops=node.ops, comparators=[self.visit(x) for x in node.comparators]), node)
+        ops = [self.visit(op) for op in node.ops]
+        return ast.copy_location(ast.Compare(left=self.visit(node.left), ops=ops, comparators=[self.visit(x) for x in node.comparators]), node)
 
     def visit_Call(self, node):
         return ast.copy_location(ast.Call(func=self.visit(node.func), args=[self.visit(x) for x in node.args], keywords=[self.visit(x) for x in node.keywords]), node)
@@ -114,10 +115,7 @@ class copyMutation(ast.NodeTransformer):
         return ast.copy_location(ast.arg(arg=node.arg, annotation=annotation), node)
     
     def visit_Return(self, node):
-        try:
-            val = None if (node.value is None) else self.visit(node.value)
-        except:
-            print("meeeeeeeeeeeeeeee")
+        val = None if (node.value is None) else self.visit(node.value)
         return ast.copy_location(ast.Return(value=val), node)
     
     def visit_Delete(self, node):

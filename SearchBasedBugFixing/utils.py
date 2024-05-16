@@ -295,7 +295,6 @@ def mutationsCanBeApplied(setTokens: set):
     if '>=' in setTokens: lstMutations.append('ROR'); lstToBeMutated.append('>=') 
 
     ################ ASSIGNMENT OPERATORS ################
-    if '==' in setTokens: lstMutations.append('MER'); lstToBeMutated.append('==')
     if '!=' in setTokens: lstMutations.append('MER'); lstToBeMutated.append('!=')
 
     ################ LOGICAL OPERATORS ################
@@ -344,7 +343,6 @@ def mutationsCanBeApplied(setTokens: set):
     # maxRand = 100
     # prob = random.randint(1, maxRand) / maxRand
     # if (prob > 0.95):  # Do not forget weights
-    if 'NUM' in setTokens: lstMutations.append('CNR'); lstToBeMutated.append('NUM') # constant replacement
     if 'STR' in setTokens: lstMutations.append('CSR'); lstToBeMutated.append('STR') # constant replacement
         # if 'return' in setTokens: lstMutations.append('STD'); lstToBeMutated.append('return') # statement deletion
     if 'return' in setTokens: lstMutations.append('RER'); lstToBeMutated.append('return') # statement deletion
@@ -355,6 +353,8 @@ def mutationsCanBeApplied(setTokens: set):
     # if '[]' in setTokens: lstMutations.append('MR')
     # if '{}' in setTokens: lstMutations.append('MR')
     weights.extend([1] * (len(lstMutations) - len(weights))) # the weights are all equal for now
+    if 'NUM' in setTokens: lstMutations.append('CNR'); lstToBeMutated.append('NUM'); weights.append(2)
+    if '==' in setTokens: lstMutations.append('MER'); lstToBeMutated.append('=='); weights.append(3)
 
     return lstMutations, weights, lstToBeMutated
 

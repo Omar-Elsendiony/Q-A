@@ -461,7 +461,7 @@ def main(BugProgram:str,
         outputs:List, 
         FixPar:Callable,
         ops:Callable,
-        popSize:int = 700, 
+        popSize:int = 1000, 
         M:int = 1,
         E:int = 10, 
         L:int = 5):
@@ -518,7 +518,7 @@ if __name__ == '__main__':
     inputCasesPath = 'SearchBasedBugFixing/testcases/Inputs'
     outputCasesPath = 'SearchBasedBugFixing/testcases/Outputs'
     metaDataPath = 'SearchBasedBugFixing/testcases/MetaData'
-    file_id = 6
+    file_id = 10
     file_name = f'{file_id}.txt'
     typeHintsInputs = []
     typeHintsOutputs = []

@@ -8,7 +8,6 @@ from .identifier import *
 
 
 standard_operators = {
-    
     ## ARITHMETIC ##
     ArithmeticOperatorDeletion,
     AdditionOperatorReplacement,
@@ -56,6 +55,3 @@ standard_operators = {
 }
 
 experimental_operators = set()
-
-
-

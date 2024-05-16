@@ -72,23 +72,24 @@ class MembershipReplacement(baseOperator):
     not in
     """
 
-    def visit_Compare(self, node: ast.Compare) -> Any:
-        if not self.wanted_line(node.lineno):
-            return node
+    # def visit_Compare(self, node: ast.Compare) -> Any:
+    #     if not self.wanted_line(node.lineno):
+    #         return node
 
-        if isinstance(node.ops[0], ast.Is):
-            operation = ast.IsNot()
-        elif isinstance(node.ops[0], ast.IsNot):
-            operation = ast.Is()
-        elif isinstance(node.ops[0], ast.In):
-            operation = ast.NotIn()
-        elif isinstance(node.ops[0], ast.NotIn):
-            operation = ast.In()
-        elif isinstance(node.ops[0], ast.Eq):
-            operation = ast.NotEq()
-        elif isinstance(node.ops[0], ast.NotEq):
-            operation = ast.Eq()
-        return ast.Compare(left=self.visit(node.left), ops=[operation], comparators=[self.visit(x) for x in node.comparators])
+    #     if isinstance(node.ops[0], ast.Is):
+    #         operation = ast.IsNot()
+    #     elif isinstance(node.ops[0], ast.IsNot):
+    #         operation = ast.Is()
+    #     elif isinstance(node.ops[0], ast.In):
+    #         operation = ast.NotIn()
+    #     elif isinstance(node.ops[0], ast.NotIn):
+    #         operation = ast.In()
+    #     elif isinstance(node.ops[0], ast.Eq):
+    #         # choice
+    #         operation = ast.NotEq()
+    #     elif isinstance(node.ops[0], ast.NotEq):
+    #         operation = ast.Eq()
+    #     return ast.Compare(left=self.visit(node.left), ops=[operation], comparators=[self.visit(x) for x in node.comparators])
         # return super().visit_Compare(node)
 
     # def visit_Is(self, node: ast.Is) -> Any:
@@ -103,6 +104,14 @@ class MembershipReplacement(baseOperator):
 
     # not IN removed for Nowwwwwwwwwwwww
     
+    def visit_Eq(self, node: ast.Eq):
+        if not self.wanted_line(node.parent.lineno):
+            return node
+        operations = [ast.NotEq(), ast.LtE(), ast.GtE()]
+        op = random.choices(operations, [1, 1, 1], k=1)[0]
+        # print(op)
+        return op
+
     # def visit_NotIn(self, node: ast.NotIn):
     #     if not self.wanted_line(node.lineno, node.col_offset):
     #         return node

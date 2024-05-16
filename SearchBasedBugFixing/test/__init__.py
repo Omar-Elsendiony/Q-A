@@ -53,14 +53,17 @@ class TestBase(unittest.TestCase):
             for m in range(numberMutationsNeeded):
                 for f in faultyLineLocations:
                     numberSearching = 0 
-                    utils.parentify(line_ast)
                     tokenSet, units_offsets = utils.segmentLine(splitted_cand[f])
                     op_f_list, op_f_weights, original_op = utils.mutationsCanBeApplied(tokenSet)
                     if (op_f_list == []):
                         continue
                     # copy before any choice
+                    # print("**********")
+                    # print(ast.unparse(line_ast))
+                    # print("**********")
                     copied_line_ast = self.copier.visit(line_ast)
                     copied_line_ast.type_ignores = []
+                    utils.parentify(copied_line_ast)
                     # changed from choosing the actual element to choosing the index, as getting 
                     # the operator attributed to the mutation is not possible with index
                     if f + 1 in idVistitor.get_function_identifiers_occurences().keys():
@@ -73,7 +76,7 @@ class TestBase(unittest.TestCase):
                     choice_index = (random.choices(range(len(op_f_list)), weights = op_f_weights, k=1)[0])
                     choice = op_f_list[choice_index]
                     if (choice == "FAR" or choice == "IDR"):
-                        # print(choice)
+                        print(choice)
                         op = name_to_operator[choice]
                         if (choice == "FAR"):
                             col_index = random.randint(0, idVistitor.get_function_identifiers_occurences().get(f + 1))
@@ -86,19 +89,19 @@ class TestBase(unittest.TestCase):
                                     col_index = random.randint(0, idVistitor.get_identifiers_occurences().get(f + 1))
                                     numberSearching += 1
                         appliedMutations.add((choice, f + 1, col_index))
-                        print(col_index)
-                        mutant = op(target_node_lineno = f + 1, indexMutation = col_index, code_ast = line_ast).visitC()
+                        # print(col_index)
+                        mutant = op(target_node_lineno = f + 1, indexMutation = col_index, code_ast = copied_line_ast).visitC()
 
                     else:
                         colOffsets = units_offsets[original_op[choice_index]]
                         col_index = random.randint(0, len(colOffsets) - 1)
                         op = name_to_operator[choice]
-                        
+                        print(choice)
                         col_index = col_index if choice != "ARD" else choice_index // 2
-                        mutant = op(target_node_lineno = f + 1, indexMutation = col_index, code_ast = line_ast, specifiedOperator=original_op[choice_index]).visitC()
+                        mutant = op(target_node_lineno = f + 1, indexMutation = col_index, code_ast = copied_line_ast, specifiedOperator=original_op[choice_index]).visitC()
                     
                     mutant = ast.fix_missing_locations(mutant) # after mutation, we need to fix the missing locations
-                    line_ast = copied_line_ast
+                    # line_ast = copied_line_ast
                     # res = (SearchBasedBugFixing.unparser.unparser().visit(mutant))
                     res = ast.unparse(mutant)
                     mutationsDone.append(res)
