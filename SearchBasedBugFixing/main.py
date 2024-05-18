@@ -1,7 +1,6 @@
 """
 Module : main
 The main pipeline resides here
-
 """
 
 import ast
@@ -18,31 +17,9 @@ import SwapVisitor
 
 ####################################################################
 import sys
-from time import sleep
-import threading
-from _thread import interrupt_main
-import sys
 from io import StringIO
-
-
-# class CustomThread(threading.Thread):
-#     def __init__(self, *args, **kwargs):
-#         super(CustomThread, self).__init__(*args, **kwargs)
-#         self._stopper = threading.Event()
-
-#     def stop(self):
-#         self._stopper.set()
-
-#     def stopped(self):
-#         return self._stopper.is_set()
-
-#     def run(self):
-#         sleep(1)
-#         while not self.stopped():
-#             interrupt_main()
-
-# thread = CustomThread()
 import signal
+
 def handler(signum, frame):
     # print('Signal handler called with signal', signum)
     raise Exception("Infinite loop may occured!")
@@ -336,7 +313,7 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
         # the operator attributed to the mutation is not possible with index
         if f in fOcc.keys():
             op_f_list.append("FAR")
-            op_f_weights.append(4)
+            op_f_weights.append(5)
         if f in idOcc.keys():
             op_f_list.append("IDR")
             op_f_weights.append(2)
@@ -345,6 +322,10 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
         choice_index = random.choices(range(len(op_f_list)), weights = op_f_weights, k=1)[0]
         # Get the operation neumonic from operation list
         op_f = op_f_list[choice_index] #op_f is the choice selected from list of plausible operations
+        while (op_f != "FAR" and op_f != "IDR" and (op_f, f) in appliedMutations and numberSearching < 2):
+            choice_index = random.choices(range(len(op_f_list)), weights = op_f_weights, k=1)[0]
+            op_f = op_f_list[choice_index]
+            numberSearching += 1
         
         if (op_f == "FAR" or op_f == "IDR"):
             operator = name_to_operator[op_f]
@@ -353,9 +334,9 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
                 if f == 11:
                     # print(col_index)
                     col_index = 2
-                # while ((op_f, f, col_index) in appliedMutations and numberSearching < 2):
-                #     col_index = random.randint(0, fOcc.get(f))
-                #     numberSearching += 1
+                while ((op_f, f, col_index) in appliedMutations and numberSearching < 2):
+                    col_index = random.randint(0, fOcc.get(f))
+                    numberSearching += 1
             else:
                 col_index = random.randint(0, idOcc.get(f))
                 while ((choice, f , col_index) in appliedMutations and numberSearching < 2):
@@ -365,6 +346,7 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
             cand_dash = operator(target_node_lineno = f, indexMutation = col_index, code_ast = copied_cand).visitC()
 
         else:
+            appliedMutations.add((op_f, f))
             # get the colum offset occurances of such an operation
             colOffsets = units_ColOffset[original_op[choice_index]]
             # get an index of the operation that you want to apply on
@@ -461,7 +443,7 @@ def main(BugProgram:str,
         outputs:List, 
         FixPar:Callable,
         ops:Callable,
-        popSize:int = 1000, 
+        popSize:int = 1500, 
         M:int = 1,
         E:int = 10, 
         L:int = 5):
@@ -518,7 +500,7 @@ if __name__ == '__main__':
     inputCasesPath = 'SearchBasedBugFixing/testcases/Inputs'
     outputCasesPath = 'SearchBasedBugFixing/testcases/Outputs'
     metaDataPath = 'SearchBasedBugFixing/testcases/MetaData'
-    file_id = 10
+    file_id = 13
     file_name = f'{file_id}.txt'
     typeHintsInputs = []
     typeHintsOutputs = []

@@ -325,7 +325,7 @@ def mutationsCanBeApplied(setTokens: set):
     ############### LOOPS OPERATORS ################
 
     # if 'range' in setTokens: lstMutations.append('OIL') ; lstToBeMutated.append('range')
-    # if 'enumerate' in setTokens: lstMutations.append('OIL') ; lstToBeMutated.append('enumerate')
+    if 'enumerate' in setTokens: lstMutations.append('EIR') ; lstToBeMutated.append('enumerate')
     # if 'zip' in setTokens: lstMutations.append('OIL'); lstToBeMutated.append('zip')
 
     ################ CONDITIONAL OPERATORS ################
@@ -345,7 +345,6 @@ def mutationsCanBeApplied(setTokens: set):
     # if (prob > 0.95):  # Do not forget weights
     if 'STR' in setTokens: lstMutations.append('CSR'); lstToBeMutated.append('STR') # constant replacement
         # if 'return' in setTokens: lstMutations.append('STD'); lstToBeMutated.append('return') # statement deletion
-    if 'return' in setTokens: lstMutations.append('RER'); lstToBeMutated.append('return') # statement deletion
     ############### STRING MUTATIONS ################
     if '"' in setTokens or '\'' in setTokens: lstMutations.append('CSR'); lstToBeMutated.append('STR') # constant string replacement
 
@@ -353,7 +352,8 @@ def mutationsCanBeApplied(setTokens: set):
     # if '[]' in setTokens: lstMutations.append('MR')
     # if '{}' in setTokens: lstMutations.append('MR')
     weights.extend([1] * (len(lstMutations) - len(weights))) # the weights are all equal for now
-    if 'NUM' in setTokens: lstMutations.append('CNR'); lstToBeMutated.append('NUM'); weights.append(2)
+    if 'NUM' in setTokens: lstMutations.append('CNR'); lstToBeMutated.append('NUM'); weights.append(6)
+    if 'return' in setTokens: lstMutations.append('RER'); lstToBeMutated.append('return'); weights.append(7)
     if '==' in setTokens: lstMutations.append('MER'); lstToBeMutated.append('=='); weights.append(3)
 
     return lstMutations, weights, lstToBeMutated

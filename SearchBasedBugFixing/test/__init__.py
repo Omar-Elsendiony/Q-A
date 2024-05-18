@@ -68,7 +68,7 @@ class TestBase(unittest.TestCase):
                     # the operator attributed to the mutation is not possible with index
                     if f + 1 in idVistitor.get_function_identifiers_occurences().keys():
                         op_f_list.append("FAR")
-                        op_f_weights.append(4)
+                        op_f_weights.append(5)
                     if f + 1 in idVistitor.get_identifiers_occurences().keys():
                         op_f_list.append("IDR")
                         op_f_weights.append(2)

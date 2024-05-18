@@ -46,7 +46,7 @@ standard_operators = {
     ## IDENTIFIER ##
     IdentifierReplacement,
     FunctionArgumentReplacement,
-    
+    EnumerateIdentifierReplacement,
     ## MEMBERSHIP ##
     MembershipReplacement,
     returnReplacement

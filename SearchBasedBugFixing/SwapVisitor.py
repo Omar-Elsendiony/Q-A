@@ -36,6 +36,7 @@ def swapNodes(parent_node):
     SwapVisitor().visit(parent_node)
     candidates = SwapVisitor.handleLst
     while (not changed and u < upperLimit):
+        u += 1
         cand_dash = choices(candidates, k=2)
         if (cand_dash[0].parent.__class__.__name__ == cand_dash[1].parent.__class__.__name__):
             try:

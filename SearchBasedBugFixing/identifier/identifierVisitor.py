@@ -18,11 +18,17 @@ class IdentifierVisitor(ast.NodeVisitor):
                 self.functionIdentifiersOccurences[node.lineno] = 0
             else:
                 self.functionIdentifiersOccurences[node.lineno] += 1
+            #######################################################
+            self.identifiers.append(node.id)
+            if self.identifiersOccurences.get(node.lineno) is None:
+                self.identifiersOccurences[node.lineno] = 0
+            else:
+                self.identifiersOccurences[node.lineno] += 1
         else:
             if (isinstance(node.parent, ast.Call) or isinstance(node.parent, ast.FunctionDef) or isinstance(node.parent, ast.Subscript)):
                 return node
-            self.identifiers.append(node.id)
             
+            self.identifiers.append(node.id)
             if self.identifiersOccurences.get(node.lineno) is None:
                 self.identifiersOccurences[node.lineno] = 0
             else:

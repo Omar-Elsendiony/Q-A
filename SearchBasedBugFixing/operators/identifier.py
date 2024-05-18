@@ -10,7 +10,8 @@ class FunctionArgumentReplacement(baseOperator):
             if (self.wanted_line(node.lineno)):
                 if (node.parent.__class__.__name__ == "Call" and node.parent.func.id != node.id) or node.parent.__class__.__name__ == "Tuple":
                     self.finishedMutation = True
-                    return ast.BinOp(left=ast.Name(id=node.id, ctx=ast.Load()), op=ast.Sub(), right=ast.Constant(value=1))
+                    op = random.choice([ast.Sub(), ast.Add()])
+                    return ast.BinOp(left=ast.Name(id=node.id, ctx=ast.Load()), op=op, right=ast.Constant(value=1))
         # else:
         return node
     
@@ -38,3 +39,20 @@ class IdentifierReplacement(baseOperator):
         @classmethod
         def name(cls):
             return 'IDR'
+
+class EnumerateIdentifierReplacement(baseOperator):
+    def visit_Name(self, node):
+        if (node.id in self.get_functionIdentifiers()):   
+            if (self.wanted_line(node.lineno)):
+                if (node.parent.__class__.__name__ == "Call" and node.parent.func.id != node.id and node.parent.func.id == "enumerate"):
+                    selectedIdentifier = random.choice(self.identifiers)
+                    numRepeat = 0
+                    while(selectedIdentifier == node.id and len(self.identifiers) > 1 and numRepeat < 2):
+                        selectedIdentifier = random.choice(self.identifiers)
+                        numRepeat += 1
+                    node.id = selectedIdentifier
+        return node
+
+    @classmethod
+    def name(cls):
+        return 'EIR'
