@@ -302,6 +302,12 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
         # getting the mutations that can be applied, original tokens and weight of each mutation
         op_f_list, op_f_weights, original_op = ops(tokenSet)
         # op_f_list may be empty as the lines are removed and added, etc. However, running the fault localization again will solve the issue
+        if f in fOcc.keys():
+            op_f_list.append("FAR")
+            op_f_weights.append(5)
+        if f in idOcc.keys():
+            op_f_list.append("IDR")
+            op_f_weights.append(2)
         if (op_f_list == []):
             continue
         
@@ -311,12 +317,6 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
         utils.parentify(copied_cand)
         # changed from choosing the actual element to choosing the index, as getting 
         # the operator attributed to the mutation is not possible with index
-        if f in fOcc.keys():
-            op_f_list.append("FAR")
-            op_f_weights.append(5)
-        if f in idOcc.keys():
-            op_f_list.append("IDR")
-            op_f_weights.append(2)
 
         # Choose the index with the higher probability
         choice_index = random.choices(range(len(op_f_list)), weights = op_f_weights, k=1)[0]
@@ -361,7 +361,11 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
         ast.fix_missing_locations(cand_dash)
         cand_dash.type_ignores = []
         # add the candidate to the pool that you will select from
-        pool.append(cand_dash)
+        try:
+            ast.unparse(cand_dash)
+            pool.append(cand_dash)
+        except:
+            pass
         # return cand to its original ast (despite different location in memory)
         # cand = copied_cand
     return True
@@ -443,7 +447,7 @@ def main(BugProgram:str,
         outputs:List, 
         FixPar:Callable,
         ops:Callable,
-        popSize:int = 1500, 
+        popSize:int = 1700, 
         M:int = 1,
         E:int = 10, 
         L:int = 5):
@@ -500,7 +504,7 @@ if __name__ == '__main__':
     inputCasesPath = 'SearchBasedBugFixing/testcases/Inputs'
     outputCasesPath = 'SearchBasedBugFixing/testcases/Outputs'
     metaDataPath = 'SearchBasedBugFixing/testcases/MetaData'
-    file_id = 13
+    file_id = 7
     file_name = f'{file_id}.txt'
     typeHintsInputs = []
     typeHintsOutputs = []
@@ -610,7 +614,8 @@ if __name__ == '__main__':
         # s = faultLocalizationUtils.runFaultLocalization(test_path, src_path)
         faultLocations = list(map(int, faultLocations))
         weightsFaultyLocations = list(map(float, weightsFaultyLocations))
-    else:
+    # else:
+    if (error != 0 or faultLocations == []):
         splittedBuggyProgram = buggyProgram.split('\n')
         allLines = len(splittedBuggyProgram)
         faultLocations = list(range(1, allLines + 1))

@@ -55,6 +55,12 @@ class TestBase(unittest.TestCase):
                     numberSearching = 0 
                     tokenSet, units_offsets = utils.segmentLine(splitted_cand[f])
                     op_f_list, op_f_weights, original_op = utils.mutationsCanBeApplied(tokenSet)
+                    if f + 1 in idVistitor.get_function_identifiers_occurences().keys():
+                        op_f_list.append("FAR")
+                        op_f_weights.append(5)
+                    if f + 1 in idVistitor.get_identifiers_occurences().keys():
+                        op_f_list.append("IDR")
+                        op_f_weights.append(2)
                     if (op_f_list == []):
                         continue
                     # copy before any choice
@@ -66,12 +72,6 @@ class TestBase(unittest.TestCase):
                     utils.parentify(copied_line_ast)
                     # changed from choosing the actual element to choosing the index, as getting 
                     # the operator attributed to the mutation is not possible with index
-                    if f + 1 in idVistitor.get_function_identifiers_occurences().keys():
-                        op_f_list.append("FAR")
-                        op_f_weights.append(5)
-                    if f + 1 in idVistitor.get_identifiers_occurences().keys():
-                        op_f_list.append("IDR")
-                        op_f_weights.append(2)
                     
                     choice_index = (random.choices(range(len(op_f_list)), weights = op_f_weights, k=1)[0])
                     choice = op_f_list[choice_index]
@@ -103,8 +103,11 @@ class TestBase(unittest.TestCase):
                     mutant = ast.fix_missing_locations(mutant) # after mutation, we need to fix the missing locations
                     # line_ast = copied_line_ast
                     # res = (SearchBasedBugFixing.unparser.unparser().visit(mutant))
-                    res = ast.unparse(mutant)
-                    mutationsDone.append(res)
+                    try:
+                        res = ast.unparse(mutant)
+                        mutationsDone.append(res)
+                    except:
+                        pass
                     # print("------------------")
                     # print(res)
                     # print("------------------")

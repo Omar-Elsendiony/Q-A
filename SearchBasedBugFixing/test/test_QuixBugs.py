@@ -26,10 +26,21 @@ class TestMisc(TestBase): # type: ignore
 #         """
 #         self.utility_2(line, [""""""])
         
-    def test_bucketSort(self):
-        line = """
-for i, count in enumerate(arr, arr2): pass
-        """
-        self.utility_2(line, [""""""])
+#     def test_bucketSort(self):
+#         line = """
+# for i, count in enumerate(arr, arr2): pass
+#         """
+#         self.utility_2(line, [""""""])
+    
+#     def test_yield(self):
+#         line = """
+# for i, count in enumerate(arr, x): pass
+#         """
+#         self.utility_2(line, [""""""])
+
+    def test_yield(self):
+        line = """steps = []; steps.append((start, helper))"""
+        self.utility_2(line, [""""""])   
+    
 if __name__ == '__main__':
     unittest.main()

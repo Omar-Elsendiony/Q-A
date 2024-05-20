@@ -74,7 +74,7 @@ class copyMutation(ast.NodeTransformer):
             l = None if node.left is None else self.visit(node.left)
             r = None if node.right is None else self.visit(node.right)
         except:
-            print(node)
+            return node
         return ast.copy_location(ast.BinOp(left=l, op=node.op, right=r), node)
     
     def visit_BoolOp(self, node):

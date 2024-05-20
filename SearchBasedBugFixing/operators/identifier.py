@@ -4,13 +4,25 @@ from typing import Any
 import random
 
 class FunctionArgumentReplacement(baseOperator):
-
+    def visit_Call(self, node):
+        if len(node.args) == 1:
+            num = random.randint(0, 2)
+            if (num == 1):
+                return node.args
+        elif len(node.args) == 2:
+            num = random.randint(0, 2)
+            if (num == 1):
+                node.args[0] , node.args[1] = node.args[1], node.args[0]
+        return ast.Call(func=self.visit(node.func), args=[self.visit(x) for x in node.args], keywords=[self.visit(x) for x in node.keywords])
+    
     def visit_Name(self, node):
         if (node.id in self.get_functionIdentifiers()):   
             if (self.wanted_line(node.lineno)):
-                if (node.parent.__class__.__name__ == "Call" and node.parent.func.id != node.id) or node.parent.__class__.__name__ == "Tuple":
+                if (node.parent.__class__.__name__ == "Call" and hasattr(node.parent, "func") and hasattr(node.parent.func, "id") and node.parent.func.id != node.id) or node.parent.__class__.__name__ == "Tuple":
                     self.finishedMutation = True
                     op = random.choice([ast.Sub(), ast.Add()])
+                    # if node.parent.__class__.__name__ == "Call" and len(node.parent.args) == 1:
+                    #     print('What I have done???')
                     return ast.BinOp(left=ast.Name(id=node.id, ctx=ast.Load()), op=op, right=ast.Constant(value=1))
         # else:
         return node
@@ -21,24 +33,25 @@ class FunctionArgumentReplacement(baseOperator):
 
 
 class IdentifierReplacement(baseOperator):
-        def visit_Name(self, node):
-            id = self.get_identifiers()
-            if node.id in id:
-                if self.wanted_line(node.lineno):
-                        # self.mutatedSet.add(node)
-                        selectedIdentifier = random.choice(self.identifiers)
-                        numRepeat = 0
-                        while(selectedIdentifier == node.id and len(self.identifiers) > 1 and numRepeat < 2):
-                            selectedIdentifier = random.choice(self.identifiers)
-                            numRepeat += 1
-                        node.id = selectedIdentifier
-                        # print(node.id)
-                        self.finishedMutation = True
-            return node
 
-        @classmethod
-        def name(cls):
-            return 'IDR'
+    def visit_Name(self, node):
+        id = self.get_identifiers()
+        if node.id in id:
+            if self.wanted_line(node.lineno):
+                    # self.mutatedSet.add(node)
+                    selectedIdentifier = random.choice(self.identifiers)
+                    numRepeat = 0
+                    while(selectedIdentifier == node.id and len(self.identifiers) > 1 and numRepeat < 2):
+                        selectedIdentifier = random.choice(self.identifiers)
+                        numRepeat += 1
+                    node.id = selectedIdentifier
+                    # print(node.id)
+                    self.finishedMutation = True
+        return node
+
+    @classmethod
+    def name(cls):
+        return 'IDR'
 
 class EnumerateIdentifierReplacement(baseOperator):
     def visit_Name(self, node):
