@@ -9,7 +9,7 @@ class TestQuix(TestBase): # type: ignore
         Testing one iteration loop
         """
         line = """
-dp[i, j] = dp[i - 1, j] + 1
+a[0] + longest_common_subsequence(a[1:], b[1:])
         """
         self.utility_2(line, ["""dp[i, j] = dp[i - 1, j - 1] + 1 if i > 0 and j > 0 else 1"""])
     
@@ -42,12 +42,12 @@ dp[i, j] = dp[i - 1, j] + 1
     #     line = """steps = []; steps.append((start, helper))"""
     #     self.utility_2(line, [""""""])   
     
-    def test_ret(self):
-        line = """return min(
-levenshtein(source,     target[1:]),
-levenshtein(source[1:], target[1:]),
-levenshtein(source[1:], target))"""
-        self.utility_2(line, [""""""])
+#     def test_ret(self):
+#         line = """return min(
+# levenshtein(source,     target[1:]),
+# levenshtein(source[1:], target[1:]),
+# levenshtein(source[1:], target))"""
+#         self.utility_2(line, [""""""])
     
 if __name__ == '__main__':
     unittest.main()

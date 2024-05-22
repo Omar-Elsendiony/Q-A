@@ -146,11 +146,14 @@ def create_py_test(inputs, outputs, function_name, destination_folder):
             # val_output = get_value(outputs[i][j], outputHints[j])
             val_output = (outputs[i][j])
             val_outputs.append(val_output)
-        
+
         final_output = ""
         # val outputs is the current output string
         if len(val_outputs) == 1:
-            final_output = str(val_outputs[0])
+            if (isinstance(val_outputs[0], str)):
+                final_output = "\'" + val_outputs[0] + "\'"
+            else:
+                final_output = str(val_outputs[0])
         else:
             final_output = str(tuple(val_outputs))
         

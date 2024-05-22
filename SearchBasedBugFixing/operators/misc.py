@@ -162,15 +162,15 @@ class ConstantNumericReplacement(baseOperator):
 
     
     def mutate_Num_incr_1(self, node):
-        # print(node.n)
         return ast.Constant(n=node.n + 1)
     
     def mutate_Num_decr_1(self, node):
-        # print(node.n)
         return ast.Constant(n=node.n - 1)
 
 
     def visit_Constant(self, node):
+        if isinstance(node.n, str):
+            return node
         if not self.wanted_line(node.lineno):
             return node
         func = self.choose_mutation_random_dist([self.mutate_Num_incr_1, self.mutate_Num_decr_1])
