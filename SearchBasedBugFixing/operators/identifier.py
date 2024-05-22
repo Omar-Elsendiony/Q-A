@@ -21,8 +21,8 @@ class FunctionArgumentReplacement(baseOperator):
                 if (node.parent.__class__.__name__ == "Call" and hasattr(node.parent, "func") and hasattr(node.parent.func, "id") and node.parent.func.id != node.id) or node.parent.__class__.__name__ == "Tuple":
                     self.finishedMutation = True
                     op = random.choice([ast.Sub(), ast.Add()])
-                    # if node.parent.__class__.__name__ == "Call" and len(node.parent.args) == 1:
-                    #     print('What I have done???')
+                    rightIdentifier = random.choice(self.identifiers)
+                    right = random.choice([ast.Constant(value=1), rightIdentifier])
                     return ast.BinOp(left=ast.Name(id=node.id, ctx=ast.Load()), op=op, right=ast.Constant(value=1))
         # else:
         return node

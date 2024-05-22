@@ -5,7 +5,8 @@ __pycache__/
 
 # C extensions
 *.so
-
+*.json
+*.jsonl
 ctssb_data_1M
 
 # Distribution / packaging

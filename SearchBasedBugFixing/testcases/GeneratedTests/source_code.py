@@ -1,11 +1,22 @@
-def knapsack(capacity, items): 
-    from collections import defaultdict 
-    memo = defaultdict(int) 
-    for i in range(1, len(items) + 1): 
-        weight, value = items[i - 1] 
-        for j in range(1, capacity + 1):
-            memo[i, j] = memo[i - 1, j] 
-            if weight < j: memo[i, j] = max( memo[i, j], value + memo[i - 1, j - weight] )
-    return memo[len(items), capacity]
+def mergesort(arr):
+    def merge(left, right):
+        result = []
+        i = 0
+        j = 0
+        while i < len(left) and j < len(right):
+            if left[i] <= right[j]:
+                result.append(left[i])
+                i += 1
+            else:
+                result.append(right[j])
+                j += 1
+        result.extend(left[i:] or right[j:])
+        return result
 
-
+    if len(arr) == 0:
+        return arr
+    else:
+        middle = len(arr) // 2
+        left = mergesort(arr[:middle])
+        right = mergesort(arr[middle:])
+        return merge(left, right)
