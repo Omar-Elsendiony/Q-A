@@ -8,6 +8,15 @@ class copyMutation(ast.NodeTransformer):
     def visit_Num(self, node):
         return ast.copy_location(ast.Constant(n=node.n), node)
     
+    def visit_Expression(self, node):
+        return ast.copy_location(ast.Expression(body=self.visit(node.body)), node)
+
+    def visit_Expr(self, node):
+        return ast.copy_location(ast.Expr(value=self.visit(node.value)), node)
+    
+    def visit_NamedExpr(self, node):
+        return ast.copy_location(ast.NamedExpr(target=self.visit(node.target), value=self.visit(node.value)), node)
+
     def visit_Constant(self, node):
         return ast.copy_location(ast.Constant(n=node.n), node)
 

@@ -69,6 +69,9 @@ class TestBase(unittest.TestCase):
                     # print("**********")
                     copied_line_ast = self.copier.visit(line_ast)
                     copied_line_ast.type_ignores = []
+                    # res = ast.unparse(copied_line_ast)
+                    # print(res)
+                    # print(copied_line_ast == line_ast)
                     utils.parentify(copied_line_ast)
                     # changed from choosing the actual element to choosing the index, as getting 
                     # the operator attributed to the mutation is not possible with index
@@ -104,10 +107,9 @@ class TestBase(unittest.TestCase):
                     # line_ast = copied_line_ast
                     # res = (SearchBasedBugFixing.unparser.unparser().visit(mutant))
                     try:
-                        res = ast.unparse(mutant)
+                        res = ast.unparse(copied_line_ast)
                         mutationsDone.append(res)
                     except:
-                        print('ayaaaaaaaaaaa')
                         pass
                     # print("------------------")
                     # print(res)
