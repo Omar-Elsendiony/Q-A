@@ -8,6 +8,7 @@ __pycache__/
 *.json
 *.jsonl
 ctssb_data_1M
+*.index
 
 # Distribution / packaging
 .Python

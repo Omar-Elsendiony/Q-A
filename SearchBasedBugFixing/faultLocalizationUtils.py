@@ -104,7 +104,7 @@ def get_value(test_item, hint):
         value = None
     return value
 
-def create_py_test(inputs, outputs, function_name, destination_folder, inputHints, outputHints):
+def create_py_test(inputs, outputs, function_name, destination_folder):
     pytest_file = ""
 
     module_ast = ast.parse(pytest_file)
@@ -202,7 +202,7 @@ def main(inputs, outputs, function_name, source_folder, destination_folder, file
     copyFolder(source_folder, destination_folder, file_id)
 
     # Create the PyTest file with the test cases
-    create_py_test(inputs, outputs, function_name, destination_folder, inputHints, outputHints)
+    create_py_test(inputs, outputs, function_name, destination_folder)
 
     # Run the fault localization tool
     test_path = f'{destination_folder}/test.py'

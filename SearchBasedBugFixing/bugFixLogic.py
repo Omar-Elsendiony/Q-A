@@ -447,7 +447,7 @@ def main(BugProgram:str,
         outputs:List, 
         FixPar:Callable,
         ops:Callable,
-        popSize:int = 2000, 
+        popSize:int = 2500, 
         M:int = 1,
         E:int = 10, 
         L:int = 5):
@@ -504,7 +504,7 @@ def bugFix():
     inputCasesPath = 'testcases/Inputs'
     outputCasesPath = 'testcases/Outputs'
     metaDataPath = 'testcases/MetaData'
-    file_id = 10
+    file_id = 19
     file_name = f'{file_id}.txt'
     typeHintsInputs = []
     typeHintsOutputs = []
@@ -531,15 +531,15 @@ def bugFix():
                 print("Function name not found")
                 exit(-1)   
             l = 1
-            while(lines[l] != '\n'):
-                typeHintsInputs.append(lines[l].strip())
-                # utils.processLine(lines[l], l, inputs)
-                l += 1
-            l += 1
-            while(l < len(lines) and lines[l] != '\n'):
-                typeHintsOutputs.append(lines[l].strip())
-                # utils.processLine(lines[l], l, inputs)
-                l += 1
+            # while(lines[l] != '\n'):
+            #     typeHintsInputs.append(lines[l].strip())
+            #     # utils.processLine(lines[l], l, inputs)
+            #     l += 1
+            # l += 1
+            # while(l < len(lines) and lines[l] != '\n'):
+            #     typeHintsOutputs.append(lines[l].strip())
+            #     # utils.processLine(lines[l], l, inputs)
+            #     l += 1
         with open(f'{inputCasesPath}/{file_name}', 'r') as file:
             lines = file.readlines()
             i = 0
@@ -551,7 +551,7 @@ def bugFix():
                     else:
                         continue
                 else: 
-                    utils.processLine(line, i, inputTestCase, typeHintsInputs[k])
+                    utils.processLine(line, i, inputTestCase)
                     i += 1; k += 1
             if (inputTestCase != []):
                 inputs.append(inputTestCase)
@@ -567,7 +567,7 @@ def bugFix():
                     else: 
                         continue
                 else: 
-                    utils.processLine(line, i, outputTestCase, typeHintsOutputs[k])
+                    utils.processLine(line, i, outputTestCase)
                     i += 1 ; k += 1
             if (outputTestCase != []):
                 outputs.append(outputTestCase)
@@ -578,23 +578,22 @@ def bugFix():
     print(inputs)
     print(outputs)
 
-#     pr = """import sys
-# sys.setrecursionlimit(10**6)    
-# def levenshtein(source, target):
-#     if source == '' or target == '':
-#         return len(source) or len(target)
+    # pr = """def kth(arr, k):
+    # pivot = arr[0]
+    # below = [x for x in arr if x < pivot]
+    # above = [x for x in arr if x > pivot]
 
-#     elif source[0] == target[0]:
-#         return levenshtein(source[1:], target[1:])
+    # num_less = len(below)
+    # num_lessoreq = len(arr) - len(above)
 
-#     else:
-#         return 1 + min(
-#             levenshtein(source,     target[1:]),
-#             levenshtein(source[1:], target[1:]),
-#             levenshtein(source[1:], target)
-#         )"""
-#     x = passesNegTests(pr, 'levenshtein', inputs, outputs)
-#     print(x)
+    # if k < num_less:
+    #     return kth(below, k)
+    # elif k >= num_lessoreq:
+    #     return kth(above, k - num_lessoreq)
+    # else:
+    #     return pivot"""
+    # x = passesNegTests(pr, 'kth', inputs, outputs)
+    # print(x)
 
     error = faultLocalizationUtils.main(
         inputs = inputs, 

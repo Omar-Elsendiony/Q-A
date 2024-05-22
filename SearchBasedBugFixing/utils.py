@@ -332,7 +332,6 @@ def mutationsCanBeApplied(setTokens: set):
     if 'if' in setTokens: lstMutations.append('COI') ; lstToBeMutated.append('if')
 
     ################ SLICE OPERATORS ################
-    if ':' in setTokens: lstMutations.append('SIR'); lstToBeMutated.append(':') # make sure it is encompassed between square brackets
 
     ################ BREAK AND CONTINUE ################
     if 'break' in setTokens: lstMutations.append('BCR'); lstToBeMutated.append('break')
@@ -352,6 +351,7 @@ def mutationsCanBeApplied(setTokens: set):
     # if '[]' in setTokens: lstMutations.append('MR')
     # if '{}' in setTokens: lstMutations.append('MR')
     weights.extend([1] * (len(lstMutations) - len(weights))) # the weights are all equal for now
+    if ':' in setTokens: lstMutations.append('SIR'); lstToBeMutated.append(':'); weights.append(4) # make sure it is encompassed between square brackets
     if 'NUM' in setTokens: lstMutations.append('CNR'); lstToBeMutated.append('NUM'); weights.append(6)
     if 'return' in setTokens: lstMutations.append('RER'); lstToBeMutated.append('return'); weights.append(7)
     if '==' in setTokens: lstMutations.append('MER'); lstToBeMutated.append('=='); weights.append(3)

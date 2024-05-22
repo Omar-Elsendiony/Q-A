@@ -22,8 +22,10 @@ class FunctionArgumentReplacement(baseOperator):
                     self.finishedMutation = True
                     op = random.choice([ast.Sub(), ast.Add()])
                     rightIdentifier = random.choice(self.identifiers)
-                    right = random.choice([ast.Constant(value=1), rightIdentifier])
-                    return ast.BinOp(left=ast.Name(id=node.id, ctx=ast.Load()), op=op, right=ast.Constant(value=1))
+                    right = random.choice([ast.Constant(value=1), ast.Name(id=rightIdentifier, ctx=ast.Load())
+])
+                    
+                    return ast.BinOp(left=ast.Name(id=node.id, ctx=ast.Load()), op=op, right=right)
         # else:
         return node
     

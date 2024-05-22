@@ -22,6 +22,14 @@ class BreakContinueReplacement(baseOperator):
 
 
 class SliceIndexRemove(baseOperator):
+    def visit_Subscript(self, node):
+        if not self.wanted_line(node.lineno):
+            return node
+        random_choice = random.randint(0, 2)
+        if (random_choice == 0):
+            return node.value
+        return ast.Subscript(value=node.value, slice=self.visit(node.slice), ctx=node.ctx)
+    
 
     def mutate_Slice_remove_lower(self, node):
         return ast.Slice(lower=None, upper=node.upper, step=node.step)
@@ -154,9 +162,11 @@ class ConstantNumericReplacement(baseOperator):
 
     
     def mutate_Num_incr_1(self, node):
+        # print(node.n)
         return ast.Constant(n=node.n + 1)
     
     def mutate_Num_decr_1(self, node):
+        # print(node.n)
         return ast.Constant(n=node.n - 1)
 
 

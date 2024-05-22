@@ -57,7 +57,7 @@ class TestBase(unittest.TestCase):
                     op_f_list, op_f_weights, original_op = utils.mutationsCanBeApplied(tokenSet)
                     if f + 1 in idVistitor.get_function_identifiers_occurences().keys():
                         op_f_list.append("FAR")
-                        op_f_weights.append(5)
+                        op_f_weights.append(15)
                     if f + 1 in idVistitor.get_identifiers_occurences().keys():
                         op_f_list.append("IDR")
                         op_f_weights.append(2)
@@ -107,6 +107,7 @@ class TestBase(unittest.TestCase):
                         res = ast.unparse(mutant)
                         mutationsDone.append(res)
                     except:
+                        print('ayaaaaaaaaaaa')
                         pass
                     # print("------------------")
                     # print(res)
