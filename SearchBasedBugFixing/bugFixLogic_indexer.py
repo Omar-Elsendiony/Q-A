@@ -37,14 +37,23 @@ model.to(DEVICE)
 #   _,embeddings = model(source_ids)
 #   return embeddings.detach()
 
+from torch.utils.data import DataLoader
 
-def fitness_bug_code(tokens , device=DEVICE):
-    tokens_ids = model.tokenize([tokens],max_length=512,mode="<encoder-only>")
-    source_ids = torch.tensor(tokens_ids).to(device)
-    _,embeddings = model(source_ids)
-    D, I = index.search(embeddings.detach(), k=1)
+def batch_tokenize(token_list, max_length=512, mode="<encoder-only>"):
+    # Tokenize multiple tokens in batches
+    token_ids = model.tokenize(token_list, max_length=max_length, mode=mode)
+    return torch.tensor(token_ids)
+
+def fitness_bug_code(tokens_list, device=DEVICE, batch_size=64):
+    dataloader = DataLoader(tokens_list, batch_size=batch_size)
+    distances = []
+    for batch_tokens in dataloader:
+        token_ids = batch_tokenize(batch_tokens).to(device)
+        _, embeddings = model(token_ids)
+        distances.append(embeddings.detach().cpu())
+    distances = torch.cat(distances)
+    D, I = index.search(distances, k=1)
     return D
-    return 1
 
 
 def handler(signum, frame):
@@ -480,7 +489,7 @@ def main(BugProgram:str,
         outputs:List, 
         FixPar:Callable,
         ops:Callable,
-        popSize:int = 2500, 
+        popSize:int = 25, 
         M:int = 1,
         E:int = 10, 
         L:int = 5):
@@ -669,7 +678,7 @@ def bugFix():
     i = 0
     for p in population:
         splt = p.split()
-        print(population[i + 100])
+        print(population[i])
         i += 1
         if (i == 10):
             break
