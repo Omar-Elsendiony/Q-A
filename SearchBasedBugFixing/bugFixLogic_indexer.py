@@ -2,7 +2,6 @@
 Module : main
 The main pipeline resides here
 """
-
 import ast
 import re
 from operators import *
@@ -19,6 +18,34 @@ import SwapVisitor
 import sys
 from io import StringIO
 import signal
+###################################################################
+import numpy as np
+import faiss
+
+index = faiss.read_index('../hnsw_index.index')
+import torch
+from unixcoder import UniXcoder
+import numpy as np
+DEVICE = torch.device("cpu")
+model = UniXcoder("microsoft/unixcoder-base")
+model.to(DEVICE)
+
+#returns numpy array of embeddings
+# def get_embeddings(model,tokens,device=DEVICE):
+#   tokens_ids = model.tokenize([tokens],max_length=512,mode="<encoder-only>")
+#   source_ids = torch.tensor(tokens_ids).to(device)
+#   _,embeddings = model(source_ids)
+#   return embeddings.detach()
+
+
+def fitness_bug_code(tokens , device=DEVICE):
+    tokens_ids = model.tokenize([tokens],max_length=512,mode="<encoder-only>")
+    source_ids = torch.tensor(tokens_ids).to(device)
+    _,embeddings = model(source_ids)
+    D, I = index.search(embeddings.detach(), k=1)
+    return D
+    return 1
+
 
 def handler(signum, frame):
     # print('Signal handler called with signal', signum)
@@ -66,8 +93,6 @@ def runCode(code: str, myglobals):
 
     return result, isError
 ####################################################################
-
-
 
 def editFreq(cand):
     ## TODO ##
@@ -256,7 +281,8 @@ def passesNegTests(program:str, program_name:str, inputs:List, outputs:List) -> 
 
 
 appliedMutations = set()
-def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_operator, pool, limitLocations = 2):
+def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_operator, pool,
+           limitLocations = 2, linesMutated = []):
     # instance of the copy class to be used for copying ASTs
     copier = copyMutation()
     # split the candidate into lines to be able to segment them into tokens and we are working line-wise fault location
@@ -364,10 +390,9 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
         try:
             ast.unparse(cand_dash)
             pool.append(cand_dash)
+            linesMutated.append(splitted_cand[f - 1])
         except:
             pass
-        # return cand to its original ast (despite different location in memory)
-        # cand = copied_cand
     return True
 
 
@@ -405,6 +430,7 @@ def mutate(cand:str, ops:Callable, name_to_operator:Dict, faultyLineLocations: L
            weightsFaultyLineLocations:List, L:int,  methodUnderTestName:str, inputs:list, outputs:list ):  # helper function to mutate the code
 
     pool = list()
+    linesMutated = list()
     availableChoices = {"1": "Insertion", "2": "Swap", "3": "Update"}
     weightsMutation = [0.01, 0.01, 0.98]
     choiceMutation = random.choices(list(availableChoices.keys()), weights=weightsMutation, k=1)[0]
@@ -416,7 +442,8 @@ def mutate(cand:str, ops:Callable, name_to_operator:Dict, faultyLineLocations: L
             ops=ops,
             name_to_operator=name_to_operator,
             pool=pool,
-            limitLocations=L
+            limitLocations=L,
+            linesMutated=linesMutated
         )
         # insert(cand=cand, pool=pool)
     elif availableChoices[choiceMutation] == "Insertion":
@@ -425,14 +452,20 @@ def mutate(cand:str, ops:Callable, name_to_operator:Dict, faultyLineLocations: L
         swap(cand=cand, pool=pool)
     if (len(pool) == 0):
         return cand
-
+    if (len(pool) == 1):
+        return ast.unparse(pool[0])
     scores = [] # list of scores that will be used to choose the candidate to be selected
+    candI = 0
     for cand in pool:
         try:
-            parsedCand = ast.unparse(cand)
-            scores.append(fitness_testCasesPassed(parsedCand, methodUnderTestName, inputs, outputs) * 10 + 1) # why +10, just to make it non-zero and also relatively, it stays the same.
+            # parsedCand = ast.unparse(cand)
+            
+            # scores.append(fitness_testCasesPassed(parsedCand, methodUnderTestName, inputs, outputs) * 10 + 1) # why +10, just to make it non-zero and also relatively, it stays the same.
+            scores.append(1 / fitness_bug_code(linesMutated[candI]) + 1) # why +10, just to make it non-zero and also relatively, it stays the same.
+
         except:
             scores.append(0.000000000000001)
+        candI += 1
     choice = random.choices(range(len(pool)), weights = scores, k=1)[0]
     return ast.unparse(pool[choice])
 
