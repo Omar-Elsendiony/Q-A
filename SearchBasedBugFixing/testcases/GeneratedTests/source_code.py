@@ -1,13 +1,22 @@
-def longest_common_subsequence(a, b):
-    if not a or not b:
-        return ''
+def mergesort(arr):
+    def merge(left, right):
+        result = []
+        i = 0
+        j = 0
+        while i < len(left) and j < len(right):
+            if left[i] <= right[j]:
+                result.append(left[i])
+                i += 1
+            else:
+                result.append(right[j])
+                j += 1
+        result.extend(left[i:] or right[j:])
+        return result
 
-    elif a[0] == b[0]:
-        return a[0] + longest_common_subsequence(a[1:], b)
-
+    if len(arr) == 0:
+        return arr
     else:
-        return max(
-            longest_common_subsequence(a, b[1:]),
-            longest_common_subsequence(a[1:], b),
-            key=len
-        )
+        middle = len(arr) // 2
+        left = mergesort(arr[:middle])
+        right = mergesort(arr[middle:])
+        return merge(left, right)

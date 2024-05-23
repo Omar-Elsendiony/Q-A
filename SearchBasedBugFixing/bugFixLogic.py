@@ -504,7 +504,7 @@ def bugFix():
     inputCasesPath = 'testcases/Inputs'
     outputCasesPath = 'testcases/Outputs'
     metaDataPath = 'testcases/MetaData'
-    file_id = 19
+    file_id = 10
     file_name = f'{file_id}.txt'
     typeHintsInputs = []
     typeHintsOutputs = []
