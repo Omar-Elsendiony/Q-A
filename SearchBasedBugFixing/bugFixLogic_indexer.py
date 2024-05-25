@@ -52,8 +52,8 @@ def fitness_bug_code(tokens_list, device=DEVICE, batch_size=64):
         _, embeddings = model(token_ids)
         distances.append(embeddings.detach().cpu())
     distances = torch.cat(distances)
-    D, I = index.search(distances, k=1)
-    return D
+    # D, I = index.search(distances, k=1)
+    return 1
 
 
 def handler(signum, frame):
@@ -489,7 +489,7 @@ def main(BugProgram:str,
         outputs:List, 
         FixPar:Callable,
         ops:Callable,
-        popSize:int = 25, 
+        popSize:int = 2500, 
         M:int = 1,
         E:int = 10, 
         L:int = 5):
@@ -546,7 +546,7 @@ def bugFix():
     inputCasesPath = 'testcases/Inputs'
     outputCasesPath = 'testcases/Outputs'
     metaDataPath = 'testcases/MetaData'
-    file_id = 19
+    file_id = 2
     file_name = f'{file_id}.txt'
     typeHintsInputs = []
     typeHintsOutputs = []

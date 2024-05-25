@@ -4,20 +4,20 @@ from __init__ import *
 
 class TestQuix(TestBase): # type: ignore
 
-    def test_lcs(self):
-        """
-        Testing one iteration loop
-        """
-        line = """
-a[0] + longest_common_subsequence(a[1:], b[1:])
-        """
-        self.utility_2(line, ["""dp[i, j] = dp[i - 1, j - 1] + 1 if i > 0 and j > 0 else 1"""])
-    
-#     def test_leveshtein(self):
+#     def test_lcs(self):
+#         """
+#         Testing one iteration loop
+#         """
 #         line = """
-# return levenshtein(source[1:], target[1:])
-# """
-#         self.utility_2(line, [""""""])
+# a[0] + longest_common_subsequence(a[1:], b[1:])
+#         """
+#         self.utility_2(line, ["""dp[i, j] = dp[i - 1, j - 1] + 1 if i > 0 and j > 0 else 1"""])
+    
+    def test_leveshtein(self):
+        line = """
+dp[i, j] = dp[i - 1, j] + 1
+"""
+        self.utility_2(line, [""""""])
 
 #     def test_mergeSort(self):
 #         line = """

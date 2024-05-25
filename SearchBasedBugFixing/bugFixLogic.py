@@ -2,7 +2,6 @@
 Module : main
 The main pipeline resides here
 """
-
 import ast
 import re
 from operators import *
@@ -22,7 +21,7 @@ import signal
 
 def handler(signum, frame):
     # print('Signal handler called with signal', signum)
-    raise Exception("Infinite loop may occured!")
+    raise Exception()
 
 def runCode(code: str, myglobals):
     # save the old stdout that is reserved
@@ -40,11 +39,10 @@ def runCode(code: str, myglobals):
     try:
         # thread.start()
         signal.signal(signal.SIGALRM, handler)
-        signal.setitimer(signal.ITIMER_REAL, 0.05)
+        signal.setitimer(signal.ITIMER_REAL, 0.15)
         exec(code, myglobals)
         # signal.alarm(0)
         signal.setitimer(signal.ITIMER_REAL, 0)
-
         result = redirectedOutput.getvalue()
     except Exception as e:
         isError = True
@@ -54,16 +52,12 @@ def runCode(code: str, myglobals):
         result = redirectedOutput2.getvalue()
     except KeyboardInterrupt as k:
         isError = True
-        result = "timed out"
-        # print('timey')
-    # thread.stop()
-    # signal.alarm(0)
+
     signal.setitimer(signal.ITIMER_REAL, 0)
     if (myglobals.get('testcase')):
         del myglobals['testcase']
     sys.stdout = oldStdOUT
     sys.stderr = oldStdERR
-
     return result, isError
 ####################################################################
 
@@ -98,7 +92,6 @@ def fitness_testCasesPassed(program:str, program_name:str, inputs:List, outputs:
     editedProgram = None
     res = None
     passedTests = 0
-
     for i in range(len(inputs)):
         try:
             testcase = inputs[i]
@@ -356,16 +349,15 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
             col_index = col_index if op_f != "ARD" else choice_index // 2
             # apply the mutation and acquire a new candidate
             cand_dash = operator(target_node_lineno = f, code_ast = copied_cand, indexMutation= col_index, specifiedOperator=original_op[choice_index]).visitC() # f + 1 because the line number starts from 1
-
         # adds/corrects the line number as well as column offset
         ast.fix_missing_locations(cand_dash)
         cand_dash.type_ignores = []
         # add the candidate to the pool that you will select from
-        try:
-            ast.unparse(cand_dash)
-            pool.append(cand_dash)
-        except:
-            pass
+        # try:
+        #     ast.unparse(cand_dash)
+        #     pool.append(cand_dash)
+        # except:
+        #     pass
         # return cand to its original ast (despite different location in memory)
         # cand = copied_cand
     return True
@@ -403,7 +395,6 @@ def swap(cand:str, pool:set):  # helper function to mutate the code
 
 def mutate(cand:str, ops:Callable, name_to_operator:Dict, faultyLineLocations: List,
            weightsFaultyLineLocations:List, L:int,  methodUnderTestName:str, inputs:list, outputs:list ):  # helper function to mutate the code
-
     pool = list()
     availableChoices = {"1": "Insertion", "2": "Swap", "3": "Update"}
     weightsMutation = [0.01, 0.01, 0.98]
@@ -419,7 +410,7 @@ def mutate(cand:str, ops:Callable, name_to_operator:Dict, faultyLineLocations: L
             limitLocations=L
         )
         # insert(cand=cand, pool=pool)
-    elif availableChoices[choiceMutation] == "Insertion":
+    elif availableChoices[choiceMutation] == "Insertion":        
         insert(cand=cand, pool=pool)
     elif availableChoices[choiceMutation] == "Swap":
         swap(cand=cand, pool=pool)
@@ -427,14 +418,20 @@ def mutate(cand:str, ops:Callable, name_to_operator:Dict, faultyLineLocations: L
         return cand
 
     scores = [] # list of scores that will be used to choose the candidate to be selected
-    for cand in pool:
+    poolMod = []
+    for candpool in pool:
         try:
-            parsedCand = ast.unparse(cand)
+            parsedCand = ast.unparse(candpool)
+            # print('pool')
+            poolMod.append(candpool)
             scores.append(fitness_testCasesPassed(parsedCand, methodUnderTestName, inputs, outputs) * 10 + 1) # why +10, just to make it non-zero and also relatively, it stays the same.
         except:
-            scores.append(0.000000000000001)
-    choice = random.choices(range(len(pool)), weights = scores, k=1)[0]
-    return ast.unparse(pool[choice])
+            # scores.append(0.000000000000001)
+            pass
+    if (poolMod == []):
+        return cand
+    choice = random.choices(range(len(poolMod)), weights = scores, k=1)[0]
+    return ast.unparse(poolMod[choice])
 
 
 
@@ -447,7 +444,7 @@ def main(BugProgram:str,
         outputs:List, 
         FixPar:Callable,
         ops:Callable,
-        popSize:int = 2500, 
+        popSize:int = 5000, 
         M:int = 1,
         E:int = 10, 
         L:int = 5):
@@ -470,9 +467,11 @@ def main(BugProgram:str,
         Pop.append(BugProgram)  # seeding the population with candidates that were not exposed to mutation
     
     name_to_operator = utils.getNameToOperatorMap()
+    jj = 0
     while len(Pop) < popSize:
         newMutation= mutate(BugProgram, ops, name_to_operator, FaultLocations, weightsFaultyLocations, L, MethodUnderTestName, inputs, outputs)
         # if not errorOccured:
+        jj += 1
         Pop.append(newMutation)  # mutate the population
 
     # print(len(Pop))
@@ -504,7 +503,7 @@ def bugFix():
     inputCasesPath = 'testcases/Inputs'
     outputCasesPath = 'testcases/Outputs'
     metaDataPath = 'testcases/MetaData'
-    file_id = 10
+    file_id = 18
     file_name = f'{file_id}.txt'
     typeHintsInputs = []
     typeHintsOutputs = []
@@ -578,21 +577,29 @@ def bugFix():
     print(inputs)
     print(outputs)
 
-    # pr = """def kth(arr, k):
-    # pivot = arr[0]
-    # below = [x for x in arr if x < pivot]
-    # above = [x for x in arr if x > pivot]
+    # pr = """def mergesort(arr):
 
-    # num_less = len(below)
-    # num_lessoreq = len(arr) - len(above)
-
-    # if k < num_less:
-    #     return kth(below, k)
-    # elif k >= num_lessoreq:
-    #     return kth(above, k - num_lessoreq)
+    # def merge(left, right):
+    #     result = []
+    #     i = 0
+    #     j = 0
+    #     while i < len(left) and j < len(right):
+    #         if left[i] <= right[j]:
+    #             left.append(left[i])
+    #             i += 1
+    #         else:
+    #             result.append(right[j])
+    #             j += 1
+    #     result.extend(left[i:] or right[j:])
+    #     return result
+    # if len(arr) == 0:
+    #     return arr
     # else:
-    #     return pivot"""
-    # x = passesNegTests(pr, 'kth', inputs, outputs)
+    #     middle = len(arr) // 2
+    #     left = mergesort(arr[:middle])
+    #     right = mergesort(arr[middle:])
+    #     return merge(left, right)"""
+    # x = fitness_testCasesPassed(pr, 'mergesort', inputs, outputs)
     # print(x)
 
     error = faultLocalizationUtils.main(

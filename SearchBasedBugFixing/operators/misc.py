@@ -175,7 +175,6 @@ class ConstantNumericReplacement(baseOperator):
             return node
         func = self.choose_mutation_random_dist([self.mutate_Num_incr_1, self.mutate_Num_decr_1])
         self.finishedMutation = True
-        # self.mutatedSet.add(node)
         return func(node)
 
     @classmethod

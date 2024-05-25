@@ -43,6 +43,7 @@ class IdentifierReplacement(baseOperator):
                     # self.mutatedSet.add(node)
                     selectedIdentifier = random.choice(self.identifiers)
                     numRepeat = 0
+                    
                     while(selectedIdentifier == node.id and len(self.identifiers) > 1 and numRepeat < 2):
                         selectedIdentifier = random.choice(self.identifiers)
                         numRepeat += 1
