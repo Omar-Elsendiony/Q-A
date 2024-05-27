@@ -118,7 +118,7 @@ class MembershipReplacement(baseOperator):
         operations = [ast.NotEq(), ast.LtE(), ast.GtE()]
         op = random.choices(operations, [1, 1, 1], k=1)[0]
         # print(op)
-        return op
+        return ast.LtE()
 
     # def visit_NotIn(self, node: ast.NotIn):
     #     if not self.wanted_line(node.lineno, node.col_offset):

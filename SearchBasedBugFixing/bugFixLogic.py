@@ -297,7 +297,7 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
         # op_f_list may be empty as the lines are removed and added, etc. However, running the fault localization again will solve the issue
         if f in fOcc.keys():
             op_f_list.append("FAR")
-            op_f_weights.append(8)
+            op_f_weights.append(10)
         if f in idOcc.keys():
             op_f_list.append("IDR")
             op_f_weights.append(2)
@@ -355,7 +355,7 @@ def update(cand, faultyLineLocations, weightsFaultyLineLocations, ops, name_to_o
         # add the candidate to the pool that you will select from
         # try:
         #     ast.unparse(cand_dash)
-        #     pool.append(cand_dash)
+        pool.append(cand_dash)
         # except:
         #     pass
         # return cand to its original ast (despite different location in memory)
@@ -444,7 +444,7 @@ def main(BugProgram:str,
         outputs:List, 
         FixPar:Callable,
         ops:Callable,
-        popSize:int = 5000, 
+        popSize:int = 2500, 
         M:int = 1,
         E:int = 10, 
         L:int = 5):
@@ -503,7 +503,7 @@ def bugFix():
     inputCasesPath = 'testcases/Inputs'
     outputCasesPath = 'testcases/Outputs'
     metaDataPath = 'testcases/MetaData'
-    file_id = 18
+    file_id = 10
     file_name = f'{file_id}.txt'
     typeHintsInputs = []
     typeHintsOutputs = []
