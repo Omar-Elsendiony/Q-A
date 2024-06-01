@@ -1,0 +1,108 @@
+Test example 0 failed
+Number of Ran Tests : 8
+Number of failed Tests : 3
+Number of Error Test : 0
+Number of Succeeded Test : 5
+Example 1 has already passed
+=====================================
+Test example 2 failed
+Number of Ran Tests : 6
+Number of failed Tests : 4
+Number of Error Test : 0
+Number of Succeeded Test : 2
+Test example 3 failed
+Number of Ran Tests : 9
+Number of failed Tests : 6
+Number of Error Test : 2
+Number of Succeeded Test : 1
+Test example 4 failed
+Number of Ran Tests : 7
+Number of failed Tests : 5
+Number of Error Test : 2
+Number of Succeeded Test : 0
+Test example 5 failed
+Number of Ran Tests : 8
+Number of failed Tests : 7
+Number of Error Test : 2
+Number of Succeeded Test : -1
+Test example 6 failed
+Number of Ran Tests : 7
+Number of failed Tests : 5
+Number of Error Test : 2
+Number of Succeeded Test : 0
+Test example 7 failed
+Number of Ran Tests : 7
+Number of failed Tests : 6
+Number of Error Test : 2
+Number of Succeeded Test : -1
+Test example 8 failed
+Number of Ran Tests : 7
+Number of failed Tests : 6
+Number of Error Test : 2
+Number of Succeeded Test : -1
+Test example 9 failed
+Number of Ran Tests : 7
+Number of failed Tests : 3
+Number of Error Test : 2
+Number of Succeeded Test : 2
+Test example 10 failed
+Number of Ran Tests : 7
+Number of failed Tests : 3
+Number of Error Test : 2
+Number of Succeeded Test : 2
+Test example 11 failed
+Number of Ran Tests : 7
+Number of failed Tests : 3
+Number of Error Test : 2
+Number of Succeeded Test : 2
+Test example 12 failed
+Number of Ran Tests : 7
+Number of failed Tests : 3
+Number of Error Test : 2
+Number of Succeeded Test : 2
+Example 13 has already passed
+=====================================
+Test example 14 failed
+Number of Ran Tests : 19
+Number of failed Tests : 7
+Number of Error Test : 2
+Number of Succeeded Test : 10
+Test example 15 failed
+Number of Ran Tests : 7
+Number of failed Tests : 8
+Number of Error Test : 2
+Number of Succeeded Test : -3
+Example 16 has already passed
+=====================================
+Test example 17 failed
+Number of Ran Tests : 8
+Number of failed Tests : 5
+Number of Error Test : 2
+Number of Succeeded Test : 1
+Test example 18 failed
+Number of Ran Tests : 7
+Number of failed Tests : 2
+Number of Error Test : 2
+Number of Succeeded Test : 3
+Test example 19 failed
+Number of Ran Tests : 7
+Number of failed Tests : 3
+Number of Error Test : 2
+Number of Succeeded Test : 2
+Example 20 has already passed
+=====================================
+Test example 21 failed
+Number of Ran Tests : 7
+Number of failed Tests : 7
+Number of Error Test : 2
+Number of Succeeded Test : -2
+Test example 22 failed
+Number of Ran Tests : 7
+Number of failed Tests : 3
+Number of Error Test : 2
+Number of Succeeded Test : 2
+Test example 23 failed
+Number of Ran Tests : 8
+Number of failed Tests : 4
+Number of Error Test : 2
+Number of Succeeded Test : 2
